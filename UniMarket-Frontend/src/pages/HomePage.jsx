@@ -14,7 +14,10 @@ const freshFindsBadge = (
   </span>
 )
 
-/** Marketplace homepage (Figma "Homepage"). Product sections show empty states until listing data exists. */
+const FEATURED_QUERY = { featured: true }
+const RECENT_QUERY = { sort: 'newest' }
+
+/** Marketplace homepage (Figma "Homepage"). Product sections show empty states when there are no listings. */
 export default function HomePage() {
   return (
     <>
@@ -27,6 +30,7 @@ export default function HomePage() {
           title="Featured Products"
           description="Great deals worth a study break. Handpicked for your campus life."
           viewAll={{ label: 'View all featured', to: PATHS.marketplace }}
+          query={FEATURED_QUERY}
           emptyTitle="No featured products yet"
           emptyDescription="Handpicked deals will appear here once students start listing items."
           emptyAction={
@@ -41,6 +45,7 @@ export default function HomePage() {
           badge={freshFindsBadge}
           description="Just landed on campus. Find your next favorite before someone else does."
           viewAll={{ label: 'View all listings', to: PATHS.marketplace }}
+          query={RECENT_QUERY}
           emptyTitle="No listings yet"
           emptyDescription="New items from your campus will show up here as soon as they are posted."
           emptyAction={

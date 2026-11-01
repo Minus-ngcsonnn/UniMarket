@@ -7,12 +7,23 @@ export const PATHS = {
   login: '/login',
   register: '/register',
 
-  // Planned pages (not implemented yet)
+  // Product marketplace
   marketplace: '/marketplace',
-  deals: '/deals',
+  product: (id) => `/products/${id}`,
   sell: '/sell',
-  messages: '/messages',
+  myListings: '/my-listings',
+  editListing: (id) => `/my-listings/${id}/edit`,
+  deals: '/deals',
+
+  // Buying (Business Plan order flow)
   cart: '/cart',
+  checkout: (productIds) => `/checkout?items=${[].concat(productIds).join(',')}`,
+  orderConfirmation: (orderIds) => `/orders/confirmation?ids=${[].concat(orderIds).join(',')}`,
+  orders: '/orders',
+  sales: '/orders?view=sales',
+  messages: '/messages',
+
+  // Information pages
   howItWorks: '/how-it-works',
   about: '/about',
   ambassadors: '/ambassadors',

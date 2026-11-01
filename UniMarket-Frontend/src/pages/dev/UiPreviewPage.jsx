@@ -6,6 +6,7 @@ import EmptyState from '../../components/ui/EmptyState'
 import ErrorState from '../../components/ui/ErrorState'
 import Input from '../../components/ui/Input'
 import LoadingState from '../../components/ui/LoadingState'
+import Pagination from '../../components/ui/Pagination'
 import PasswordInput from '../../components/ui/PasswordInput'
 import useForm from '../../hooks/useForm'
 import { hasMinLength, isBlank, isValidEmail } from '../../utils/validators'
@@ -34,6 +35,7 @@ function Section({ title, children }) {
 
 export default function UiPreviewPage() {
   const [submitted, setSubmitted] = useState(null)
+  const [page, setPage] = useState(1)
   const form = useForm({
     initialValues: { email: '', password: '' },
     validate: validateSample,
@@ -77,6 +79,12 @@ export default function UiPreviewPage() {
             </Alert>
           )}
         </form>
+      </Section>
+
+      <Section title="Pagination (128 items, 9 per page)">
+        <div data-testid="pagination-demo">
+          <Pagination page={page} pageSize={9} total={128} onPageChange={setPage} />
+        </div>
       </Section>
 
       <Section title="Alerts">

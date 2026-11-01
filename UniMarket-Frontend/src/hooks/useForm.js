@@ -31,6 +31,17 @@ export default function useForm({ initialValues, validate, onSubmit }) {
     setErrors(validate(values))
   }
 
+  /**
+   * Sets a value from a custom control (photo uploader, Select, radio group) and marks it touched,
+   * so its error updates immediately.
+   */
+  function setFieldValue(name, value) {
+    const nextValues = { ...values, [name]: value }
+    setValues(nextValues)
+    setTouched((current) => ({ ...current, [name]: true }))
+    setErrors(validate(nextValues))
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
     const form = event.currentTarget
@@ -40,7 +51,10 @@ export default function useForm({ initialValues, validate, onSubmit }) {
 
     const firstInvalidField = Object.keys(values).find((name) => nextErrors[name])
     if (firstInvalidField) {
-      form.elements.namedItem(firstInvalidField)?.focus()
+      const element = form.elements.namedItem(firstInvalidField)
+      // Radio groups return a RadioNodeList: focus its first option.
+      const target = element instanceof RadioNodeList ? element[0] : element
+      target?.focus()
       return
     }
 
@@ -82,5 +96,5 @@ export default function useForm({ initialValues, validate, onSubmit }) {
     }
   }
 
-  return { values, errors, isSubmitting, handleSubmit, getFieldProps, getCheckboxProps, revalidate }
+  return { values, errors, touched, isSubmitting, handleSubmit, getFieldProps, getCheckboxProps, setFieldValue, revalidate }
 }
