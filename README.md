@@ -12,7 +12,8 @@ UniMarket is a full-stack web marketplace application built with a **Spring Boot
 |------------|-------------------------------------------------------------------|
 | Backend    | Java 21, Spring Boot 3.5 (Web, Data JPA, Validation), Maven       |
 | Database   | Microsoft SQL Server (2019/2022), `mssql-jdbc` driver             |
-| Frontend   | React 19, Vite 8, React Router, Axios, ESLint                     |
+| Frontend   | React 19, Vite 8, Tailwind CSS 4, React Router, Axios, ESLint     |
+| UI         | Inter font (self-hosted), shared design tokens in `src/index.css` |
 | API style  | RESTful JSON, all endpoints under `/api`                          |
 | Tooling    | Git & GitHub, Visual Studio Code, Windows PowerShell              |
 
@@ -56,6 +57,7 @@ UniMarket/
 │   └── vite.config.js               Dev server + /api proxy
 ├── database/
 │   └── schema.sql                   Idempotent database creation script
+├── .vscode/extensions.json          Recommended VS Code extensions for the team
 ├── .gitattributes
 ├── .gitignore
 └── README.md
@@ -76,7 +78,7 @@ UniMarket/
 
 Maven does **not** need to be installed: use the included wrapper (`mvnw.cmd`), which downloads Maven 3.9 automatically.
 
-Recommended VS Code extensions: *Extension Pack for Java*, *Spring Boot Extension Pack*, *ESLint*, *SQL Server (mssql)*.
+Recommended VS Code extensions (VS Code offers to install them from `.vscode/extensions.json`): *Extension Pack for Java*, *Spring Boot Extension Pack*, *ESLint*, *Tailwind CSS IntelliSense*, *SQL Server (mssql)*.
 
 ### JDK 21 on Windows
 
@@ -232,6 +234,35 @@ To point the proxy at a different backend, create `UniMarket-Frontend/.env.local
 VITE_BACKEND_URL=http://localhost:9090
 ```
 
+### Styling: Tailwind CSS and design tokens
+
+The frontend uses **Tailwind CSS v4** through the official Vite plugin (`@tailwindcss/vite`). There is no `tailwind.config.js`: all UniMarket design tokens live in the `@theme` block of `UniMarket-Frontend/src/index.css`, and each token automatically becomes a Tailwind class.
+
+| Token                    | Example classes                     | Value     | Status              |
+|--------------------------|-------------------------------------|-----------|---------------------|
+| `--font-sans`            | `font-sans` (default)               | Inter     | Confirmed (Figma)   |
+| `--color-primary`        | `bg-primary`, `text-primary`        | `#2459E0` | Confirmed (Figma)   |
+| `--color-primary-hover`  | `hover:bg-primary-hover`            | `#1D47B8` | Proposed            |
+| `--color-primary-soft`   | `bg-primary-soft`                   | `#EAF0FC` | Proposed            |
+| `--color-canvas`         | `bg-canvas` (page background)       | `#F8FAFD` | Proposed            |
+| `--color-surface`        | `bg-surface` (cards, inputs)        | `#FFFFFF` | Proposed            |
+| `--color-ink`            | `text-ink` (main text)              | `#172033` | Proposed            |
+| `--color-ink-muted`      | `text-ink-muted` (secondary text)   | `#64748B` | Proposed            |
+| `--color-line`           | `border-line`                       | `#E2E8F0` | Proposed            |
+| `--color-success` / `-soft` | `text-success`, `bg-success-soft` | `#16A34A` | Proposed            |
+| `--color-warning` / `-soft` | `text-warning`, `bg-warning-soft` | `#F59E0B` | Proposed            |
+| `--color-danger` / `-soft`  | `text-danger`, `bg-danger-soft`   | `#DC2626` | Proposed            |
+| `--radius-control`       | `rounded-control` (buttons, inputs) | `0.5rem`  | Proposed            |
+| `--radius-card`          | `rounded-card` (cards, panels)      | `0.75rem` | Proposed            |
+
+"Proposed" values have not been checked against Figma yet. When they are, update them in `index.css` only.
+
+Rules:
+
+- Style components with Tailwind classes. Add regular CSS to `index.css` only when Tailwind cannot express it.
+- Use the token classes (`text-ink`, `bg-primary`) instead of raw hex values or Tailwind's default palette (`text-gray-700`, `bg-blue-600`), so colors stay consistent.
+- Use Tailwind's default spacing scale (`p-4`, `gap-3`, …) and its mobile-first breakpoints (`sm:`, `md:`, `lg:`).
+
 ---
 
 ## 7. Running the Whole Project
@@ -324,3 +355,4 @@ If a secret is committed by mistake, **change the password immediately**. Deleti
 - Never expose JPA entities directly from controllers. Use DTOs.
 - Configuration goes in `config/` and `application*.properties`, never mixed with business logic.
 - **React:** components and pages in `PascalCase.jsx`, hooks named `useSomething.js`, all HTTP calls go through `src/services/`.
+- **Styling:** Tailwind classes with UniMarket design tokens (see section 6, *Styling*). No inline hex colors.
