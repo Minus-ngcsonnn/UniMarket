@@ -1,6 +1,7 @@
 import { Link, NavLink, useLocation } from 'react-router'
 import { BRAND_COPY } from '../../constants/brandCopy'
 import useCart from '../../hooks/useCart'
+import useOrderAttention from '../../hooks/useOrderAttention'
 import { PATHS } from '../../routes/paths'
 import { CircleUserIcon, MapPinIcon, MessageCircleIcon, PackageIcon, PlusIcon, ShoppingCartIcon, SparklesIcon, TagIcon } from '../icons'
 import ActionMenu from '../ui/ActionMenu'
@@ -16,14 +17,20 @@ const MAIN_NAV = [
   { label: 'How it works', to: PATHS.howItWorks },
 ]
 
-// Until authentication exists the account menu offers sign-in plus the student's marketplace pages.
-const ACCOUNT_MENU = [
-  { label: 'Sign in', Icon: CircleUserIcon, to: PATHS.login },
-  { label: 'Create account', Icon: PlusIcon, to: PATHS.register },
-  { label: 'My orders', Icon: PackageIcon, to: PATHS.orders },
-  { label: 'My sales', Icon: ShoppingCartIcon, to: PATHS.sales },
-  { label: 'My listings', Icon: TagIcon, to: PATHS.myListings },
-]
+/**
+ * Until authentication exists the account menu offers sign-in plus the student's marketplace pages.
+ * Order entries show how many orders wait for the student's action (Q4: refreshed every 30 s).
+ */
+function accountMenu(attention) {
+  const withCount = (label, count) => (count > 0 ? `${label} (${count} to do)` : label)
+  return [
+    { label: 'Sign in', Icon: CircleUserIcon, to: PATHS.login },
+    { label: 'Create account', Icon: PlusIcon, to: PATHS.register },
+    { label: withCount('My orders', attention.buyer), Icon: PackageIcon, to: PATHS.orders },
+    { label: withCount('My sales', attention.seller), Icon: ShoppingCartIcon, to: PATHS.sales },
+    { label: 'My listings', Icon: TagIcon, to: PATHS.myListings },
+  ]
+}
 
 const iconLinkClass = ({ isActive }) =>
   `relative flex size-9 items-center justify-center rounded-full transition-colors hover:bg-subtle hover:text-primary sm:size-10 ${isActive ? 'text-primary' : 'text-ink'}`
@@ -36,6 +43,7 @@ const iconLinkClass = ({ isActive }) =>
 export default function Header() {
   const location = useLocation()
   const { count: cartCount } = useCart()
+  const attention = useOrderAttention()
   // On the catalog, the search field shows the current ?q=. The key remounts it when the URL changes
   // (e.g. the "Search" filter chip is removed), so it never shows a stale query.
   const currentQuery = location.pathname === PATHS.marketplace ? (new URLSearchParams(location.search).get('q') ?? '') : ''
@@ -71,14 +79,24 @@ export default function Header() {
                 </span>
               )}
             </NavLink>
-            <ActionMenu
-              label="Account menu"
-              heading="Your account"
-              icon={CircleUserIcon}
-              iconClassName="size-5.5 text-ink sm:size-6"
-              triggerClassName="size-9 rounded-full sm:size-10"
-              items={ACCOUNT_MENU}
-            />
+            <div className="relative">
+              <ActionMenu
+                label={attention.total ? `Account menu, ${attention.total} ${attention.total === 1 ? 'order needs' : 'orders need'} your action` : 'Account menu'}
+                heading="Your account"
+                icon={CircleUserIcon}
+                iconClassName="size-5.5 text-ink sm:size-6"
+                triggerClassName="size-9 rounded-full sm:size-10"
+                items={accountMenu(attention)}
+              />
+              {attention.total > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute top-0.5 right-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[10px] leading-none font-semibold text-ink ring-2 ring-surface"
+                >
+                  {attention.total}
+                </span>
+              )}
+            </div>
           </nav>
 
           <Link to={PATHS.sell} className={buttonClasses({ size: 'lg', className: 'h-10 px-2.5 sm:h-12 sm:px-5' })}>

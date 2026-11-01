@@ -7,7 +7,7 @@ import SampleDataNotice from '../../components/product/SampleDataNotice'
 import { buttonClasses } from '../../components/ui/buttonClasses'
 import EmptyState from '../../components/ui/EmptyState'
 import ErrorState from '../../components/ui/ErrorState'
-import ImageSlot from '../../components/ui/ImageSlot'
+import OrderItemList from '../../components/orders/OrderItemList'
 import LoadingState from '../../components/ui/LoadingState'
 import { SELLER_CONFIRM_HOURS, orderCode } from '../../constants/order'
 import useAsyncData from '../../hooks/useAsyncData'
@@ -41,7 +41,7 @@ export default function OrderConfirmationPage() {
       <EmptyState
         titleAs="h1"
         title="We couldn’t find these orders"
-        description="They may belong to another account, or sample orders were reset when the page reloaded."
+        description="They may belong to another account, or the sample data was reset."
         action={
           <Link to={PATHS.orders} className={buttonClasses({ variant: 'secondary', size: 'sm' })}>
             Go to My orders
@@ -64,22 +64,23 @@ export default function OrderConfirmationPage() {
             We’ve let {orders.length === 1 ? 'the seller' : 'the sellers'} know. You’ll pay online once {orders.length === 1 ? 'they confirm' : 'each one confirms'}.
           </p>
 
-          <ul className="mt-6 flex flex-col divide-y divide-line border-y border-line">
+          <ul className="mt-6 flex flex-col gap-4">
             {orders.map((order) => (
-              <li key={order.id} className="flex items-center gap-3 py-3">
-                <span className="block size-14 shrink-0 overflow-hidden rounded-lg border border-line bg-subtle">
-                  <ImageSlot src={order.product?.image} alt="" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-ink">{order.product?.title}</p>
-                  <p className="text-xs text-ink-muted">
-                    {orderCode(order.id)} · Seller {order.seller?.name} · confirm by {formatDateTime(order.confirmBy)}
+              <li key={order.id} className="rounded-card border border-line p-4">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm">
+                    <Link to={PATHS.order(order.id)} className="font-semibold text-ink hover:text-primary">
+                      Order {orderCode(order.id)}
+                    </Link>
+                    <span className="text-ink-muted"> · Seller {order.seller?.name} · confirm by {formatDateTime(order.confirmBy)}</span>
                   </p>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className="text-sm font-semibold text-ink">{formatPrice(order.amount)}</span>
                   <OrderStatusBadge status={order.status} />
                 </div>
+                <OrderItemList items={order.items} />
+                <p className="mt-3 flex justify-between border-t border-line pt-3 text-sm">
+                  <span className="text-ink-muted">Order total</span>
+                  <span className="font-semibold text-ink">{formatPrice(order.amount)}</span>
+                </p>
               </li>
             ))}
           </ul>
@@ -124,7 +125,7 @@ export default function OrderConfirmationPage() {
       <div className="mb-6 flex justify-end">
         <CheckoutSteps current="Confirmation" />
       </div>
-      <SampleDataNotice className="mb-5">These sample orders are kept in this browser tab only. No payment has been taken.</SampleDataNotice>
+      <SampleDataNotice className="mb-5">These sample orders are saved in this browser only. No payment has been taken.</SampleDataNotice>
       {content}
     </PageContainer>
   )

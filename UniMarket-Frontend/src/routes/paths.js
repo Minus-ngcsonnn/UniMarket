@@ -21,6 +21,7 @@ export const PATHS = {
   orderConfirmation: (orderIds) => `/orders/confirmation?ids=${[].concat(orderIds).join(',')}`,
   orders: '/orders',
   sales: '/orders?view=sales',
+  order: (id) => `/orders/${id}`,
   messages: '/messages',
 
   // Information pages

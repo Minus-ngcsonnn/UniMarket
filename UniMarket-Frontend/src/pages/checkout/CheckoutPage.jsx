@@ -30,9 +30,19 @@ const CAMPUS_OPTIONS = CAMPUS_KEYS.map((key) => ({ value: key, label: `${UNIVERS
 const NEXT_STEPS = [
   `Each seller confirms your order within ${SELLER_CONFIRM_HOURS} hours.`,
   'You pay online on UniMarket. Nothing is charged before that.',
-  'The seller delivers the item to the address below.',
+  'The seller delivers the order to the address below.',
   'You confirm you’ve received it, and the order is complete.',
 ]
+
+/** [{ seller, products }] in the order the sellers first appear. */
+function groupBySeller(products) {
+  const groups = new Map()
+  products.forEach((product) => {
+    if (!groups.has(product.sellerId)) groups.set(product.sellerId, { seller: product.seller, products: [] })
+    groups.get(product.sellerId).products.push(product)
+  })
+  return [...groups.values()]
+}
 
 function Section({ title, icon: Icon, children }) {
   return (
@@ -66,6 +76,7 @@ export default function CheckoutPage() {
   const items = (products ?? []).filter((p) => p.status === 'AVAILABLE' && p.sellerId !== currentUserId)
   const unavailable = (products ?? []).filter((p) => !items.includes(p))
   const total = items.reduce((sum, p) => sum + p.price, 0)
+  const sellerGroups = groupBySeller(items) // Q3: one order per seller, so the summary is grouped the same way
 
   const form = useForm({
     initialValues: { fullName: '', phone: '', campus: 'HANOI', address: '', note: '' },
@@ -164,19 +175,27 @@ export default function CheckoutPage() {
               Your order
             </h2>
             <p className="mt-1 text-sm text-ink-muted">
-              {items.length} {items.length === 1 ? 'listing' : 'listings'} · {items.length === 1 ? 'one order' : `${items.length} separate orders (one per listing)`}
+              {items.length} {items.length === 1 ? 'listing' : 'listings'} · {sellerGroups.length === 1 ? 'one order' : `${sellerGroups.length} orders (one per seller)`}
             </p>
-            <ul className="mt-4 flex flex-col gap-3 border-t border-line pt-4">
-              {items.map((product) => (
-                <li key={product.id} className="flex gap-3">
-                  <span className="block size-14 shrink-0 overflow-hidden rounded-lg border border-line bg-subtle">
-                    <ImageSlot src={product.images[0]} alt="" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-sm font-medium text-ink">{product.title}</p>
-                    <p className="text-xs text-ink-muted">Sold by {product.seller?.name}</p>
-                  </div>
-                  <p className="text-sm font-semibold whitespace-nowrap text-ink">{formatPrice(product.price)}</p>
+            <ul className="mt-4 flex flex-col gap-4 border-t border-line pt-4">
+              {sellerGroups.map(({ seller, products: groupProducts }) => (
+                <li key={seller?.id} aria-label={`Order from ${seller?.name}`} className="flex flex-col gap-3">
+                  <p className="text-xs font-semibold tracking-wide text-ink-muted uppercase">Order from {seller?.name}</p>
+                  {groupProducts.map((product) => (
+                    <div key={product.id} className="flex gap-3">
+                      <span className="block size-14 shrink-0 overflow-hidden rounded-lg border border-line bg-subtle">
+                        <ImageSlot src={product.images[0]} alt="" />
+                      </span>
+                      <p className="line-clamp-2 min-w-0 flex-1 text-sm font-medium text-ink">{product.title}</p>
+                      <p className="text-sm font-semibold whitespace-nowrap text-ink">{formatPrice(product.price)}</p>
+                    </div>
+                  ))}
+                  {sellerGroups.length > 1 && (
+                    <p className="flex justify-between text-xs text-ink-muted">
+                      <span>Order subtotal</span>
+                      <span className="font-semibold text-ink">{formatPrice(groupProducts.reduce((sum, p) => sum + p.price, 0))}</span>
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
@@ -233,7 +252,7 @@ export default function CheckoutPage() {
         </div>
         <CheckoutSteps current="Checkout" />
       </header>
-      <SampleDataNotice className="mb-5">Orders placed here are kept in this browser tab only and disappear when you reload. No payment is taken.</SampleDataNotice>
+      <SampleDataNotice className="mb-5">Sample orders placed here are saved in this browser only. No payment is taken.</SampleDataNotice>
       {content}
     </PageContainer>
   )

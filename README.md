@@ -248,7 +248,9 @@ The product backend (and its SQL Server schema) is not ready yet, so the marketp
 - Sample data is read-only: *Publish*, *Save changes* and *Delete* validate the input and then clearly report **"Preview only"**. Nothing is stored.
 - To test states in development, add `?simulate=slow` or `?simulate=error` to a marketplace URL.
 
-- **Orders (sample data):** cart → checkout → confirmation → *My orders* follows the Business Plan flow (seller confirms within 24 h → buyer pays online → seller delivers → buyer confirms receipt). Sample orders live in memory and reset on reload; payments are **simulated**. In *My orders*, “Simulate … step” buttons play the other person’s step so one person can try both sides.
+- **Orders (sample data):** cart → checkout → confirmation → *My orders* / *Order detail* follows the Business Plan flow (seller confirms within 24 h → buyer pays online → seller delivers → buyer confirms receipt). Sample orders and the listing statuses they change are saved in this browser (`localStorage`, survives reloads); use *Reset sample data* on My orders to start over. Payments are **simulated**. “Simulate … step” buttons play the other person’s step so one person can try both sides.
+- **Q3 (approved): one order per seller.** Checkout groups the selected listings by seller; each order has several items. The seller confirms or declines the whole order and the buyer pays each order once. Statuses: `PENDING → AWAITING_PAYMENT → PAID → DELIVERING → COMPLETED`, or `CANCELLED` (buyer before payment, or seller declines).
+- **Q4 (approved): polling.** Order pages and the header “to do” badge refresh every 30 s while the tab is visible, and immediately after any order action (`useLiveOrders`, `usePolling`).
 - **Cart:** stored in this browser (`localStorage`, listing IDs only) until a backend cart exists.
 
 Routes:
@@ -257,7 +259,7 @@ Routes:
 |------|--------|
 | Marketplace | `/marketplace` (filters in the URL), `/products/:id`, `/deals` |
 | Selling | `/sell`, `/my-listings`, `/my-listings/:id/edit` |
-| Buying | `/cart`, `/checkout?items=…`, `/orders/confirmation?ids=…`, `/orders` (`?view=sales` for sales), `/messages` |
+| Buying | `/cart`, `/checkout?items=…`, `/orders/confirmation?ids=…`, `/orders` (`?view=sales`, `?status=ACTIVE\|COMPLETED\|CANCELLED`), `/orders/:id`, `/messages` |
 | Information | `/how-it-works`, `/safety`, `/help`, `/about`, `/contact`, `/ambassadors`, `/privacy`, `/terms` |
 | Account | `/login`, `/register` |
 

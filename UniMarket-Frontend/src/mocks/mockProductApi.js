@@ -12,6 +12,13 @@ import { CATEGORIES } from '../constants/categories'
 import { CATALOG_PAGE_SIZE, CONDITION_KEYS, CAMPUS_KEYS, DEAL_MIN_SAVINGS } from '../constants/product'
 import { simulateNetwork } from './network'
 import { MOCK_CURRENT_USER_ID, MOCK_PRODUCTS, MOCK_SELLERS } from './products'
+import { applySavedProductStatuses } from './sampleStore'
+
+/** Simulated network delay, then listing statuses saved by sample orders (Reserved / Sold). */
+async function ready() {
+  await simulateNetwork()
+  applySavedProductStatuses(MOCK_PRODUCTS)
+}
 
 function withSeller(product) {
   return { ...product, seller: MOCK_SELLERS[product.sellerId] }
@@ -44,7 +51,7 @@ function countBy(products, key, values) {
  * @returns {Promise<{ items, total, page, pageSize, facets }>}
  */
 async function listProducts(params = {}) {
-  await simulateNetwork()
+  await ready()
   const { q, category, conditions = [], campuses = [], minPrice, maxPrice, sort = 'newest', featured, deals, page = 1 } = params
   const pageSize = params.pageSize ?? CATALOG_PAGE_SIZE
 
@@ -85,14 +92,14 @@ async function listProducts(params = {}) {
 
 /** @returns {Promise<object|null>} the product with its seller, or null when it does not exist */
 async function getProduct(id) {
-  await simulateNetwork()
+  await ready()
   const product = MOCK_PRODUCTS.find((p) => String(p.id) === String(id))
   return product ? withSeller(product) : null
 }
 
 /** Several products by ID (cart, checkout). Missing IDs are left out. */
 async function getProductsByIds(ids) {
-  await simulateNetwork()
+  await ready()
   const wanted = new Set(ids.map(String))
   return MOCK_PRODUCTS.filter((p) => wanted.has(String(p.id))).map(withSeller)
 }
@@ -104,7 +111,7 @@ function getCurrentUserId() {
 
 /** Listings of the signed-in student (sample user). */
 async function listMyListings() {
-  await simulateNetwork()
+  await ready()
   return MOCK_PRODUCTS.filter((p) => p.sellerId === MOCK_CURRENT_USER_ID)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .map(withSeller)
@@ -112,24 +119,24 @@ async function listMyListings() {
 
 /** One of the signed-in student's listings, for editing. null when not found or not owned. */
 async function getMyListing(id) {
-  await simulateNetwork()
+  await ready()
   const product = MOCK_PRODUCTS.find((p) => String(p.id) === String(id) && p.sellerId === MOCK_CURRENT_USER_ID)
   return product ? withSeller(product) : null
 }
 
 // Writes: preview only, nothing is stored.
 async function createListing() {
-  await simulateNetwork()
+  await ready()
   return { saved: false }
 }
 
 async function updateListing() {
-  await simulateNetwork()
+  await ready()
   return { saved: false }
 }
 
 async function deleteListing() {
-  await simulateNetwork()
+  await ready()
   return { saved: false }
 }
 

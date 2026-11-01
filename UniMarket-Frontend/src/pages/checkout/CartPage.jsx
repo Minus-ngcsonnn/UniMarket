@@ -244,6 +244,7 @@ export default function CartPage() {
             <p className="mt-1 text-sm text-ink-muted">
               {selected.length} selected {selected.length === 1 ? 'listing' : 'listings'} · {sellerCount} {sellerCount === 1 ? 'seller' : 'sellers'}
             </p>
+            {sellerCount > 1 && <p className="mt-1 text-xs text-ink-muted">Checkout creates one order per seller.</p>}
             <dl className="mt-5 flex flex-col gap-3 border-t border-line pt-5 text-sm">
               <div className="flex justify-between">
                 <dt className="text-ink-muted">Subtotal</dt>
