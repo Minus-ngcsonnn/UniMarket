@@ -97,7 +97,8 @@ export default function PriceRangeFilter({ min, max, onCommit }) {
           Max price (₫)
           <input
             inputMode="numeric"
-            value={high >= PRICE_FILTER_MAX ? `${formatNumber(PRICE_FILTER_MAX)}+` : formatNumber(high)}
+            value={high >= PRICE_FILTER_MAX ? '' : formatNumber(high)}
+            placeholder="No limit"
             onChange={(event) => setHigh(toHigh(event.target.value))}
             onBlur={(event) => commit(low, toHigh(event.currentTarget.value))}
             onKeyDown={(event) => event.key === 'Enter' && commit(low, toHigh(event.currentTarget.value))}

@@ -18,6 +18,7 @@ export default {
   getBadgeCounts: pending('Admin notifications'),
   approveListing: pending('Approving listings'),
   blockListing: pending('Blocking listings'),
+  removeListing: pending('Removing listings'),
   suspendUser: pending('Suspending accounts'),
   reactivateUser: pending('Reactivating accounts'),
   resolveReport: pending('Resolving reports'),

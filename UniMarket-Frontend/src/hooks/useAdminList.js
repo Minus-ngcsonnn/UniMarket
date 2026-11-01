@@ -52,5 +52,7 @@ export default function useAdminList(name, load, filterKeys = []) {
     setSearch: (q) => update({ q }),
     setPage: (page) => update({ page: page > 1 ? page : '' }),
     setPageSize: (size) => update({ size: size === ADMIN_PAGE_SIZES[0] ? '' : size }),
+    /** Replaces every URL parameter, e.g. when switching tabs (filters of the old tab are dropped). */
+    replaceParams: (next) => setSearchParams(new URLSearchParams(Object.entries(next).filter(([, value]) => value)), { replace: true }),
   }
 }

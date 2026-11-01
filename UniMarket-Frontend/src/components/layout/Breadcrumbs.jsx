@@ -19,7 +19,7 @@ export default function Breadcrumbs({ items, className = '' }) {
                   {item.label}
                 </span>
               ) : (
-                <Link to={item.to} className="text-ink-muted transition-colors hover:text-primary">
+                <Link to={item.to} className="inline-block py-1 text-ink-muted transition-colors hover:text-primary">
                   {item.label}
                 </Link>
               )}

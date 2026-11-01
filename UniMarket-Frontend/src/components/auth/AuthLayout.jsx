@@ -16,11 +16,11 @@ export default function AuthLayout() {
 
       <div className="flex min-h-screen flex-col px-4 py-6 sm:px-8 lg:min-h-0 lg:px-12">
         <div className="mx-auto flex w-full max-w-[30rem] items-center justify-between text-sm text-ink-muted">
-          <Link to={PATHS.home} className="inline-flex items-center gap-1.5 transition-colors hover:text-ink">
+          <Link to={PATHS.home} className="inline-flex min-h-6 items-center gap-1.5 transition-colors hover:text-ink">
             <ArrowLeftIcon className="size-4" />
             Marketplace
           </Link>
-          <Link to={PATHS.help} className="transition-colors hover:text-ink">
+          <Link to={PATHS.help} className="inline-flex min-h-6 items-center transition-colors hover:text-ink">
             Need help?
           </Link>
         </div>
@@ -33,11 +33,11 @@ export default function AuthLayout() {
         <footer className="mx-auto flex w-full max-w-[30rem] flex-wrap items-center justify-between gap-2 text-xs text-ink-muted">
           <p>© {year} UniMarket</p>
           <nav aria-label="Legal" className="flex items-center gap-2">
-            <Link to={PATHS.privacy} className="hover:text-ink">
+            <Link to={PATHS.privacy} className="inline-flex min-h-6 items-center hover:text-ink">
               Privacy policy
             </Link>
             <span aria-hidden="true">·</span>
-            <Link to={PATHS.terms} className="hover:text-ink">
+            <Link to={PATHS.terms} className="inline-flex min-h-6 items-center hover:text-ink">
               Terms of service
             </Link>
           </nav>

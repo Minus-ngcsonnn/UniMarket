@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { FlagIcon, HeartIcon, PencilIcon, ShoppingCartIcon } from '../../components/icons'
+import { FlagIcon, PencilIcon, ShoppingCartIcon } from '../../components/icons'
+import SaveItemButton from '../../components/product/SaveItemButton'
 import Breadcrumbs from '../../components/layout/Breadcrumbs'
 import PageContainer from '../../components/layout/PageContainer'
 import ReportDialog from '../../components/moderation/ReportDialog'
@@ -209,15 +210,7 @@ export default function ProductDetailPage() {
               <Button variant="secondary" size="lg" className="flex-1" disabled={!canBuy} onClick={() => navigate(PATHS.checkout(product.id))}>
                 Buy now
               </Button>
-              <button
-                type="button"
-                aria-disabled="true"
-                aria-label="Save item (coming soon)"
-                title="Saving items is coming soon"
-                className="flex size-12 shrink-0 items-center justify-center rounded-control border border-line text-ink transition-colors hover:text-primary"
-              >
-                <HeartIcon className="size-5" />
-              </button>
+              <SaveItemButton productId={product.id} title={product.title} variant="detail" className="relative shrink-0" />
             </div>
           )}
 

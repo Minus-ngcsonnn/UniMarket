@@ -18,7 +18,8 @@ import useAsyncData from '../../hooks/useAsyncData'
 import useCart from '../../hooks/useCart'
 import { PATHS } from '../../routes/paths'
 import { productService } from '../../services/products/productService'
-import { formatPrice, initials } from '../../utils/format'
+import { formatPrice } from '../../utils/format'
+import Avatar from '../../components/ui/Avatar'
 
 /** Checkbox that can show "some selected" (indeterminate), for Select all / per-seller selection. */
 function SelectBox({ checked, indeterminate = false, disabled, onChange, label }) {
@@ -155,9 +156,7 @@ export default function CartPage() {
                     disabled={groupBuyable.length === 0}
                     onChange={(checked) => groupBuyable.forEach((line) => cart.setSelected(line.product.id, checked))}
                   />
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary" aria-hidden="true">
-                    {initials(seller?.name ?? '?')}
-                  </span>
+                  <Avatar name={seller?.name} size="sm" className="size-9" />
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
                       {seller?.name}
@@ -187,7 +186,7 @@ export default function CartPage() {
                           onChange={(checked) => cart.setSelected(product.id, checked)}
                         />
                       </div>
-                      <Link to={PATHS.product(product.id)} className="block size-20 shrink-0 overflow-hidden rounded-lg border border-line bg-subtle sm:size-22">
+                      <Link to={PATHS.product(product.id)} tabIndex={-1} aria-hidden="true" className="block size-20 shrink-0 overflow-hidden rounded-lg border border-line bg-subtle sm:size-22">
                         <ImageSlot src={product.images[0]} alt="" />
                       </Link>
                       <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">

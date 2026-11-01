@@ -22,7 +22,8 @@ import useOrderActions from '../../hooks/useOrderActions'
 import { PATHS } from '../../routes/paths'
 import { orderService } from '../../services/orders/orderService'
 import { isSampleData } from '../../services/products/productService'
-import { formatDateTime, formatPrice, initials } from '../../utils/format'
+import { formatDateTime, formatPrice } from '../../utils/format'
+import Avatar from '../../components/ui/Avatar'
 import { OTHER_PARTY_TURN, nextStep } from '../../utils/orderFlow'
 
 function Card({ title, children, className = '' }) {
@@ -158,9 +159,7 @@ export default function OrderDetailPage() {
 
             <Card title={role === 'buyer' ? 'Seller' : 'Buyer'}>
               <div className="flex items-center gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary" aria-hidden="true">
-                  {initials(counterpart?.name ?? '?')}
-                </span>
+                <Avatar name={counterpart?.name} size="sm" className="size-10" />
                 <div className="min-w-0">
                   <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
                     {counterpart ? (

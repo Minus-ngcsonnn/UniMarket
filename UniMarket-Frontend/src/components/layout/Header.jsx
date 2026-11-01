@@ -4,7 +4,7 @@ import useCart from '../../hooks/useCart'
 import useOrderAttention from '../../hooks/useOrderAttention'
 import { PATHS } from '../../routes/paths'
 import { isSampleData } from '../../services/products/productService'
-import { CircleUserIcon, LayoutDashboardIcon, MapPinIcon, MessageCircleIcon, PackageIcon, PlusIcon, ShoppingCartIcon, SparklesIcon, TagIcon, UserIcon } from '../icons'
+import { CircleUserIcon, HeartIcon, LayoutDashboardIcon, MapPinIcon, MessageCircleIcon, PackageIcon, PlusIcon, ShoppingCartIcon, SparklesIcon, TagIcon, UserIcon } from '../icons'
 import ActionMenu from '../ui/ActionMenu'
 import { buttonClasses } from '../ui/buttonClasses'
 import Logo from './Logo'
@@ -31,6 +31,7 @@ function accountMenu(attention) {
     { label: withCount('My orders', attention.buyer), Icon: PackageIcon, to: PATHS.orders },
     { label: withCount('My sales', attention.seller), Icon: ShoppingCartIcon, to: PATHS.sales },
     { label: 'My listings', Icon: TagIcon, to: PATHS.myListings },
+    { label: 'Saved items', Icon: HeartIcon, to: PATHS.saved },
     // Sample data only: there is no admin sign-in yet, so the demo workspace is linked here.
     ...(isSampleData ? [{ label: 'Admin dashboard (demo)', Icon: LayoutDashboardIcon, to: PATHS.admin }] : []),
   ]

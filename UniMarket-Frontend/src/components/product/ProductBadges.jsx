@@ -29,9 +29,8 @@ export function ProductStatusBadge({ status, className = '' }) {
   const config = STATUSES[status]
   if (!config) return null
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${config.pill} ${className}`}>
-      <span className={`size-1.5 rounded-full ${config.dot}`} aria-hidden="true" />
+    <StatusPill tone={config.tone} className={className}>
       {config.label}
-    </span>
+    </StatusPill>
   )
 }

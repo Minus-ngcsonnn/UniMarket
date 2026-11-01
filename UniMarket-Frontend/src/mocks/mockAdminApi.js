@@ -116,11 +116,21 @@ async function getBadgeCounts() {
 /** Listings for moderation. @param {{ q, moderation, category, campus, page, pageSize }} params */
 async function listListings(params = {}) {
   await ready()
-  const { q, moderation, category, campus } = params
+  const { q, moderation, category, campus, listed, sort } = params
+  const since = Number(listed) > 0 ? Date.now() - Number(listed) * 86_400_000 : null
   const matching = MOCK_PRODUCTS.filter(
-    (p) => includesText([p.title, `UM-${p.id}`, MOCK_USERS[p.sellerId]?.name], q) && (!category || p.categorySlug === category) && inCampus(p.campus, campus),
+    (p) =>
+      includesText([p.title, `UM-${p.id}`, MOCK_USERS[p.sellerId]?.name], q) &&
+      (!category || p.categorySlug === category) &&
+      inCampus(p.campus, campus) &&
+      (!since || new Date(p.createdAt).getTime() >= since),
   )
-  const rows = matching.filter((p) => !moderation || p.moderation === moderation).sort(byNewest('createdAt'))
+  const sorters = {
+    oldest: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+    price_desc: (a, b) => b.price - a.price,
+    price_asc: (a, b) => a.price - b.price,
+  }
+  const rows = matching.filter((p) => !moderation || p.moderation === moderation).sort(sorters[sort] ?? byNewest('createdAt'))
   return { ...paginate(rows.map(listingRow), params), counts: countBy(matching, 'moderation', LISTING_MODERATION_KEYS) }
 }
 
@@ -218,6 +228,11 @@ export default {
   approveListing: (id) =>
     preview(() => {
       if (findListing(id).moderation === 'APPROVED') throw new Error('This listing is already active.')
+    }),
+  removeListing: (id, reason) =>
+    preview(() => {
+      if (findListing(id).status === 'RESERVED') throw new Error('This listing is part of an open order. Wait until the order is completed or cancelled.')
+      requireReason(reason, 'reason')
     }),
   blockListing: (id, reason) =>
     preview(() => {
