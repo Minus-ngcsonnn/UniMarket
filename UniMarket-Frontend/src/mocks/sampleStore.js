@@ -1,32 +1,53 @@
 /**
  * SAMPLE DATA PERSISTENCE (development only).
- * Keeps sample orders and the listing statuses they changed (Reserved / Sold) in this browser's
- * localStorage, so sample data survives page reloads and is shared between open tabs.
+ * Keeps sample orders, the listing statuses they changed (Reserved / Sold) and reviews written in the
+ * demo in this browser's localStorage, so sample data survives page reloads and is shared between tabs.
  * Real data will live in the backend; this module is never part of production builds.
  */
 const STORAGE_KEY = 'unimarket.sample-data.v1'
+const REVIEWS_KEY = 'unimarket.sample-reviews.v1'
 
-/** @returns {{ orders: object[], nextOrderId: number, productStatuses: Record<string, string> } | null} */
-export function loadSampleState() {
+function read(key) {
   try {
-    const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY))
-    return saved && Array.isArray(saved.orders) ? saved : null
+    return JSON.parse(window.localStorage.getItem(key))
   } catch {
     return null
   }
 }
 
-export function saveSampleState(state) {
+function write(key, value) {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    window.localStorage.setItem(key, JSON.stringify(value))
   } catch {
     // Storage full or blocked: sample data still works until the page is reloaded.
   }
 }
 
+/** @returns {{ orders: object[], nextOrderId: number, productStatuses: Record<string, string> } | null} */
+export function loadSampleState() {
+  const saved = read(STORAGE_KEY)
+  return saved && Array.isArray(saved.orders) ? saved : null
+}
+
+export function saveSampleState(state) {
+  write(STORAGE_KEY, state)
+}
+
+/** Reviews submitted in the demo (not the seed reviews). */
+export function loadSampleReviews() {
+  const saved = read(REVIEWS_KEY)
+  return Array.isArray(saved) ? saved : []
+}
+
+export function saveSampleReviews(reviews) {
+  write(REVIEWS_KEY, reviews)
+}
+
+/** Forgets everything the demo saved (orders, listing statuses, reviews). */
 export function clearSampleState() {
   try {
     window.localStorage.removeItem(STORAGE_KEY)
+    window.localStorage.removeItem(REVIEWS_KEY)
   } catch {
     // Nothing to clear.
   }

@@ -24,6 +24,18 @@ export const PATHS = {
   order: (id) => `/orders/${id}`,
   messages: '/messages',
 
+  // Profiles and reviews
+  profile: '/profile',
+  user: (id) => `/users/${id}`,
+
+  // Admin workspace (sample data only until the backend enforces admin access)
+  admin: '/admin',
+  adminProducts: '/admin/products',
+  adminUsers: '/admin/users',
+  adminOrders: '/admin/orders',
+  adminCategories: '/admin/categories',
+  adminReports: '/admin/reports',
+
   // Information pages
   howItWorks: '/how-it-works',
   about: '/about',

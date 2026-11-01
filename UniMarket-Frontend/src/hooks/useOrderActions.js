@@ -9,7 +9,7 @@ import { ORDER_ACTIONS, actionDoneMessage } from '../utils/orderFlow'
  */
 export default function useOrderActions() {
   const [busy, setBusy] = useState(null) // { orderId, action }
-  const [dialog, setDialog] = useState(null) // { type: 'pay' | 'confirm', order, action }
+  const [dialog, setDialog] = useState(null) // { type: 'pay' | 'confirm' | 'review', order, action }
   const [feedback, setFeedback] = useState(null) // { variant, text }
 
   async function run(order, action) {
@@ -29,6 +29,7 @@ export default function useOrderActions() {
   function handleAction(order, action) {
     setFeedback(null)
     if (action === 'pay') setDialog({ type: 'pay', order })
+    else if (action === 'review') setDialog({ type: 'review', order })
     else if (ORDER_ACTIONS[action].confirm) setDialog({ type: 'confirm', order, action })
     else run(order, action)
   }

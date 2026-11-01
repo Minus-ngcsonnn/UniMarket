@@ -10,6 +10,7 @@
  */
 import { CATEGORIES } from '../constants/categories'
 import { CATALOG_PAGE_SIZE, CONDITION_KEYS, CAMPUS_KEYS, DEAL_MIN_SAVINGS } from '../constants/product'
+import { isPubliclyListed } from '../constants/moderation'
 import { simulateNetwork } from './network'
 import { MOCK_CURRENT_USER_ID, MOCK_PRODUCTS, MOCK_SELLERS } from './products'
 import { applySavedProductStatuses } from './sampleStore'
@@ -55,8 +56,8 @@ async function listProducts(params = {}) {
   const { q, category, conditions = [], campuses = [], minPrice, maxPrice, sort = 'newest', featured, deals, page = 1 } = params
   const pageSize = params.pageSize ?? CATALOG_PAGE_SIZE
 
-  // Only available listings are shown in the marketplace.
-  const searchable = MOCK_PRODUCTS.filter((p) => p.status === 'AVAILABLE' && matchesQuery(p, q))
+  // Only available listings approved by an admin (pre-moderation) are shown in the marketplace.
+  const searchable = MOCK_PRODUCTS.filter((p) => p.status === 'AVAILABLE' && isPubliclyListed(p) && matchesQuery(p, q))
 
   const filtered = searchable.filter(
     (p) =>
@@ -90,11 +91,23 @@ async function listProducts(params = {}) {
   }
 }
 
-/** @returns {Promise<object|null>} the product with its seller, or null when it does not exist */
+/**
+ * @returns {Promise<object|null>} the product with its seller, or null when it does not exist.
+ * Listings that are pending review or blocked are only visible to their seller.
+ */
 async function getProduct(id) {
   await ready()
   const product = MOCK_PRODUCTS.find((p) => String(p.id) === String(id))
-  return product ? withSeller(product) : null
+  if (!product || (!isPubliclyListed(product) && product.sellerId !== MOCK_CURRENT_USER_ID)) return null
+  return withSeller(product)
+}
+
+/** Approved, available listings of one student (public profile). */
+async function listUserListings(userId) {
+  await ready()
+  return MOCK_PRODUCTS.filter((p) => p.sellerId === userId && p.status === 'AVAILABLE' && isPubliclyListed(p))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .map(withSeller)
 }
 
 /** Several products by ID (cart, checkout). Missing IDs are left out. */
@@ -144,6 +157,7 @@ export default {
   listProducts,
   getProduct,
   getProductsByIds,
+  listUserListings,
   getCurrentUserId,
   listMyListings,
   getMyListing,

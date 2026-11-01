@@ -32,6 +32,8 @@ export default defineConfig(({ command, mode }) => {
       alias: {
         '@product-api-impl': apiImpl('./src/mocks/mockProductApi.js', './src/services/products/productApi.js'),
         '@order-api-impl': apiImpl('./src/mocks/mockOrderApi.js', './src/services/orders/orderApi.js'),
+        '@account-api-impl': apiImpl('./src/mocks/mockAccountApi.js', './src/services/account/accountApi.js'),
+        '@admin-api-impl': apiImpl('./src/mocks/mockAdminApi.js', './src/services/admin/adminApi.js'),
       },
     },
     server: {

@@ -13,6 +13,8 @@ export const productService = {
   listProducts: (params) => productApiImpl.listProducts(params),
   getProduct: (id) => productApiImpl.getProduct(id),
   getProductsByIds: (ids) => productApiImpl.getProductsByIds(ids),
+  /** Public, approved listings of one student (profile page). */
+  listUserListings: (userId) => productApiImpl.listUserListings(userId),
   /** Signed-in student's ID (sample user in development), or null. */
   getCurrentUserId: () => productApiImpl.getCurrentUserId(),
   listMyListings: () => productApiImpl.listMyListings(),

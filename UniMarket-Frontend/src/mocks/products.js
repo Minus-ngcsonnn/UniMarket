@@ -13,20 +13,14 @@ import nikeSneakers from './images/nike-sneakers.jpg'
 import organicChemistry from './images/organic-chemistry.jpg'
 import sonyHeadphones from './images/sony-headphones.jpg'
 
-/** The signed-in student in sample data (there is no real sign-in yet). */
-export const MOCK_CURRENT_USER_ID = 'u-demo'
+import { MOCK_CURRENT_USER_ID, MOCK_USERS } from './users'
+
+export { MOCK_CURRENT_USER_ID }
+
+/** Sellers/buyers are the sample users (see users.js). Kept under this name for existing imports. */
+export const MOCK_SELLERS = MOCK_USERS
 
 const minutesAgo = (minutes) => new Date(Date.now() - minutes * 60_000).toISOString()
-
-export const MOCK_SELLERS = {
-  'u-minh': { id: 'u-minh', name: 'Minh Nguyen', verified: true, campus: 'HANOI', programme: 'Software Engineering · Year 2', memberSince: '2025-09-05' },
-  'u-linh': { id: 'u-linh', name: 'Linh Tran', verified: true, campus: 'HANOI', programme: 'Graphic Design · Year 3', memberSince: '2024-09-10' },
-  'u-duc': { id: 'u-duc', name: 'Duc Pham', verified: true, campus: 'HANOI', programme: 'Business Administration · Year 1', memberSince: '2026-09-01' },
-  'u-anh': { id: 'u-anh', name: 'Anh Le', verified: false, campus: 'HCMC', programme: 'Information Assurance · Year 2', memberSince: '2025-10-12' },
-  'u-huy': { id: 'u-huy', name: 'Huy Do', verified: true, campus: 'DA_NANG', programme: 'Artificial Intelligence · Year 4', memberSince: '2023-09-15' },
-  'u-mai': { id: 'u-mai', name: 'Mai Vo', verified: true, campus: 'HANOI', programme: 'Digital Marketing · Year 2', memberSince: '2025-09-08' },
-  [MOCK_CURRENT_USER_ID]: { id: MOCK_CURRENT_USER_ID, name: 'Demo Student', verified: true, campus: 'HANOI', programme: 'Information Systems · Year 3', memberSince: '2024-09-01' },
-}
 
 export const MOCK_PRODUCTS = [
   {
@@ -38,6 +32,7 @@ export const MOCK_PRODUCTS = [
     originalPrice: 1_350_000,
     condition: 'LIKE_NEW',
     status: 'AVAILABLE',
+    moderation: 'APPROVED',
     categorySlug: 'textbooks',
     campus: 'HANOI',
     images: [calculusTextbook],
@@ -54,6 +49,7 @@ export const MOCK_PRODUCTS = [
     originalPrice: 6_490_000,
     condition: 'LIKE_NEW',
     status: 'AVAILABLE',
+    moderation: 'APPROVED',
     categorySlug: 'electronics',
     campus: 'HANOI',
     images: [sonyHeadphones],
@@ -70,6 +66,7 @@ export const MOCK_PRODUCTS = [
     originalPrice: 3_290_000,
     condition: 'USED',
     status: 'AVAILABLE',
+    moderation: 'APPROVED',
     categorySlug: 'dorm-items',
     campus: 'HANOI',
     images: [miniFridge],
@@ -85,6 +82,8 @@ export const MOCK_PRODUCTS = [
     originalPrice: 2_929_000,
     condition: 'LIKE_NEW',
     status: 'AVAILABLE',
+    moderation: 'BLOCKED',
+    moderationNote: 'The photos don’t show the actual item. Please upload your own photos of the shoes.',
     categorySlug: 'fashion',
     campus: 'HCMC',
     images: [nikeSneakers],
@@ -100,6 +99,7 @@ export const MOCK_PRODUCTS = [
     originalPrice: null,
     condition: 'LIKE_NEW',
     status: 'AVAILABLE',
+    moderation: 'PENDING',
     categorySlug: 'study-gear',
     campus: 'HANOI',
     images: [graphingCalculator],
@@ -115,6 +115,7 @@ export const MOCK_PRODUCTS = [
     originalPrice: null,
     condition: 'NEW',
     status: 'RESERVED',
+    moderation: 'APPROVED',
     categorySlug: 'dorm-items',
     campus: 'HANOI',
     images: [deskLamp],
@@ -130,11 +131,12 @@ export const MOCK_PRODUCTS = [
     originalPrice: 1_590_000,
     condition: 'LIKE_NEW',
     status: 'AVAILABLE',
+    moderation: 'APPROVED',
     categorySlug: 'fashion',
     campus: 'DA_NANG',
     images: [herschelBackpack],
     sellerId: 'u-huy',
-    featured: false,
+    featured: true,
     createdAt: minutesAgo(4 * 60),
   },
   {
@@ -145,6 +147,7 @@ export const MOCK_PRODUCTS = [
     originalPrice: null,
     condition: 'USED',
     status: 'SOLD',
+    moderation: 'APPROVED',
     categorySlug: 'textbooks',
     campus: 'HANOI',
     images: [organicChemistry],
@@ -161,6 +164,7 @@ export const MOCK_PRODUCTS = [
     originalPrice: 18_990_000,
     condition: 'LIKE_NEW',
     status: 'AVAILABLE',
+    moderation: 'APPROVED',
     categorySlug: 'electronics',
     campus: 'HANOI',
     images: [macbookAir],

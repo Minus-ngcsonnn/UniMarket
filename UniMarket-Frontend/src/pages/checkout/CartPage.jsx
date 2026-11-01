@@ -12,6 +12,7 @@ import EmptyState from '../../components/ui/EmptyState'
 import ErrorState from '../../components/ui/ErrorState'
 import ImageSlot from '../../components/ui/ImageSlot'
 import LoadingState from '../../components/ui/LoadingState'
+import { isPurchasable } from '../../constants/moderation'
 import { CAMPUSES, UNIVERSITY_NAME } from '../../constants/product'
 import useAsyncData from '../../hooks/useAsyncData'
 import useCart from '../../hooks/useCart'
@@ -70,7 +71,7 @@ export default function CartPage() {
       const product = products.find((p) => p.id === item.productId)
       if (!product) return null
       const isOwn = product.sellerId === currentUserId
-      const canBuy = product.status === 'AVAILABLE' && !isOwn
+      const canBuy = isPurchasable(product) && !isOwn
       return { product, canBuy, isOwn, isSelected: item.selected && canBuy }
     })
     .filter(Boolean)
@@ -196,7 +197,14 @@ export default function CartPage() {
                           </Link>
                           <div className="flex flex-wrap items-center gap-2">
                             <ConditionBadge condition={product.condition} />
-                            {!canBuy && (isOwn ? <span className="text-xs text-ink-muted">Your own listing</span> : <ProductStatusBadge status={product.status} />)}
+                            {!canBuy &&
+                              (isOwn ? (
+                                <span className="text-xs text-ink-muted">Your own listing</span>
+                              ) : product.status === 'AVAILABLE' ? (
+                                <span className="text-xs text-ink-muted">Unavailable</span>
+                              ) : (
+                                <ProductStatusBadge status={product.status} />
+                              ))}
                           </div>
                           {!canBuy && <p className="text-xs text-ink-muted">{isOwn ? 'You can’t buy your own listing.' : 'No longer available, so it can’t be checked out.'}</p>}
                         </div>

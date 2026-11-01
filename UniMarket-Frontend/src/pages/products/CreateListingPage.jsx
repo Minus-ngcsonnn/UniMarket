@@ -8,7 +8,7 @@ import { PATHS } from '../../routes/paths'
 import { productService } from '../../services/products/productService'
 
 const MESSAGES = {
-  saved: { title: 'Listing published', text: 'Your item is now visible in the marketplace.' },
+  saved: { title: 'Listing sent for review', text: 'An admin will check it shortly. It appears in the marketplace once it’s approved.' },
   preview: {
     title: 'Preview only: listing not published',
     text: 'Your listing passed all checks, but publishing needs the UniMarket backend, which isn’t connected yet. Nothing was saved and no photos were uploaded.',
@@ -26,7 +26,7 @@ export default function CreateListingPage() {
 
       <header className="mt-4 mb-6">
         <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight text-ink sm:text-[2rem]">Sell an item</h1>
-        <p className="mt-1.5 text-ink-muted">Give your things a second campus life. Listing is always free.</p>
+        <p className="mt-1.5 text-ink-muted">Give your things a second campus life. Listing is always free, and an admin checks each new listing before it goes live.</p>
       </header>
 
       <Alert variant="info" title="Publishing isn’t connected yet" className="mb-6">

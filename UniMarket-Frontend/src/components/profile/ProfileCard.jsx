@@ -1,0 +1,68 @@
+import { CAMPUSES, UNIVERSITY_NAME } from '../../constants/product'
+import { MapPinIcon } from '../icons'
+import RatingStars from '../reviews/RatingStars'
+import Avatar from '../ui/Avatar'
+import VerificationBadge from './VerificationBadge'
+
+const memberSinceFormatter = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' })
+
+/**
+ * Student profile summary: avatar, name, verification, programme, campus, rating and activity.
+ * @param {React.ReactNode} [actions] buttons under the summary (edit, report…)
+ * @param {'h1'|'h2'} [titleAs]
+ */
+export default function ProfileCard({ profile, actions, titleAs: Title = 'h1', className = '' }) {
+  const { rating, stats } = profile
+  const facts = [
+    ['Active listings', stats.activeListings],
+    ['Sales', stats.completedSales],
+    ['Purchases', stats.completedPurchases],
+  ]
+
+  return (
+    <section aria-label="Profile" className={`flex flex-col gap-5 rounded-card border border-line bg-surface p-5 sm:p-6 ${className}`}>
+      <div className="flex items-start gap-4">
+        <Avatar name={profile.name} size="xl" />
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <Title className="text-xl leading-tight font-bold tracking-tight text-ink sm:text-2xl">{profile.name}</Title>
+          <VerificationBadge user={profile} className="w-fit" />
+          {profile.programme && <p className="text-sm text-ink-muted">{profile.programme}</p>}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2 text-sm text-ink-muted">
+        <p className="flex items-center gap-1.5">
+          <MapPinIcon className="size-4 shrink-0 text-primary" />
+          {UNIVERSITY_NAME} · {CAMPUSES[profile.campus]?.label}
+        </p>
+        <p>Member since {memberSinceFormatter.format(new Date(profile.memberSince))}</p>
+        <p className="flex flex-wrap items-center gap-2">
+          {rating.count > 0 ? (
+            <>
+              <RatingStars value={rating.average} size="sm" />
+              <span className="font-medium text-ink">{rating.average.toFixed(1)}</span>
+              <span>
+                ({rating.count} {rating.count === 1 ? 'review' : 'reviews'})
+              </span>
+            </>
+          ) : (
+            'No reviews yet'
+          )}
+        </p>
+      </div>
+
+      {profile.bio && <p className="text-sm leading-relaxed whitespace-pre-line text-ink">{profile.bio}</p>}
+
+      <dl className="grid grid-cols-3 divide-x divide-line rounded-control bg-subtle py-3 text-center">
+        {facts.map(([label, value]) => (
+          <div key={label} className="flex flex-col-reverse gap-0.5 px-2">
+            <dt className="text-xs text-ink-muted">{label}</dt>
+            <dd className="text-lg font-semibold text-ink tabular-nums">{value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {actions && <div className="flex flex-col gap-2">{actions}</div>}
+    </section>
+  )
+}
