@@ -24,6 +24,9 @@
   /* Neutrals (proposed) */
   --color-canvas: #f8fafd; /* page background */
   --color-surface: #ffffff; /* cards, panels, inputs */
+  --color-subtle: #f1f4f9; /* search field, segmented tabs (estimated from Figma screenshots) */
+  --color-navy: #1b2a5e; /* footer background (estimated from Figma screenshots) */
+  --color-lime: #dcf58f; /* marketing stickers and accents (estimated from Figma screenshots) */
   --color-ink: #172033; /* primary text */
   --color-ink-muted: #64748b; /* secondary text */
   --color-line: #e2e8f0; /* borders, dividers */

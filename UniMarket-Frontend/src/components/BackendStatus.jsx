@@ -1,4 +1,4 @@
-import useBackendHealth from '../hooks/useBackendHealth'
+import Button from './ui/Button'
 
 /** Tailwind classes for each connection state (colors come from the design tokens in index.css). */
 const STATUS_STYLES = {
@@ -7,10 +7,11 @@ const STATUS_STYLES = {
   down: 'border-danger/30 bg-danger-soft text-danger',
 }
 
-/** Shows whether the frontend can reach the backend's /api/health endpoint. */
-export default function BackendStatus() {
-  const { loading, data, error, refresh } = useBackendHealth()
-
+/**
+ * Shows whether the frontend can reach the backend's /api/health endpoint.
+ * Presentational: pass the result of useBackendHealth() so the check runs only once.
+ */
+export default function BackendStatus({ loading, data, error, refresh }) {
   let statusClass = STATUS_STYLES.pending
   let message = 'Checking backend connection…'
 
@@ -25,14 +26,9 @@ export default function BackendStatus() {
   return (
     <section className="flex flex-col items-center gap-3" aria-live="polite">
       <p className={`rounded-control border px-4 py-3 text-sm ${statusClass}`}>{message}</p>
-      <button
-        type="button"
-        onClick={refresh}
-        disabled={loading}
-        className="rounded-control border border-line bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-primary hover:text-primary disabled:cursor-wait disabled:opacity-60"
-      >
+      <Button variant="secondary" onClick={refresh} disabled={loading}>
         Check again
-      </button>
+      </Button>
     </section>
   )
 }
