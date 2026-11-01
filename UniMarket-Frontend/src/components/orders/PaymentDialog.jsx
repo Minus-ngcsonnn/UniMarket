@@ -39,7 +39,9 @@ export default function PaymentDialog({ order, onClose, onPaid }) {
             <h2 id={titleId} className="text-lg font-semibold text-ink">
               Pay for order {orderCode(order.id)}
             </h2>
-            <p className="mt-0.5 text-sm text-ink-muted">{order.product?.title}</p>
+            <p className="mt-0.5 text-sm text-ink-muted">
+              {order.items.length === 1 ? order.items[0].title : `${order.items.length} items`} · Seller {order.seller?.name}
+            </p>
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="flex size-8 items-center justify-center rounded-control text-ink-muted hover:bg-subtle hover:text-ink">
             <XIcon className="size-5" />

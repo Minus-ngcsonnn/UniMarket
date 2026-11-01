@@ -22,6 +22,7 @@ const CartPage = lazy(() => import('./pages/checkout/CartPage'))
 const CheckoutPage = lazy(() => import('./pages/checkout/CheckoutPage'))
 const OrderConfirmationPage = lazy(() => import('./pages/orders/OrderConfirmationPage'))
 const OrdersPage = lazy(() => import('./pages/orders/OrdersPage'))
+const OrderDetailPage = lazy(() => import('./pages/orders/OrderDetailPage'))
 const MessagesPage = lazy(() => import('./pages/MessagesPage'))
 const HowItWorksPage = lazy(() => import('./pages/info/HowItWorksPage'))
 const SafetyPage = lazy(() => import('./pages/info/SafetyPage'))
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="/checkout" element={page(CheckoutPage)} />
           <Route path="/orders/confirmation" element={page(OrderConfirmationPage)} />
           <Route path={PATHS.orders} element={page(OrdersPage)} />
+          <Route path="/orders/:id" element={page(OrderDetailPage)} />
           <Route path={PATHS.messages} element={page(MessagesPage)} />
 
           {/* Information pages */}
