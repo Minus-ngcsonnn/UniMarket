@@ -234,6 +234,35 @@ To point the proxy at a different backend, create `UniMarket-Frontend/.env.local
 VITE_BACKEND_URL=http://localhost:9090
 ```
 
+### Sample product data (until the product API exists)
+
+The product backend (and its SQL Server schema) is not ready yet, so the marketplace pages use **sample data** in development:
+
+| Command          | Product data                                   |
+|------------------|------------------------------------------------|
+| `npm run dev`    | Sample data from `src/mocks/` (pages show a yellow *Sample data* notice) |
+| `npm run build`  | Real API (`src/services/products/productApi.js`); the mock files are **not** included in the build |
+
+- Override with `VITE_USE_MOCK_DATA=true|false` in `UniMarket-Frontend/.env.local`.
+- Pages only use `productService` (`src/services/products/productService.js`); `vite.config.js` points it to the mock or the real implementation.
+- Sample data is read-only: *Publish*, *Save changes* and *Delete* validate the input and then clearly report **"Preview only"**. Nothing is stored.
+- To test states in development, add `?simulate=slow` or `?simulate=error` to a marketplace URL.
+
+- **Orders (sample data):** cart → checkout → confirmation → *My orders* follows the Business Plan flow (seller confirms within 24 h → buyer pays online → seller delivers → buyer confirms receipt). Sample orders live in memory and reset on reload; payments are **simulated**. In *My orders*, “Simulate … step” buttons play the other person’s step so one person can try both sides.
+- **Cart:** stored in this browser (`localStorage`, listing IDs only) until a backend cart exists.
+
+Routes:
+
+| Area | Routes |
+|------|--------|
+| Marketplace | `/marketplace` (filters in the URL), `/products/:id`, `/deals` |
+| Selling | `/sell`, `/my-listings`, `/my-listings/:id/edit` |
+| Buying | `/cart`, `/checkout?items=…`, `/orders/confirmation?ids=…`, `/orders` (`?view=sales` for sales), `/messages` |
+| Information | `/how-it-works`, `/safety`, `/help`, `/about`, `/contact`, `/ambassadors`, `/privacy`, `/terms` |
+| Account | `/login`, `/register` |
+
+Pages other than the homepage and sign-in are code-split and loaded on first visit.
+
 ### Styling: Tailwind CSS and design tokens
 
 The frontend uses **Tailwind CSS v4** through the official Vite plugin (`@tailwindcss/vite`). There is no `tailwind.config.js`: all UniMarket design tokens live in the `@theme` block of `UniMarket-Frontend/src/index.css`, and each token automatically becomes a Tailwind class.

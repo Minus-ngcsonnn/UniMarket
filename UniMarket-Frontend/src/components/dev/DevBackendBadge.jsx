@@ -20,7 +20,8 @@ export default function DevBackendBadge() {
   const { dot, label } = STATES[state]
 
   return (
-    <aside aria-label="Developer tools" className="fixed right-3 bottom-3 z-50 flex flex-col items-end gap-2">
+    // Hidden on phones so it never covers page content such as the product page's bottom bar.
+    <aside aria-label="Developer tools" className="fixed right-3 bottom-3 z-50 flex-col items-end gap-2 max-sm:hidden sm:flex">
       {isOpen && (
         <div className="rounded-card border border-line bg-surface p-3 shadow-lg shadow-ink/10">
           <BackendStatus {...health} />

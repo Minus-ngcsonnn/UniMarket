@@ -10,10 +10,10 @@ const SHORTCUT_LABEL = IS_MAC ? '⌘ K' : 'Ctrl K'
  * Site-wide product search. Submitting opens the marketplace with ?q=<query>.
  * Ctrl+K / ⌘K focuses the field from anywhere on the page.
  */
-export default function SearchBar({ className = '' }) {
+export default function SearchBar({ initialQuery = '', className = '' }) {
   const navigate = useNavigate()
   const inputRef = useRef(null)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
 
   useEffect(() => {
     function handleShortcut(event) {

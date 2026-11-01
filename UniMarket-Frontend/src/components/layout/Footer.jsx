@@ -11,6 +11,8 @@ const FOOTER_COLUMNS = [
       { label: 'Explore all listings', to: PATHS.marketplace },
       { label: 'Student deals', to: PATHS.deals },
       { label: 'Sell an item', to: PATHS.sell },
+      // Until sign-in exists there is no account menu, so My listings is reachable from here.
+      { label: 'My listings', to: PATHS.myListings },
     ],
   },
   {
