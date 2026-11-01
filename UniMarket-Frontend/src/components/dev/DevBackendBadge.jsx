@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import useBackendHealth from '../../hooks/useBackendHealth'
+import useViewer from '../../hooks/useViewer'
 import BackendStatus from '../BackendStatus'
 
 const STATES = {
@@ -14,6 +15,7 @@ const STATES = {
  */
 export default function DevBackendBadge() {
   const health = useBackendHealth()
+  const viewer = useViewer()
   const [isOpen, setIsOpen] = useState(false)
 
   const state = health.loading ? 'checking' : health.data?.status === 'UP' ? 'up' : 'down'
@@ -23,8 +25,21 @@ export default function DevBackendBadge() {
     // Hidden on phones so it never covers page content such as the product page's bottom bar.
     <aside aria-label="Developer tools" className="fixed right-3 bottom-3 z-50 flex-col items-end gap-2 max-sm:hidden sm:flex">
       {isOpen && (
-        <div className="rounded-card border border-line bg-surface p-3 shadow-lg shadow-ink/10">
+        <div className="flex flex-col gap-3 rounded-card border border-line bg-surface p-3 shadow-pop">
           <BackendStatus {...health} />
+          {viewer.isDemo && (
+            <fieldset className="flex flex-col gap-1.5 border-t border-line pt-3 text-xs text-ink">
+              <legend className="mb-1 font-semibold">Header preview (sample data)</legend>
+              <label className="flex items-center gap-2">
+                <input type="radio" name="viewer" checked={!viewer.isGuest} onChange={() => viewer.setGuestPreview(false)} className="accent-primary" />
+                Signed in as the demo student
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="radio" name="viewer" checked={viewer.isGuest} onChange={() => viewer.setGuestPreview(true)} className="accent-primary" />
+                Guest (Sign In / Sign Up)
+              </label>
+            </fieldset>
+          )}
         </div>
       )}
       <button

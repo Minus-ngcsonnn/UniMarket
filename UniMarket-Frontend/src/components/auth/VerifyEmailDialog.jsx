@@ -55,7 +55,7 @@ export default function VerifyEmailDialog({ email, onClose }) {
       ref={dialogRef}
       onClose={onClose}
       aria-labelledby="verify-email-title"
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-xl overflow-y-auto rounded-2xl bg-surface p-0 text-ink shadow-xl backdrop:bg-ink/50"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-xl overflow-y-auto rounded-2xl bg-surface p-0 text-ink shadow-pop backdrop:bg-ink/50"
     >
       <div className="flex flex-col gap-6 p-6 sm:p-8">
         <div className="flex items-start justify-between gap-4">

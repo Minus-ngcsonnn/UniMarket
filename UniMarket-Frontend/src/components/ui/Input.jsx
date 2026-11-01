@@ -1,5 +1,6 @@
 import { useId } from 'react'
 import FieldError from './FieldError'
+import useTranslation from '../../i18n/useTranslation'
 
 const FIELD_SIZES = {
   md: 'h-10',
@@ -32,6 +33,7 @@ export default function Input({
   'aria-describedby': extraDescribedBy,
   ...props
 }) {
+  const { t } = useTranslation()
   const generatedId = useId()
   const inputId = id ?? generatedId
   const hintId = hint && !error ? `${inputId}-hint` : undefined
@@ -45,7 +47,7 @@ export default function Input({
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       <label htmlFor={inputId} className="text-sm font-medium text-ink">
-        {label}
+        {typeof label === 'string' ? t(label) : label}
         {required && (
           <span className="text-danger" aria-hidden="true">
             {' '}*
@@ -72,7 +74,7 @@ export default function Input({
 
       {hintId && (
         <p id={hintId} className="text-xs text-ink-muted">
-          {hint}
+          {typeof hint === 'string' ? t(hint) : hint}
         </p>
       )}
       <FieldError id={errorId}>{error}</FieldError>

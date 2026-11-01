@@ -24,6 +24,7 @@ import useCart from '../../hooks/useCart'
 import { PATHS, marketplaceUrl } from '../../routes/paths'
 import { productService } from '../../services/products/productService'
 import { formatDate, formatPrice, formatRelativeTime } from '../../utils/format'
+import useTranslation from '../../i18n/useTranslation'
 
 /** Feedback after an action on this page. */
 const NOTICES = {
@@ -38,8 +39,9 @@ const STATUS_MESSAGES = {
 }
 
 function DetailSkeleton() {
+  const { t } = useTranslation()
   return (
-    <div className="mt-6 grid animate-pulse gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-12" aria-busy="true" aria-label="Loading listing">
+    <div className="mt-6 grid animate-pulse gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-12" aria-busy="true" aria-label={t('Loading listing')}>
       <div className="aspect-[4/3] rounded-2xl bg-subtle" />
       <div className="flex flex-col gap-4">
         <div className="h-5 w-32 rounded-full bg-subtle" />
@@ -55,6 +57,7 @@ function DetailSkeleton() {
 
 /** Product Detail (approved two-column layout; not part of the Figma file). */
 export default function ProductDetailPage() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const { data: product, error, isLoading, reload } = useAsyncData(() => productService.getProduct(id), `product-${id}`)
   const category = CATEGORIES.find((c) => c.slug === product?.categorySlug)
@@ -81,7 +84,7 @@ export default function ProductDetailPage() {
   if (error) {
     return (
       <PageContainer className="py-10">
-        <ErrorState title="Couldn’t load this listing" message={error.message} onRetry={reload} />
+        <ErrorState title={t("Couldn’t load this listing")} message={error.message} onRetry={reload} />
       </PageContainer>
     )
   }
@@ -98,14 +101,14 @@ export default function ProductDetailPage() {
   if (!product) {
     return (
       <PageContainer width="md" className="py-16">
-        <title>Listing not found · UniMarket</title>
+        <title>{t("Listing not found · UniMarket")}</title>
         <EmptyState
           titleAs="h1"
-          title="Listing not found"
-          description="This listing may have been removed, or the link is not correct."
+          title={t("Listing not found")}
+          description={t("This listing may have been removed, or the link is not correct.")}
           action={
             <Link to={PATHS.marketplace} className={buttonClasses({ variant: 'secondary' })}>
-              Back to marketplace
+              {t("Back to marketplace")}
             </Link>
           }
         />
@@ -122,9 +125,9 @@ export default function ProductDetailPage() {
   const canBuy = isAvailable && !isOwnListing
 
   const details = [
-    ['Category', category?.name],
-    ['Condition', CONDITIONS[product.condition]?.label],
-    ['Campus', `${UNIVERSITY_NAME} · ${CAMPUSES[product.campus]?.label}`],
+    ['Category', t(category?.name)],
+    ['Condition', t(CONDITIONS[product.condition]?.label)],
+    ['Campus', `${t(UNIVERSITY_NAME)} · ${t(CAMPUSES[product.campus]?.label)}`],
     ['Listed on', formatDate(product.createdAt)],
     ['Listing ID', listingCode(product.id)],
   ]
@@ -137,7 +140,7 @@ export default function ProductDetailPage() {
         items={[
           { label: 'Home', to: PATHS.home },
           { label: 'Explore marketplace', to: PATHS.marketplace },
-          ...(category ? [{ label: category.name, to: marketplaceUrl({ category: category.slug }) }] : []),
+          ...(category ? [{ label: t(category.name), to: marketplaceUrl({ category: category.slug }) }] : []),
           { label: product.title },
         ]}
       />
@@ -159,7 +162,7 @@ export default function ProductDetailPage() {
           <div>
             <h1 className="text-2xl leading-tight font-bold tracking-tight text-ink sm:text-3xl">{product.title}</h1>
             <p className="mt-2 text-sm text-ink-muted">
-              {category?.name} · Listed {formatRelativeTime(product.createdAt).toLowerCase()} · {listingCode(product.id)}
+              {t(category?.name)} · {t('Listed {time}', { time: formatRelativeTime(product.createdAt).toLowerCase() })} · {listingCode(product.id)}
             </p>
           </div>
 
@@ -182,22 +185,22 @@ export default function ProductDetailPage() {
           {isOwnListing ? (
             <div className="flex flex-col gap-3 rounded-card border border-primary/20 bg-primary-soft p-4">
               <p className="text-sm text-ink">
-                <span className="font-semibold">This is your listing.</span>{' '}
+                <span className="font-semibold">{t("This is your listing.")}</span>{' '}
                 {product.moderation === 'PENDING'
-                  ? 'It’s waiting for an admin to check it. Buyers can’t see it until it’s approved.'
+                  ? t('It’s waiting for an admin to check it. Buyers can’t see it until it’s approved.')
                   : product.moderation === 'BLOCKED'
-                    ? `An admin blocked it, so buyers can’t see it${product.moderationNote ? `: “${product.moderationNote}”` : '.'} Edit it to send it for review again.`
-                    : 'Buyers see it exactly like this.'}
+                    ? `${t('An admin blocked it, so buyers can’t see it.')}${product.moderationNote ? ` “${product.moderationNote}”` : ''} ${t('Edit it to send it for review again.')}`
+                    : t('Buyers see it exactly like this.')}
               </p>
               <div className="flex flex-wrap gap-2">
                 {product.status !== 'SOLD' && (
                   <Link to={PATHS.editListing(product.id)} className={buttonClasses({ size: 'sm' })}>
                     <PencilIcon className="size-4" />
-                    Edit listing
+                    {t("Edit listing")}
                   </Link>
                 )}
                 <Link to={PATHS.myListings} className={buttonClasses({ variant: 'secondary', size: 'sm' })}>
-                  Manage my listings
+                  {t("Manage my listings")}
                 </Link>
               </div>
             </div>
@@ -205,10 +208,10 @@ export default function ProductDetailPage() {
             <div className="flex gap-2">
               <Button size="lg" className="flex-1" disabled={!canBuy} onClick={addToCart}>
                 <ShoppingCartIcon className="size-5" />
-                {cart.has(product.id) ? 'In your cart' : 'Add to cart'}
+                {cart.has(product.id) ? t('In your cart') : t('Add to cart')}
               </Button>
               <Button variant="secondary" size="lg" className="flex-1" disabled={!canBuy} onClick={() => navigate(PATHS.checkout(product.id))}>
-                Buy now
+                {t("Buy now")}
               </Button>
               <SaveItemButton productId={product.id} title={product.title} variant="detail" className="relative shrink-0" />
             </div>
@@ -217,10 +220,10 @@ export default function ProductDetailPage() {
           <div ref={noticeRef} className="scroll-mt-32 empty:hidden">
             {notice && (
               <Alert variant={notice.variant} title={notice.title}>
-                {notice.text}{' '}
+                {t(notice.text)}{' '}
                 {notice.cartLink && (
                   <Link to={PATHS.cart} className="font-semibold text-primary hover:underline">
-                    View cart →
+                    {t("View cart →")}
                   </Link>
                 )}
               </Alert>
@@ -236,14 +239,14 @@ export default function ProductDetailPage() {
               className="inline-flex w-fit items-center gap-1.5 text-sm text-ink-muted transition-colors hover:text-danger"
             >
               <FlagIcon className="size-4" />
-              Report this listing
+              {t("Report this listing")}
             </button>
           )}
 
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-card border border-line bg-surface p-4 text-sm sm:p-5">
             {details.map(([term, value]) => (
               <div key={term} className="min-w-0">
-                <dt className="text-xs text-ink-muted">{term}</dt>
+                <dt className="text-xs text-ink-muted">{t(term)}</dt>
                 <dd className="mt-0.5 font-medium text-ink">{value}</dd>
               </div>
             ))}
@@ -253,7 +256,7 @@ export default function ProductDetailPage() {
         <div className="flex flex-col gap-5 lg:[grid-area:about]">
           <section aria-labelledby="description-title">
             <h2 id="description-title" className="text-lg font-bold text-ink">
-              Description
+              {t("Description")}
             </h2>
             <p className="mt-2 leading-relaxed whitespace-pre-line text-ink-muted">{product.description}</p>
           </section>
@@ -265,13 +268,13 @@ export default function ProductDetailPage() {
         <section aria-labelledby="related-title" className="mt-14">
           <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
             <h2 id="related-title" className="text-xl font-extrabold tracking-tight text-ink sm:text-2xl">
-              More in {category.name}
+              {t('More in {category}', { category: t(category.name) })}
             </h2>
             <Link to={marketplaceUrl({ category: category.slug })} className="text-sm font-semibold text-primary hover:underline">
-              View all →
+              {t("View all →")}
             </Link>
           </div>
-          <ProductGrid products={relatedItems} layout="wide" label={`More in ${category.name}`} />
+          <ProductGrid products={relatedItems} layout="wide" label={t('More in {category}', { category: t(category.name) })} />
         </section>
       )}
 
@@ -280,10 +283,10 @@ export default function ProductDetailPage() {
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur lg:hidden">
           <div className="mx-auto flex max-w-xl items-center gap-2">
             <p className="flex-1 truncate text-lg font-semibold text-ink">{formatPrice(product.price)}</p>
-            <Button variant="secondary" onClick={addToCart} aria-label={cart.has(product.id) ? 'In your cart' : 'Add to cart'}>
+            <Button variant="secondary" onClick={addToCart} aria-label={cart.has(product.id) ? t('In your cart') : t('Add to cart')}>
               <ShoppingCartIcon className="size-4" />
             </Button>
-            <Button onClick={() => navigate(PATHS.checkout(product.id))}>Buy now</Button>
+            <Button onClick={() => navigate(PATHS.checkout(product.id))}>{t("Buy now")}</Button>
           </div>
         </div>
       )}

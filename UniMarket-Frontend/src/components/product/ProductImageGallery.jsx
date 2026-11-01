@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { ChevronLeftIcon, ChevronRightIcon } from '../icons'
 import ImageSlot from '../ui/ImageSlot'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * Product photo gallery: large photo + thumbnails. With several photos it also offers
  * previous/next buttons and ←/→ keys. A listing without photos shows a placeholder.
  */
 export default function ProductImageGallery({ images = [], title }) {
+  const { t } = useTranslation()
   const [index, setIndex] = useState(0)
   const count = images.length
   const hasMany = count > 1
@@ -17,7 +19,7 @@ export default function ProductImageGallery({ images = [], title }) {
   if (count === 0) {
     return (
       <div className={frame}>
-        <ImageSlot alt={`No photo available for ${title}`} className="h-full w-full" />
+        <ImageSlot alt={t('No photo available for {title}', { title })} className="h-full w-full" />
       </div>
     )
   }
@@ -25,7 +27,7 @@ export default function ProductImageGallery({ images = [], title }) {
   return (
     <section
       aria-roledescription="carousel"
-      aria-label={`Photos of ${title}`}
+      aria-label={t('Photos of {title}', { title })}
       className="flex flex-col gap-3"
       onKeyDown={(event) => {
         if (!hasMany) return
@@ -34,14 +36,14 @@ export default function ProductImageGallery({ images = [], title }) {
       }}
     >
       <div className={frame}>
-        <img src={images[index]} alt={`${title}, photo ${index + 1} of ${count}`} className="h-full w-full object-cover" />
+        <img src={images[index]} alt={t('{title}, photo {number} of {count}', { title, number: index + 1, count })} className="h-full w-full object-cover" />
 
         {hasMany && (
           <>
             <button
               type="button"
               onClick={() => show(index - 1)}
-              aria-label="Previous photo"
+              aria-label={t("Previous photo")}
               className="absolute top-1/2 left-3 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-surface/90 text-ink shadow-sm hover:bg-surface"
             >
               <ChevronLeftIcon className="size-5" />
@@ -49,7 +51,7 @@ export default function ProductImageGallery({ images = [], title }) {
             <button
               type="button"
               onClick={() => show(index + 1)}
-              aria-label="Next photo"
+              aria-label={t("Next photo")}
               className="absolute top-1/2 right-3 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-surface/90 text-ink shadow-sm hover:bg-surface"
             >
               <ChevronRightIcon className="size-5" />
@@ -62,13 +64,13 @@ export default function ProductImageGallery({ images = [], title }) {
       </div>
 
       {hasMany && (
-        <ul className="grid grid-cols-5 gap-2" aria-label="Choose photo">
+        <ul className="grid grid-cols-5 gap-2" aria-label={t("Choose photo")}>
           {images.map((src, thumbIndex) => (
             <li key={src}>
               <button
                 type="button"
                 onClick={() => setIndex(thumbIndex)}
-                aria-label={`Show photo ${thumbIndex + 1}`}
+                aria-label={t('Show photo {number}', { number: thumbIndex + 1 })}
                 aria-current={thumbIndex === index ? 'true' : undefined}
                 className={`block aspect-square w-full overflow-hidden rounded-control border-2 transition-colors ${
                   thumbIndex === index ? 'border-primary' : 'border-transparent opacity-70 hover:opacity-100'

@@ -1,137 +1,183 @@
+import { useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router'
-import { BRAND_COPY } from '../../constants/brandCopy'
 import useCart from '../../hooks/useCart'
-import useOrderAttention from '../../hooks/useOrderAttention'
+import useViewer from '../../hooks/useViewer'
+import { LANGUAGES } from '../../i18n/languageContext'
+import useTranslation from '../../i18n/useTranslation'
 import { PATHS } from '../../routes/paths'
-import { isSampleData } from '../../services/products/productService'
-import { CircleUserIcon, HeartIcon, LayoutDashboardIcon, MapPinIcon, MessageCircleIcon, PackageIcon, PlusIcon, ShoppingCartIcon, SparklesIcon, TagIcon, UserIcon } from '../icons'
-import ActionMenu from '../ui/ActionMenu'
+import { MenuIcon, MessageCircleIcon, PlusIcon, ShoppingCartIcon, XIcon } from '../icons'
 import { buttonClasses } from '../ui/buttonClasses'
+import Modal from '../ui/Modal'
+import AccountMenu from './AccountMenu'
+import LanguageMenu from './LanguageMenu'
 import Logo from './Logo'
 import PageContainer from './PageContainer'
 import SearchBar from './SearchBar'
 
-// Same items as the Figma shopping-cart header.
 const MAIN_NAV = [
-  { label: 'Explore marketplace', to: PATHS.marketplace },
-  { label: 'Student deals', to: PATHS.deals },
-  { label: 'How it works', to: PATHS.howItWorks },
+  { key: 'nav.explore', to: PATHS.marketplace },
+  { key: 'nav.deals', to: PATHS.deals },
+  { key: 'nav.howItWorks', to: PATHS.howItWorks },
 ]
 
-/**
- * Until authentication exists the account menu offers sign-in plus the student's marketplace pages.
- * Order entries show how many orders wait for the student's action (Q4: refreshed every 30 s).
- */
-function accountMenu(attention) {
-  const withCount = (label, count) => (count > 0 ? `${label} (${count} to do)` : label)
-  return [
-    { label: 'Sign in', Icon: CircleUserIcon, to: PATHS.login },
-    { label: 'Create account', Icon: PlusIcon, to: PATHS.register },
-    { label: 'My profile', Icon: UserIcon, to: PATHS.profile },
-    { label: withCount('My orders', attention.buyer), Icon: PackageIcon, to: PATHS.orders },
-    { label: withCount('My sales', attention.seller), Icon: ShoppingCartIcon, to: PATHS.sales },
-    { label: 'My listings', Icon: TagIcon, to: PATHS.myListings },
-    { label: 'Saved items', Icon: HeartIcon, to: PATHS.saved },
-    // Sample data only: there is no admin sign-in yet, so the demo workspace is linked here.
-    ...(isSampleData ? [{ label: 'Admin dashboard (demo)', Icon: LayoutDashboardIcon, to: PATHS.admin }] : []),
-  ]
-}
+const iconButton = 'relative flex size-10 shrink-0 items-center justify-center rounded-full text-ink transition-colors hover:bg-subtle hover:text-primary'
 
-const iconLinkClass = ({ isActive }) =>
-  `relative flex size-9 items-center justify-center rounded-full transition-colors hover:bg-subtle hover:text-primary sm:size-10 ${isActive ? 'text-primary' : 'text-ink'}`
-
-/**
- * Site header from the Figma design: announcement bar, logo + search + account actions, sub-navigation.
- * From md up, the header (without the announcement bar) stays at the top while scrolling.
- * Mobile layout (search on its own row, icon-only "Sell" button, non-sticky) is a responsive adaptation.
- */
-export default function Header() {
-  const location = useLocation()
-  const { count: cartCount } = useCart()
-  const attention = useOrderAttention()
-  // On the catalog, the search field shows the current ?q=. The key remounts it when the URL changes
-  // (e.g. the "Search" filter chip is removed), so it never shows a stale query.
-  const currentQuery = location.pathname === PATHS.marketplace ? (new URLSearchParams(location.search).get('q') ?? '') : ''
-
+/** Small drawer for screens without room for the main navigation (below lg). */
+function MobileMenu({ onClose, isGuest, sellTo }) {
+  const { t, lang, setLang } = useTranslation()
   return (
-    <>
-      <div className="bg-primary text-white">
-        <PageContainer className="flex items-center justify-center gap-2 py-2 text-center text-xs sm:text-sm">
-          <SparklesIcon className="size-4 shrink-0" />
-          <p>{BRAND_COPY.announcement}</p>
-        </PageContainer>
-      </div>
-
-      <header className="z-40 border-b border-line bg-surface/95 backdrop-blur md:sticky md:top-0">
-        <PageContainer className="flex flex-wrap items-center gap-x-3 gap-y-3 py-3 md:flex-nowrap md:gap-6 md:py-4">
+    <Modal variant="drawer" labelledBy="mobile-menu-title" onClose={onClose}>
+      <div className="flex h-full flex-col gap-6 p-5">
+        <div className="flex items-center justify-between">
+          <h2 id="mobile-menu-title" className="sr-only">
+            {t('nav.menu')}
+          </h2>
           <Logo />
-          <SearchBar key={currentQuery} initialQuery={currentQuery} className="order-last w-full md:order-none md:flex-1" />
-
-          <nav aria-label="Account" className="ml-auto flex items-center sm:gap-1 md:ml-0">
-            <NavLink to={PATHS.messages} aria-label="Messages" title="Messages" className={iconLinkClass}>
-              <MessageCircleIcon className="size-5.5 sm:size-6" />
-            </NavLink>
-            <NavLink
-              to={PATHS.cart}
-              aria-label={cartCount ? `Shopping cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}` : 'Shopping cart'}
-              title="Shopping cart"
-              className={iconLinkClass}
-            >
-              <ShoppingCartIcon className="size-5.5 sm:size-6" />
-              {cartCount > 0 && (
-                <span className="absolute top-0.5 right-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] leading-none font-semibold text-white ring-2 ring-surface">
-                  {cartCount}
-                </span>
-              )}
-            </NavLink>
-            <div className="relative">
-              <ActionMenu
-                label={attention.total ? `Account menu, ${attention.total} ${attention.total === 1 ? 'order needs' : 'orders need'} your action` : 'Account menu'}
-                heading="Your account"
-                icon={CircleUserIcon}
-                iconClassName="size-5.5 text-ink sm:size-6"
-                triggerClassName="size-9 rounded-full sm:size-10"
-                items={accountMenu(attention)}
-              />
-              {attention.total > 0 && (
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute top-0.5 right-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[10px] leading-none font-semibold text-ink ring-2 ring-surface"
-                >
-                  {attention.total}
-                </span>
-              )}
-            </div>
-          </nav>
-
-          <Link to={PATHS.sell} className={buttonClasses({ size: 'lg', className: 'h-10 px-2.5 sm:h-12 sm:px-5' })}>
-            <span className="sr-only sm:not-sr-only">Sell an item</span>
-            <PlusIcon className="size-5" />
-          </Link>
-        </PageContainer>
-
-        <div className="border-t border-line">
-          <PageContainer className="flex items-center justify-between gap-4">
-            <nav aria-label="Main" className="-mb-px flex gap-6 overflow-x-auto">
-              {MAIN_NAV.map(({ label, to }) => (
+          <button type="button" onClick={onClose} aria-label="Close" className={iconButton}>
+            <XIcon className="size-5" />
+          </button>
+        </div>
+        <nav aria-label={t('nav.main')}>
+          <ul className="flex flex-col gap-1">
+            {[...MAIN_NAV, { key: 'header.messages', to: PATHS.messages }].map(({ key, to }) => (
+              <li key={to}>
                 <NavLink
-                  key={to}
                   to={to}
+                  onClick={onClose}
                   className={({ isActive }) =>
-                    `border-b-2 py-3 text-sm whitespace-nowrap transition-colors ${isActive ? 'border-primary font-medium text-primary' : 'border-transparent text-ink-muted hover:text-ink'}`
+                    `flex h-11 items-center rounded-control px-3 text-[15px] font-semibold ${isActive ? 'bg-primary-soft text-primary' : 'text-ink hover:bg-subtle'}`
                   }
                 >
-                  {label}
+                  {t(key)}
                 </NavLink>
-              ))}
-            </nav>
-            <p className="hidden items-center gap-1.5 text-sm text-ink sm:flex">
-              <MapPinIcon className="size-4 text-primary" />
-              {BRAND_COPY.campusName}
-            </p>
-          </PageContainer>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div role="group" aria-label={t('language.label')} className="flex gap-2">
+          {LANGUAGES.map((language) => (
+            <button
+              key={language.code}
+              type="button"
+              aria-pressed={lang === language.code}
+              onClick={() => setLang(language.code)}
+              className={buttonClasses({ variant: lang === language.code ? 'selected' : 'secondary', size: 'sm', className: 'flex-1' })}
+            >
+              {language.label}
+            </button>
+          ))}
         </div>
-      </header>
-    </>
+        <div className="mt-auto flex flex-col gap-2">
+          <Link to={sellTo} onClick={onClose} className={buttonClasses({ fullWidth: true, className: 'rounded-full' })}>
+            <PlusIcon className="size-4" />
+            {t('header.sell')}
+          </Link>
+          {isGuest && (
+            <div className="grid grid-cols-2 gap-2">
+              <Link to={PATHS.login} onClick={onClose} className={buttonClasses({ variant: 'secondary' })}>
+                {t('header.signIn')}
+              </Link>
+              <Link to={PATHS.register} onClick={onClose} className={buttonClasses({ variant: 'secondary' })}>
+                {t('header.signUp')}
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+/**
+ * Site header (approved "Warm Minimal" design): one row with logo, Explore / Student Deals / How It Works,
+ * search, language, messages, cart, Sell an Item and the account (avatar menu, or Sign In / Sign Up).
+ * Below lg the navigation moves into a drawer and search gets its own row, so it stays usable.
+ */
+export default function Header() {
+  const { t } = useTranslation()
+  const location = useLocation()
+  const { count: cartCount } = useCart()
+  const viewer = useViewer()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  // On the catalog, the search field shows the current ?q=. The key remounts it when the URL changes.
+  const currentQuery = location.pathname === PATHS.marketplace ? (new URLSearchParams(location.search).get('q') ?? '') : ''
+  // Selling needs an account: guests are sent to sign in first.
+  const sellTo = viewer.isGuest ? `${PATHS.login}?next=${encodeURIComponent(PATHS.sell)}` : PATHS.sell
+
+  return (
+    <header className="z-40 border-b border-line bg-canvas/95 backdrop-blur md:sticky md:top-0">
+      <PageContainer className="flex h-16 items-center gap-2 sm:gap-3 lg:h-[4.5rem] lg:gap-5">
+        <button type="button" onClick={() => setIsMenuOpen(true)} aria-label={t('nav.openMenu')} className={`${iconButton} -ml-2 lg:hidden`}>
+          <MenuIcon className="size-5" />
+        </button>
+        <Logo />
+
+        <nav aria-label={t('nav.main')} className="hidden self-stretch lg:flex lg:gap-1 xl:gap-3">
+          {MAIN_NAV.map(({ key, to }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `flex items-center border-b-2 px-2 pt-0.5 text-[15px] font-semibold whitespace-nowrap transition-colors ${
+                  isActive ? 'border-primary text-primary' : 'border-transparent text-ink hover:text-primary'
+                }`
+              }
+            >
+              {t(key)}
+            </NavLink>
+          ))}
+        </nav>
+
+        <SearchBar key={currentQuery} initialQuery={currentQuery} className="hidden min-w-0 flex-1 lg:block lg:max-w-xs xl:max-w-md" />
+
+        <div className="ml-auto flex items-center gap-0.5 sm:gap-1.5">
+          <LanguageMenu className="hidden sm:block" />
+          <NavLink to={PATHS.messages} aria-label={t('header.messages')} title={t('header.messages')} className={`${iconButton} hidden sm:flex`}>
+            <MessageCircleIcon className="size-5.5" />
+          </NavLink>
+          <NavLink
+            to={PATHS.cart}
+            aria-label={cartCount ? t('header.cartWithCount', { count: cartCount }) : t('header.cart')}
+            title={t('header.cart')}
+            className={iconButton}
+          >
+            <ShoppingCartIcon className="size-5.5" />
+            {cartCount > 0 && (
+              <span className="absolute top-0.5 right-0 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-danger px-1 text-[10px] leading-none font-semibold text-white ring-2 ring-canvas">
+                {cartCount}
+              </span>
+            )}
+          </NavLink>
+
+          <Link to={sellTo} className={buttonClasses({ className: 'ml-1 h-10 rounded-full px-2.5 sm:h-11 sm:px-5' })}>
+            <PlusIcon className="size-5" />
+            <span className="sr-only sm:not-sr-only">{t('header.sell')}</span>
+          </Link>
+
+          {viewer.isGuest ? (
+            <div className="ml-1 hidden items-center gap-1 sm:flex">
+              <Link to={PATHS.login} className={buttonClasses({ variant: 'ghost', className: 'h-11 rounded-full' })}>
+                {t('header.signIn')}
+              </Link>
+              <Link to={PATHS.register} className={buttonClasses({ variant: 'secondary', className: 'h-11 rounded-full' })}>
+                {t('header.signUp')}
+              </Link>
+            </div>
+          ) : viewer.profile ? (
+            <div className="ml-1">
+              <AccountMenu profile={viewer.profile} isDemo={viewer.isDemo} onSignOut={() => viewer.setGuestPreview(true)} />
+            </div>
+          ) : (
+            <span className="ml-1 block size-9 animate-pulse rounded-full bg-subtle" aria-hidden="true" />
+          )}
+        </div>
+      </PageContainer>
+
+      <PageContainer className="pb-3 lg:hidden">
+        <SearchBar key={`m-${currentQuery}`} initialQuery={currentQuery} shortcut={false} />
+      </PageContainer>
+
+      {isMenuOpen && <MobileMenu onClose={() => setIsMenuOpen(false)} isGuest={viewer.isGuest} sellTo={sellTo} />}
+    </header>
   )
 }

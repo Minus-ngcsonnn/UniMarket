@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
+import useMenu from '../../hooks/useMenu'
 import { MoreHorizontalIcon } from '../icons'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * "⋯" row-actions menu (Figma admin dashboard table style).
@@ -13,42 +14,8 @@ import { MoreHorizontalIcon } from '../icons'
  * @param {string} [triggerClassName] replaces the default trigger size/shape classes
  */
 export default function ActionMenu({ label, items, heading, icon: TriggerIcon = MoreHorizontalIcon, iconClassName = 'size-5', triggerClassName = 'size-9 rounded-control' }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const containerRef = useRef(null)
-  const triggerRef = useRef(null)
-  const itemRefs = useRef([])
-
-  useEffect(() => {
-    if (!isOpen) return undefined
-    itemRefs.current[0]?.focus()
-    function handlePointerDown(event) {
-      if (!containerRef.current?.contains(event.target)) setIsOpen(false)
-    }
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
-  }, [isOpen])
-
-  function close() {
-    setIsOpen(false)
-    triggerRef.current?.focus()
-  }
-
-  function handleMenuKeyDown(event) {
-    const focusable = itemRefs.current.filter(Boolean)
-    const index = focusable.indexOf(document.activeElement)
-    if (event.key === 'ArrowDown') {
-      event.preventDefault()
-      focusable[(index + 1) % focusable.length]?.focus()
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault()
-      focusable[(index - 1 + focusable.length) % focusable.length]?.focus()
-    } else if (event.key === 'Escape') {
-      event.preventDefault()
-      close()
-    } else if (event.key === 'Tab') {
-      setIsOpen(false)
-    }
-  }
+  const { t } = useTranslation()
+  const { isOpen, close, containerRef, triggerRef, toggle, onTriggerKeyDown, onMenuKeyDown, itemRef } = useMenu()
 
   const itemClass = (danger) =>
     `flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition-colors focus:outline-none ${
@@ -58,18 +25,13 @@ export default function ActionMenu({ label, items, heading, icon: TriggerIcon = 
   return (
     <div ref={containerRef} className="relative inline-block">
       <button
-        ref={triggerRef}
         type="button"
-        aria-label={label}
+        aria-label={t(label)}
+        ref={triggerRef}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        onClick={() => setIsOpen((open) => !open)}
-        onKeyDown={(event) => {
-          if (event.key === 'ArrowDown') {
-            event.preventDefault()
-            setIsOpen(true)
-          }
-        }}
+        onClick={toggle}
+        onKeyDown={onTriggerKeyDown}
         className={`flex items-center justify-center transition-colors ${triggerClassName} ${
           isOpen ? 'bg-primary-soft text-primary ring-1 ring-primary/30' : 'text-ink-muted hover:bg-subtle hover:text-ink'
         }`}
@@ -80,23 +42,21 @@ export default function ActionMenu({ label, items, heading, icon: TriggerIcon = 
       {isOpen && (
         <div
           role="menu"
-          aria-label={label}
-          onKeyDown={handleMenuKeyDown}
-          className="absolute top-full right-0 z-30 mt-1 min-w-44 rounded-control border border-line bg-surface p-1 shadow-lg shadow-ink/10"
+          onKeyDown={onMenuKeyDown}
+          aria-label={t(label)}
+          className="absolute top-full right-0 z-30 mt-1 min-w-44 rounded-control border border-line bg-surface p-1 shadow-pop"
         >
-          {heading && <p className="px-3 pt-1.5 pb-1 text-xs text-ink-muted">{heading}</p>}
+          {heading && <p className="px-3 pt-1.5 pb-1 text-xs text-ink-muted">{typeof heading === 'string' ? t(heading) : heading}</p>}
           {items.map(({ label: itemLabel, Icon, to, onSelect, danger }, index) => {
             const content = (
               <>
                 {Icon && <Icon className="size-4 shrink-0" />}
-                {itemLabel}
+                {t(itemLabel)}
               </>
             )
-            const ref = (element) => {
-              itemRefs.current[index] = element
-            }
+            const ref = itemRef(index)
             return to ? (
-              <Link key={itemLabel} ref={ref} to={to} role="menuitem" className={itemClass(danger)} onClick={() => setIsOpen(false)}>
+              <Link key={itemLabel} ref={ref} to={to} role="menuitem" className={itemClass(danger)} onClick={() => close({ restoreFocus: false })}>
                 {content}
               </Link>
             ) : (
@@ -107,7 +67,7 @@ export default function ActionMenu({ label, items, heading, icon: TriggerIcon = 
                 role="menuitem"
                 className={itemClass(danger)}
                 onClick={() => {
-                  setIsOpen(false)
+                  close({ restoreFocus: false })
                   onSelect?.()
                 }}
               >

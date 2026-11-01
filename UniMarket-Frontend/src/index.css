@@ -19,17 +19,17 @@
   --color-primary: #2459e0;
   /* Brand support (proposed) */
   --color-primary-hover: #1d47b8;
-  --color-primary-soft: #eaf0fc;
+  --color-primary-soft: #edf3ff; /* "Soft Blue": selected states, subtle accents */
 
-  /* Neutrals (proposed) */
-  --color-canvas: #f8fafd; /* page background */
-  --color-surface: #ffffff; /* cards, panels, inputs */
-  --color-subtle: #f1f4f9; /* search field, segmented tabs (estimated from Figma screenshots) */
+  /* Neutrals — "Warm Minimal Student Marketplace" (approved redesign, Nov 2026) */
+  --color-canvas: #f7f6f2; /* warm off-white page background */
+  --color-surface: #ffffff; /* cards, panels, inputs, dropdowns */
+  --color-subtle: #efede8; /* search field, quiet fills, segmented tabs */
   --color-navy: #1b2a5e; /* footer background (estimated from Figma screenshots) */
   --color-lime: #dcf58f; /* marketing stickers and accents (estimated from Figma screenshots) */
-  --color-ink: #172033; /* primary text */
-  --color-ink-muted: #5f6f84; /* secondary text (slightly darker than #64748b for 4.5:1 on subtle backgrounds) */
-  --color-line: #e2e8f0; /* borders, dividers */
+  --color-ink: #18243b; /* primary text */
+  --color-ink-muted: #5d6879; /* secondary text: design target #647084, darkened slightly for 4.5:1 on subtle fills */
+  --color-line: #e7e5e0; /* borders, dividers (warm) */
 
   /* Feedback (proposed) */
   --color-success: #15803d; /* darkened from #16a34a for 4.5:1 text contrast (WCAG AA) */
@@ -40,8 +40,12 @@
   --color-danger-soft: #fef2f2;
 
   /* Shape */
-  --radius-control: 0.5rem; /* buttons, inputs: rounded-control */
-  --radius-card: 0.75rem; /* cards, panels: rounded-card */
+  --radius-control: 0.625rem; /* 10px: buttons, inputs: rounded-control */
+  --radius-card: 0.75rem; /* 12px: cards, panels: rounded-card */
+
+  /* Elevation: restrained, warm-neutral shadows */
+  --shadow-card: 0 1px 2px rgb(24 36 59 / 0.04);
+  --shadow-pop: 0 12px 32px -12px rgb(24 36 59 / 0.18), 0 2px 6px rgb(24 36 59 / 0.06);
 }
 
 /* Page-wide defaults. Component styling belongs in Tailwind classes. */

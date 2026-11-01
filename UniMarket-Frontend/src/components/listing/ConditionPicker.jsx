@@ -1,6 +1,7 @@
 import { useId } from 'react'
 import { CONDITIONS, CONDITION_KEYS } from '../../constants/product'
 import FieldError from '../ui/FieldError'
+import useTranslation from '../../i18n/useTranslation'
 
 const HINTS = {
   NEW: 'Never used, may still be in its packaging.',
@@ -10,12 +11,13 @@ const HINTS = {
 
 /** Condition choice for a listing (Business Plan values: New / Like new / Used), as selectable cards. */
 export default function ConditionPicker({ value, onChange, error, name = 'condition' }) {
+  const { t } = useTranslation()
   const groupId = useId()
   const errorId = error ? `${groupId}-error` : undefined
 
   return (
     <fieldset aria-describedby={errorId} className="flex flex-col gap-2">
-      <legend className="mb-1.5 text-sm font-medium text-ink">Condition</legend>
+      <legend className="mb-1.5 text-sm font-medium text-ink">{t("Condition")}</legend>
       <div className="grid gap-2 sm:grid-cols-3">
         {CONDITION_KEYS.map((key) => {
           const isSelected = value === key
@@ -35,8 +37,8 @@ export default function ConditionPicker({ value, onChange, error, name = 'condit
                 aria-invalid={error ? true : undefined}
                 className="sr-only"
               />
-              <span className={`text-sm font-semibold ${isSelected ? 'text-primary' : 'text-ink'}`}>{CONDITIONS[key].label}</span>
-              <span className="text-xs text-ink-muted">{HINTS[key]}</span>
+              <span className={`text-sm font-semibold ${isSelected ? 'text-primary' : 'text-ink'}`}>{t(CONDITIONS[key].label)}</span>
+              <span className="text-xs text-ink-muted">{t(HINTS[key])}</span>
             </label>
           )
         })}

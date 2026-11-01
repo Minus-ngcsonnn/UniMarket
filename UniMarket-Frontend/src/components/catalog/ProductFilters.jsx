@@ -4,6 +4,7 @@ import { CAMPUSES, CAMPUS_KEYS, CONDITIONS, CONDITION_KEYS, UNIVERSITY_NAME } fr
 import { PanelLeftCloseIcon, SlidersIcon } from '../icons'
 import FilterSection from './FilterSection'
 import PriceRangeFilter from './PriceRangeFilter'
+import useTranslation from '../../i18n/useTranslation'
 
 function toggle(list, value) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]
@@ -14,10 +15,11 @@ function Count({ value }) {
 }
 
 function CheckboxRow({ label, checked, count, onChange }) {
+  const { t } = useTranslation()
   return (
     <label className="flex cursor-pointer items-center gap-3 rounded-md py-1.5 text-sm">
       <input type="checkbox" checked={checked} onChange={onChange} className="size-4 shrink-0 cursor-pointer accent-primary" />
-      <span className={`flex-1 ${checked ? 'font-medium text-primary' : 'text-ink'}`}>{label}</span>
+      <span className={`flex-1 ${checked ? 'font-medium text-primary' : 'text-ink'}`}>{t(label)}</span>
       <Count value={count} />
     </label>
   )
@@ -33,6 +35,7 @@ function CheckboxRow({ label, checked, count, onChange }) {
  * @param {boolean} [bare] without the card frame (inside the mobile drawer)
  */
 export default function ProductFilters({ filters, facets, onChange, onCollapse, bare = false }) {
+  const { t } = useTranslation()
   const headingId = useId()
 
   return (
@@ -40,14 +43,14 @@ export default function ProductFilters({ filters, facets, onChange, onCollapse, 
       <div className="flex items-center justify-between pb-5">
         <h2 id={headingId} className="flex items-center gap-2.5 text-lg font-semibold text-ink">
           <SlidersIcon className="size-5" />
-          Filters
+          {t("Filters")}
         </h2>
         {onCollapse && (
           <button
             type="button"
             onClick={onCollapse}
-            aria-label="Hide filters"
-            title="Hide filters"
+            aria-label={t('Hide filters')}
+            title={t('Hide filters')}
             className="flex size-8 items-center justify-center rounded-control text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
           >
             <PanelLeftCloseIcon className="size-4.5" />
@@ -55,7 +58,7 @@ export default function ProductFilters({ filters, facets, onChange, onCollapse, 
         )}
       </div>
 
-      <FilterSection title="Categories">
+      <FilterSection title={t("Categories")}>
         <ul className="flex flex-col gap-0.5">
           {[{ slug: '', name: 'All categories' }, ...CATEGORIES].map(({ slug, name }) => {
             const isSelected = filters.category === slug
@@ -70,7 +73,7 @@ export default function ProductFilters({ filters, facets, onChange, onCollapse, 
                     isSelected ? 'bg-primary-soft font-medium text-primary' : 'text-ink hover:bg-subtle'
                   }`}
                 >
-                  {name}
+                  {t(name)}
                   <span className={`text-xs tabular-nums ${isSelected ? 'text-primary' : 'text-ink-muted'}`}>{count ?? '–'}</span>
                 </button>
               </li>
@@ -79,7 +82,7 @@ export default function ProductFilters({ filters, facets, onChange, onCollapse, 
         </ul>
       </FilterSection>
 
-      <FilterSection title="Price range">
+      <FilterSection title={t("Price range")}>
         <PriceRangeFilter
           key={`${filters.minPrice}-${filters.maxPrice}`}
           min={filters.minPrice}
@@ -88,7 +91,7 @@ export default function ProductFilters({ filters, facets, onChange, onCollapse, 
         />
       </FilterSection>
 
-      <FilterSection title="Item condition">
+      <FilterSection title={t("Item condition")}>
         {CONDITION_KEYS.map((key) => (
           <CheckboxRow
             key={key}
@@ -100,8 +103,8 @@ export default function ProductFilters({ filters, facets, onChange, onCollapse, 
         ))}
       </FilterSection>
 
-      <FilterSection title="University campus">
-        <p className="mb-2 text-xs font-semibold tracking-wide text-ink-muted uppercase">{UNIVERSITY_NAME}</p>
+      <FilterSection title={t("University campus")}>
+        <p className="mb-2 text-xs font-semibold tracking-wide text-ink-muted uppercase">{t(UNIVERSITY_NAME)}</p>
         {CAMPUS_KEYS.map((key) => (
           <CheckboxRow
             key={key}

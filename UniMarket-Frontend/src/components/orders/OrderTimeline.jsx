@@ -1,6 +1,7 @@
 import { ORDER_STATUSES, ORDER_STEPS } from '../../constants/order'
 import { formatDateTime } from '../../utils/format'
 import { CheckIcon, XIcon } from '../icons'
+import useTranslation from '../../i18n/useTranslation'
 
 const STEP_TEXT = {
   PENDING: 'Order request sent to the seller.',
@@ -16,6 +17,7 @@ const STEP_TEXT = {
  * Shows every step of the Business Plan path; steps not reached yet are greyed out.
  */
 export default function OrderTimeline({ order }) {
+  const { t } = useTranslation()
   const reached = new Map(order.timeline.map((event) => [event.status, event.at]))
   const isCancelled = order.status === 'CANCELLED'
   const steps = isCancelled
@@ -47,8 +49,8 @@ export default function OrderTimeline({ order }) {
               {status === 'CANCELLED' ? <XIcon className="size-3.5" /> : (isDone || status === 'COMPLETED') && at ? <CheckIcon className="size-3.5" /> : null}
             </span>
             <div className="min-w-0 pt-0.5">
-              <p className={`text-sm font-medium ${at ? 'text-ink' : 'text-ink-muted'}`}>{label}</p>
-              <p className="text-xs text-ink-muted">{at ? `${formatDateTime(at)} · ${STEP_TEXT[status]}` : 'Not yet'}</p>
+              <p className={`text-sm font-medium ${at ? 'text-ink' : 'text-ink-muted'}`}>{t(label)}</p>
+              <p className="text-xs text-ink-muted">{at ? `${formatDateTime(at)} · ${t(STEP_TEXT[status])}` : t('Not yet')}</p>
             </div>
           </li>
         )

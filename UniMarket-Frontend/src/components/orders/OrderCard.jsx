@@ -9,6 +9,7 @@ import OrderItemList from './OrderItemList'
 import OrderNextStep from './OrderNextStep'
 import OrderProgress from './OrderProgress'
 import OrderStatusBadge from './OrderStatusBadge'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * One order in My orders (buyer "Purchases" or seller "Sales"): items, progress, next step and actions,
@@ -18,6 +19,7 @@ import OrderStatusBadge from './OrderStatusBadge'
  * @param {string|null} busyAction action currently running for this order
  */
 export default function OrderCard({ order, role, onAction, busyAction }) {
+  const { t } = useTranslation()
   const counterpart = role === 'buyer' ? order.seller : order.buyer
 
   return (
@@ -25,9 +27,9 @@ export default function OrderCard({ order, role, onAction, busyAction }) {
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3 sm:px-5">
         <p className="text-sm text-ink-muted">
           <span id={`order-${order.id}`} className="font-semibold text-ink">
-            Order {orderCode(order.id)}
+            {t('Order {code}', { code: orderCode(order.id) })}
           </span>{' '}
-          · {formatDateTime(order.createdAt)} · {role === 'buyer' ? 'Seller' : 'Buyer'}: {counterpart?.name}
+          · {formatDateTime(order.createdAt)} · {role === 'buyer' ? t('Seller') : t('Buyer')}: {counterpart?.name}
         </p>
         <OrderStatusBadge status={order.status} />
       </header>
@@ -36,7 +38,7 @@ export default function OrderCard({ order, role, onAction, busyAction }) {
         <OrderItemList items={order.items} />
         <div className="flex justify-between border-t border-line pt-3 text-sm">
           <span className="text-ink-muted">
-            {order.items.length} {order.items.length === 1 ? 'item' : 'items'} · Total
+            {t(order.items.length === 1 ? '{count} item' : '{count} items', { count: order.items.length })} · {t('Total')}
           </span>
           <span className="font-semibold text-ink">{formatPrice(order.amount)}</span>
         </div>
@@ -52,7 +54,7 @@ export default function OrderCard({ order, role, onAction, busyAction }) {
         />
 
         <Link to={PATHS.order(order.id)} className="group inline-flex w-fit items-center gap-1 text-sm font-semibold text-primary">
-          View order details
+          {t("View order details")}
           <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>

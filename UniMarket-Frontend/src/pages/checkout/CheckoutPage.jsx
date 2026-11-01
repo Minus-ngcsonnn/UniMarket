@@ -26,6 +26,7 @@ import { orderService } from '../../services/orders/orderService'
 import { productService } from '../../services/products/productService'
 import { NOTE_MAX_LENGTH, validateDelivery } from '../../utils/checkoutValidation'
 import { formatPrice } from '../../utils/format'
+import useTranslation from '../../i18n/useTranslation'
 
 const CAMPUS_OPTIONS = CAMPUS_KEYS.map((key) => ({ value: key, label: `${UNIVERSITY_NAME} · ${CAMPUSES[key].label}` }))
 const NEXT_STEPS = [
@@ -63,6 +64,7 @@ function Section({ title, icon: Icon, children }) {
  * Items come from ?items=<ids> (selected cart lines, or one listing for "Buy now").
  */
 export default function CheckoutPage() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const cart = useCart()
@@ -100,17 +102,17 @@ export default function CheckoutPage() {
 
   let content
   if (error) {
-    content = <ErrorState title="Couldn’t load checkout" message={error.message} onRetry={reload} />
+    content = <ErrorState title={t("Couldn’t load checkout")} message={error.message} onRetry={reload} />
   } else if (isLoading) {
-    content = <LoadingState message="Preparing checkout…" />
+    content = <LoadingState message={t("Preparing checkout…")} />
   } else if (items.length === 0) {
     content = (
       <EmptyState
-        title="Nothing to check out"
+        title={t("Nothing to check out")}
         description={unavailable.length ? 'The selected listings are no longer available.' : 'Choose items in your cart, or use “Buy now” on a listing.'}
         action={
           <Link to={PATHS.cart} className={buttonClasses({ variant: 'secondary', size: 'sm' })}>
-            Back to cart
+            {t("Back to cart")}
           </Link>
         }
       />
@@ -120,19 +122,19 @@ export default function CheckoutPage() {
       <form noValidate onSubmit={form.handleSubmit} className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_23rem]">
         <div className="flex flex-col gap-5">
           {unavailable.length > 0 && (
-            <Alert variant="warning" title="Some items were removed from this order">
-              {unavailable.map((p) => p.title).join(', ')} {unavailable.length === 1 ? 'is' : 'are'} no longer available.
+            <Alert variant="warning" title={t("Some items were removed from this order")}>
+              {t(unavailable.length === 1 ? '{titles} is no longer available.' : '{titles} are no longer available.', { titles: unavailable.map((p) => p.title).join(', ') })}
             </Alert>
           )}
 
-          <Section title="Delivery details" icon={MapPinIcon}>
-            <p className="-mt-2 text-sm text-ink-muted">The seller uses these details to arrange delivery to you on campus.</p>
+          <Section title={t("Delivery details")} icon={MapPinIcon}>
+            <p className="-mt-2 text-sm text-ink-muted">{t("The seller uses these details to arrange delivery to you on campus.")}</p>
             <div className="grid gap-5 sm:grid-cols-2">
-              <Input label="Full name" autoComplete="name" placeholder="Who receives the item" startIcon={<UserIcon className="size-4.5" />} {...form.getFieldProps('fullName')} />
-              <Input label="Phone number" type="tel" autoComplete="tel" inputMode="tel" placeholder="e.g. 0912 345 678" {...form.getFieldProps('phone')} />
+              <Input label={t("Full name")} autoComplete="name" placeholder={t("Who receives the item")} startIcon={<UserIcon className="size-4.5" />} {...form.getFieldProps('fullName')} />
+              <Input label={t("Phone number")} type="tel" autoComplete="tel" inputMode="tel" placeholder="e.g. 0912 345 678" {...form.getFieldProps('phone')} />
             </div>
             <Select
-              label="Campus"
+              label={t("Campus")}
               name="campus"
               options={CAMPUS_OPTIONS}
               value={form.values.campus}
@@ -140,19 +142,19 @@ export default function CheckoutPage() {
               error={form.touched.campus ? form.errors.campus : undefined}
             />
             <Input
-              label="Delivery address on campus"
-              placeholder="e.g. Dormitory A, room 305"
-              hint="Building and room, or a clear meeting point such as a building entrance."
+              label={t("Delivery address on campus")}
+              placeholder={t("e.g. Dormitory A, room 305")}
+              hint={t("Building and room, or a clear meeting point such as a building entrance.")}
               {...form.getFieldProps('address')}
             />
-            <Textarea label="Note to seller (optional)" rows={3} maxLength={NOTE_MAX_LENGTH} placeholder="e.g. Best time to deliver" {...form.getFieldProps('note')} />
+            <Textarea label={t("Note to seller (optional)")} rows={3} maxLength={NOTE_MAX_LENGTH} placeholder={t("e.g. Best time to deliver")} {...form.getFieldProps('note')} />
           </Section>
 
-          <Section title="Payment" icon={ShieldCheckIcon}>
+          <Section title={t("Payment")} icon={ShieldCheckIcon}>
             <p className="-mt-2 text-sm text-ink-muted">
-              UniMarket only accepts <span className="font-medium text-ink">online payment through the website</span>. You’ll pay each order after the seller confirms it. Never transfer money to a seller directly.
+              UniMarket only accepts <span className="font-medium text-ink">{t("online payment through the website")}</span>. You’ll pay each order after the seller confirms it. Never transfer money to a seller directly.
             </p>
-            <ul className="flex flex-wrap gap-2" aria-label="Accepted payment methods">
+            <ul className="flex flex-wrap gap-2" aria-label={t("Accepted payment methods")}>
               {PAYMENT_METHODS.map((method) => (
                 <li key={method.value} className="rounded-control border border-line px-3 py-1.5 text-xs font-medium text-ink">
                   {method.label}
@@ -163,7 +165,7 @@ export default function CheckoutPage() {
               {NEXT_STEPS.map((step, index) => (
                 <li key={step} className="flex gap-3">
                   <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-white">{index + 1}</span>
-                  <span className="text-ink-muted">{step}</span>
+                  <span className="text-ink-muted">{t(step)}</span>
                 </li>
               ))}
             </ol>
@@ -173,10 +175,10 @@ export default function CheckoutPage() {
         <aside className="flex flex-col gap-4 lg:sticky lg:top-36">
           <section aria-labelledby="checkout-summary" className="rounded-card border border-line bg-surface p-5 sm:p-6">
             <h2 id="checkout-summary" className="text-xl font-bold text-ink">
-              Your order
+              {t("Your order")}
             </h2>
             <p className="mt-1 text-sm text-ink-muted">
-              {items.length} {items.length === 1 ? 'listing' : 'listings'} · {sellerGroups.length === 1 ? 'one order' : `${sellerGroups.length} orders (one per seller)`}
+              {t(items.length === 1 ? '{count} listing' : '{count} listings', { count: items.length })} · {sellerGroups.length === 1 ? t('one order') : t('{count} orders (one per seller)', { count: sellerGroups.length })}
             </p>
             <ul className="mt-4 flex flex-col gap-4 border-t border-line pt-4">
               {sellerGroups.map(({ seller, products: groupProducts }) => (
@@ -193,7 +195,7 @@ export default function CheckoutPage() {
                   ))}
                   {sellerGroups.length > 1 && (
                     <p className="flex justify-between text-xs text-ink-muted">
-                      <span>Order subtotal</span>
+                      <span>{t("Order subtotal")}</span>
                       <span className="font-semibold text-ink">{formatPrice(groupProducts.reduce((sum, p) => sum + p.price, 0))}</span>
                     </p>
                   )}
@@ -202,40 +204,40 @@ export default function CheckoutPage() {
             </ul>
             <dl className="mt-4 flex flex-col gap-2 border-t border-line pt-4 text-sm">
               <div className="flex justify-between">
-                <dt className="text-ink-muted">Subtotal</dt>
+                <dt className="text-ink-muted">{t("Subtotal")}</dt>
                 <dd className="text-ink">{formatPrice(total)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-ink-muted">Delivery</dt>
-                <dd className="text-ink">Arranged by seller</dd>
+                <dt className="text-ink-muted">{t("Delivery")}</dt>
+                <dd className="text-ink">{t("Arranged by seller")}</dd>
               </div>
               <div className="mt-2 flex items-end justify-between border-t border-line pt-3">
-                <dt className="font-semibold text-ink">Total</dt>
+                <dt className="font-semibold text-ink">{t("Total")}</dt>
                 <dd className="text-2xl font-bold tracking-tight text-ink">{formatPrice(total)}</dd>
               </div>
             </dl>
             <Button type="submit" size="lg" fullWidth className="mt-5" loading={form.isSubmitting}>
-              Place order request
+              {t("Place order request")}
               <ArrowRightIcon className="size-4.5" />
             </Button>
             {submitError && (
-              <Alert variant="danger" title="Order not placed" className="mt-4">
+              <Alert variant="danger" title={t("Order not placed")} className="mt-4">
                 {submitError}
               </Alert>
             )}
             <p className="mt-3 flex items-start gap-1.5 text-xs text-ink-muted">
               <LockIcon className="mt-px size-3.5 shrink-0" />
               <span>
-                Nothing is charged now. By placing this order you agree to the{' '}
+                {t('Nothing is charged now. By placing this order you agree to the')}{' '}
                 <Link to={PATHS.terms} className="text-primary hover:underline">
-                  Terms of service
+                  {t("Terms of service")}
                 </Link>
                 .
               </span>
             </p>
           </section>
           <Link to={PATHS.cart} className="text-center text-sm font-medium text-primary hover:underline">
-            ← Back to cart
+            {t("← Back to cart")}
           </Link>
         </aside>
       </form>
@@ -244,16 +246,16 @@ export default function CheckoutPage() {
 
   return (
     <PageContainer className="py-6 sm:py-8">
-      <title>Checkout · UniMarket</title>
+      <title>{t("Checkout · UniMarket")}</title>
       <Breadcrumbs items={[{ label: 'Marketplace', to: PATHS.marketplace }, { label: 'Shopping cart', to: PATHS.cart }, { label: 'Checkout' }]} />
       <header className="mt-4 mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight text-ink sm:text-[2rem]">Checkout</h1>
-          <p className="mt-1.5 text-ink-muted">Tell the seller where to deliver. You’ll pay online once they confirm.</p>
+          <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight text-ink sm:text-[2rem]">{t("Checkout")}</h1>
+          <p className="mt-1.5 text-ink-muted">{t("Tell the seller where to deliver. You’ll pay online once they confirm.")}</p>
         </div>
         <CheckoutSteps current="Checkout" />
       </header>
-      <SampleDataNotice className="mb-5">Sample orders placed here are saved in this browser only. No payment is taken.</SampleDataNotice>
+      <SampleDataNotice className="mb-5">{t("Sample orders placed here are saved in this browser only. No payment is taken.")}</SampleDataNotice>
       {content}
     </PageContainer>
   )

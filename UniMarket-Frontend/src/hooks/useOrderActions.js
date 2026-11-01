@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { orderCode } from '../constants/order'
-import { ORDER_ACTIONS, actionDoneMessage } from '../utils/orderFlow'
+import useTranslation from '../i18n/useTranslation'
+import { ORDER_ACTIONS } from '../utils/orderFlow'
 
 /**
  * State for running order actions with confirmation/payment dialogs and feedback.
@@ -8,6 +9,7 @@ import { ORDER_ACTIONS, actionDoneMessage } from '../utils/orderFlow'
  * Order data refreshes automatically after each action (orderService notifies useLiveOrders).
  */
 export default function useOrderActions() {
+  const { t } = useTranslation()
   const [busy, setBusy] = useState(null) // { orderId, action }
   const [dialog, setDialog] = useState(null) // { type: 'pay' | 'confirm' | 'review', order, action }
   const [feedback, setFeedback] = useState(null) // { variant, text }
@@ -17,9 +19,9 @@ export default function useOrderActions() {
     setFeedback(null)
     try {
       await ORDER_ACTIONS[action].run(order.id)
-      setFeedback({ variant: 'success', text: actionDoneMessage(order, action) })
+      setFeedback({ variant: 'success', text: `${orderCode(order.id)}: ${t(ORDER_ACTIONS[action].done)}` })
     } catch (actionError) {
-      setFeedback({ variant: 'danger', text: `${orderCode(order.id)}: ${actionError.message}` })
+      setFeedback({ variant: 'danger', text: `${orderCode(order.id)}: ${t(actionError.message)}` })
     } finally {
       setBusy(null)
       setDialog(null)
