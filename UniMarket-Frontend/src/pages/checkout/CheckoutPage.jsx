@@ -15,6 +15,7 @@ import Input from '../../components/ui/Input'
 import LoadingState from '../../components/ui/LoadingState'
 import Select from '../../components/ui/Select'
 import Textarea from '../../components/ui/Textarea'
+import { isPurchasable } from '../../constants/moderation'
 import { PAYMENT_METHODS, SELLER_CONFIRM_HOURS } from '../../constants/order'
 import { CAMPUSES, CAMPUS_KEYS, UNIVERSITY_NAME } from '../../constants/product'
 import useAsyncData from '../../hooks/useAsyncData'
@@ -73,7 +74,7 @@ export default function CheckoutPage() {
   const [submitError, setSubmitError] = useState(null)
   const currentUserId = productService.getCurrentUserId()
 
-  const items = (products ?? []).filter((p) => p.status === 'AVAILABLE' && p.sellerId !== currentUserId)
+  const items = (products ?? []).filter((p) => isPurchasable(p) && p.sellerId !== currentUserId)
   const unavailable = (products ?? []).filter((p) => !items.includes(p))
   const total = items.reduce((sum, p) => sum + p.price, 0)
   const sellerGroups = groupBySeller(items) // Q3: one order per seller, so the summary is grouped the same way

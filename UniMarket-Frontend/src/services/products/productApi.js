@@ -20,6 +20,7 @@ export default {
   listProducts: pending('The product catalog'),
   getProduct: pending('Product details'),
   getProductsByIds: pending('Cart items'),
+  listUserListings: pending('Student listings'),
   getCurrentUserId: () => null, // no sign-in yet
 
   listMyListings: pending('My listings'),

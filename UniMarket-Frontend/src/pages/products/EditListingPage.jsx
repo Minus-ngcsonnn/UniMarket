@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router'
 import Breadcrumbs from '../../components/layout/Breadcrumbs'
 import PageContainer from '../../components/layout/PageContainer'
 import ProductForm from '../../components/listing/ProductForm'
-import { ProductStatusBadge } from '../../components/product/ProductBadges'
+import { ModerationBadge, ProductStatusBadge } from '../../components/product/ProductBadges'
 import SampleDataNotice from '../../components/product/SampleDataNotice'
 import Alert from '../../components/ui/Alert'
 import { buttonClasses } from '../../components/ui/buttonClasses'
@@ -16,7 +16,7 @@ import { PATHS } from '../../routes/paths'
 import { productService } from '../../services/products/productService'
 
 const MESSAGES = {
-  saved: { title: 'Changes saved', text: 'Your listing has been updated.' },
+  saved: { title: 'Changes sent for review', text: 'An admin will check your changes before the updated listing goes live again.' },
   preview: {
     title: 'Preview only: changes not saved',
     text: 'Your changes passed all checks, but saving needs the UniMarket backend, which isn’t connected yet. The listing was not changed.',
@@ -82,6 +82,7 @@ export default function EditListingPage() {
           <span className="flex items-center gap-2 text-sm text-ink-muted">
             {listingCode(listing.id)}
             <ProductStatusBadge status={listing.status} />
+            <ModerationBadge moderation={listing.moderation} />
           </span>
         )}
       </header>
@@ -89,7 +90,8 @@ export default function EditListingPage() {
       <SampleDataNotice className="mb-4">You’re editing a sample listing. Sign-in and saving aren’t connected yet.</SampleDataNotice>
       {listing && listing.status !== 'SOLD' && (
         <Alert variant="info" title="Saving isn’t connected yet" className="mb-6">
-          You can edit and check the form, but changes can’t be saved until the UniMarket backend is ready.
+          You can edit and check the form, but changes can’t be saved until the UniMarket backend is ready. Once saving works, edited
+          listings are checked by an admin again before they go live.
         </Alert>
       )}
 

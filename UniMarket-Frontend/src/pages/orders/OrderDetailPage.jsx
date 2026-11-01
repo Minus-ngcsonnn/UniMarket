@@ -8,6 +8,7 @@ import OrderNextStep from '../../components/orders/OrderNextStep'
 import OrderProgress from '../../components/orders/OrderProgress'
 import OrderStatusBadge from '../../components/orders/OrderStatusBadge'
 import OrderTimeline from '../../components/orders/OrderTimeline'
+import OrderReviews from '../../components/reviews/OrderReviews'
 import SampleDataNotice from '../../components/product/SampleDataNotice'
 import Alert from '../../components/ui/Alert'
 import { buttonClasses } from '../../components/ui/buttonClasses'
@@ -104,6 +105,7 @@ export default function OrderDetailPage() {
                 <OrderProgress status={order.status} />
               </Card>
             )}
+            {order.status === 'COMPLETED' && <OrderReviews order={order} onWriteReview={() => handleAction(order, 'review')} />}
             <Card title="Status history">
               <OrderTimeline order={order} />
             </Card>
@@ -161,7 +163,13 @@ export default function OrderDetailPage() {
                 </span>
                 <div className="min-w-0">
                   <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
-                    {counterpart?.name}
+                    {counterpart ? (
+                      <Link to={PATHS.user(counterpart.id)} className="hover:text-primary hover:underline">
+                        {counterpart.name}
+                      </Link>
+                    ) : (
+                      'Former student'
+                    )}
                     {counterpart?.verified && (
                       <>
                         <BadgeCheckIcon className="size-4 text-primary" />

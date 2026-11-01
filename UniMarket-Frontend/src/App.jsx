@@ -24,6 +24,15 @@ const OrderConfirmationPage = lazy(() => import('./pages/orders/OrderConfirmatio
 const OrdersPage = lazy(() => import('./pages/orders/OrdersPage'))
 const OrderDetailPage = lazy(() => import('./pages/orders/OrderDetailPage'))
 const MessagesPage = lazy(() => import('./pages/MessagesPage'))
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
+const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'))
+const UserProfilePage = lazy(() => import('./pages/profile/UserProfilePage'))
+const AdminOverviewPage = lazy(() => import('./pages/admin/AdminOverviewPage'))
+const AdminProductsPage = lazy(() => import('./pages/admin/AdminProductsPage'))
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
+const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'))
+const AdminCategoriesPage = lazy(() => import('./pages/admin/AdminCategoriesPage'))
+const AdminReportsPage = lazy(() => import('./pages/admin/AdminReportsPage'))
 const HowItWorksPage = lazy(() => import('./pages/info/HowItWorksPage'))
 const SafetyPage = lazy(() => import('./pages/info/SafetyPage'))
 const HelpCenterPage = lazy(() => import('./pages/info/HelpCenterPage'))
@@ -67,6 +76,10 @@ export default function App() {
           <Route path="/orders/:id" element={page(OrderDetailPage)} />
           <Route path={PATHS.messages} element={page(MessagesPage)} />
 
+          {/* Profiles and reviews */}
+          <Route path={PATHS.profile} element={page(ProfilePage)} />
+          <Route path="/users/:id" element={page(UserProfilePage)} />
+
           {/* Information pages */}
           <Route path={PATHS.howItWorks} element={page(HowItWorksPage)} />
           <Route path={PATHS.safety} element={page(SafetyPage)} />
@@ -78,6 +91,24 @@ export default function App() {
           <Route path={PATHS.terms} element={page(TermsPage)} />
 
           {/* Unknown URLs */}
+          <Route path="*" element={<NotAvailablePage />} />
+        </Route>
+
+        {/* Admin workspace (Figma admin dashboard). The backend must enforce admin access; see AdminLayout. */}
+        <Route
+          path={PATHS.admin}
+          element={
+            <Suspense fallback={<LoadingState className="min-h-screen" />}>
+              <AdminLayout />
+            </Suspense>
+          }
+        >
+          <Route index element={<AdminOverviewPage />} />
+          <Route path={PATHS.adminProducts} element={<AdminProductsPage />} />
+          <Route path={PATHS.adminUsers} element={<AdminUsersPage />} />
+          <Route path={PATHS.adminOrders} element={<AdminOrdersPage />} />
+          <Route path={PATHS.adminCategories} element={<AdminCategoriesPage />} />
+          <Route path={PATHS.adminReports} element={<AdminReportsPage />} />
           <Route path="*" element={<NotAvailablePage />} />
         </Route>
 

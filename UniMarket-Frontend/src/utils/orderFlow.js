@@ -78,7 +78,10 @@ export function nextStep(order, role) {
       case 'DELIVERING':
         return { text: `${seller} is delivering your order. Confirm once you have everything.`, actions: [{ key: 'received', label: 'I’ve received it', variant: 'primary' }] }
       case 'COMPLETED':
-        return { text: 'Completed. Thanks for buying on campus! Reviews are coming in a later version.', actions: [] }
+        return {
+          text: `Completed. Thanks for buying on campus! Rate ${seller} to help other students.`,
+          actions: [{ key: 'review', label: 'Review seller', variant: 'secondary' }],
+        }
       default:
         return { text: 'This order was cancelled. The items are available again.', actions: [] }
     }
@@ -100,7 +103,10 @@ export function nextStep(order, role) {
     case 'DELIVERING':
       return { text: `Waiting for ${buyer} to confirm they’ve received it.`, actions: [] }
     case 'COMPLETED':
-      return { text: 'Completed. These listings are now marked as sold.', actions: [] }
+      return {
+        text: `Completed. These listings are now marked as sold. You can rate ${buyer} as a buyer.`,
+        actions: [{ key: 'review', label: 'Review buyer', variant: 'secondary' }],
+      }
     default:
       return { text: 'This order was cancelled. Your listings are available again.', actions: [] }
   }

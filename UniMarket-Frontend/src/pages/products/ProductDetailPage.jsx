@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { HeartIcon, PencilIcon, ShoppingCartIcon } from '../../components/icons'
+import { FlagIcon, HeartIcon, PencilIcon, ShoppingCartIcon } from '../../components/icons'
 import Breadcrumbs from '../../components/layout/Breadcrumbs'
 import PageContainer from '../../components/layout/PageContainer'
-import { ConditionBadge, ProductStatusBadge } from '../../components/product/ProductBadges'
+import ReportDialog from '../../components/moderation/ReportDialog'
+import { ConditionBadge, ModerationBadge, ProductStatusBadge } from '../../components/product/ProductBadges'
 import ProductGrid from '../../components/product/ProductGrid'
 import ProductImageGallery from '../../components/product/ProductImageGallery'
 import SafetyNote from '../../components/product/SafetyNote'
@@ -15,6 +16,7 @@ import { buttonClasses } from '../../components/ui/buttonClasses'
 import EmptyState from '../../components/ui/EmptyState'
 import ErrorState from '../../components/ui/ErrorState'
 import { CATEGORIES } from '../../constants/categories'
+import { isPubliclyListed } from '../../constants/moderation'
 import { CAMPUSES, CONDITIONS, UNIVERSITY_NAME, listingCode } from '../../constants/product'
 import useAsyncData from '../../hooks/useAsyncData'
 import useCart from '../../hooks/useCart'
@@ -60,6 +62,7 @@ export default function ProductDetailPage() {
     `related-${product?.id ?? 'none'}`,
   )
   const [noticeKey, setNoticeKey] = useState(null)
+  const [isReporting, setIsReporting] = useState(false)
   const noticeRef = useRef(null)
   const navigate = useNavigate()
   const cart = useCart()
@@ -109,7 +112,7 @@ export default function ProductDetailPage() {
     )
   }
 
-  const isAvailable = product.status === 'AVAILABLE'
+  const isAvailable = product.status === 'AVAILABLE' && isPubliclyListed(product)
   const statusMessage = STATUS_MESSAGES[product.status]
   const savings = product.originalPrice > product.price ? Math.round((1 - product.price / product.originalPrice) * 100) : 0
   const relatedItems = (related.data?.items ?? []).filter((item) => item.id !== product.id).slice(0, 4)
@@ -149,6 +152,7 @@ export default function ProductDetailPage() {
           <div className="flex flex-wrap items-center gap-2">
             <ConditionBadge condition={product.condition} className="text-xs" />
             <ProductStatusBadge status={product.status} />
+            <ModerationBadge moderation={product.moderation} />
           </div>
 
           <div>
@@ -177,7 +181,12 @@ export default function ProductDetailPage() {
           {isOwnListing ? (
             <div className="flex flex-col gap-3 rounded-card border border-primary/20 bg-primary-soft p-4">
               <p className="text-sm text-ink">
-                <span className="font-semibold">This is your listing.</span> Buyers see it exactly like this.
+                <span className="font-semibold">This is your listing.</span>{' '}
+                {product.moderation === 'PENDING'
+                  ? 'It’s waiting for an admin to check it. Buyers can’t see it until it’s approved.'
+                  : product.moderation === 'BLOCKED'
+                    ? `An admin blocked it, so buyers can’t see it${product.moderationNote ? `: “${product.moderationNote}”` : '.'} Edit it to send it for review again.`
+                    : 'Buyers see it exactly like this.'}
               </p>
               <div className="flex flex-wrap gap-2">
                 {product.status !== 'SOLD' && (
@@ -227,6 +236,17 @@ export default function ProductDetailPage() {
 
           <SellerCard seller={product.seller} onMessage={isOwnListing ? undefined : () => showNotice('message')} />
 
+          {!isOwnListing && (
+            <button
+              type="button"
+              onClick={() => setIsReporting(true)}
+              className="inline-flex w-fit items-center gap-1.5 text-sm text-ink-muted transition-colors hover:text-danger"
+            >
+              <FlagIcon className="size-4" />
+              Report this listing
+            </button>
+          )}
+
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-card border border-line bg-surface p-4 text-sm sm:p-5">
             {details.map(([term, value]) => (
               <div key={term} className="min-w-0">
@@ -274,6 +294,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
       )}
+      {isReporting && <ReportDialog target={{ type: 'LISTING', id: product.id, label: product.title }} onClose={() => setIsReporting(false)} />}
     </PageContainer>
   )
 }

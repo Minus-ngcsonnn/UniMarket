@@ -3,7 +3,8 @@ import { BRAND_COPY } from '../../constants/brandCopy'
 import useCart from '../../hooks/useCart'
 import useOrderAttention from '../../hooks/useOrderAttention'
 import { PATHS } from '../../routes/paths'
-import { CircleUserIcon, MapPinIcon, MessageCircleIcon, PackageIcon, PlusIcon, ShoppingCartIcon, SparklesIcon, TagIcon } from '../icons'
+import { isSampleData } from '../../services/products/productService'
+import { CircleUserIcon, LayoutDashboardIcon, MapPinIcon, MessageCircleIcon, PackageIcon, PlusIcon, ShoppingCartIcon, SparklesIcon, TagIcon, UserIcon } from '../icons'
 import ActionMenu from '../ui/ActionMenu'
 import { buttonClasses } from '../ui/buttonClasses'
 import Logo from './Logo'
@@ -26,9 +27,12 @@ function accountMenu(attention) {
   return [
     { label: 'Sign in', Icon: CircleUserIcon, to: PATHS.login },
     { label: 'Create account', Icon: PlusIcon, to: PATHS.register },
+    { label: 'My profile', Icon: UserIcon, to: PATHS.profile },
     { label: withCount('My orders', attention.buyer), Icon: PackageIcon, to: PATHS.orders },
     { label: withCount('My sales', attention.seller), Icon: ShoppingCartIcon, to: PATHS.sales },
     { label: 'My listings', Icon: TagIcon, to: PATHS.myListings },
+    // Sample data only: there is no admin sign-in yet, so the demo workspace is linked here.
+    ...(isSampleData ? [{ label: 'Admin dashboard (demo)', Icon: LayoutDashboardIcon, to: PATHS.admin }] : []),
   ]
 }
 

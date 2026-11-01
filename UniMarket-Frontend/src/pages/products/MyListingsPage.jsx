@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { PackageIcon, PencilIcon, PlusIcon, TrashIcon } from '../../components/icons'
 import Breadcrumbs from '../../components/layout/Breadcrumbs'
 import PageContainer from '../../components/layout/PageContainer'
-import { ProductStatusBadge } from '../../components/product/ProductBadges'
+import { ModerationBadge, ProductStatusBadge } from '../../components/product/ProductBadges'
 import SampleDataNotice from '../../components/product/SampleDataNotice'
 import ActionMenu from '../../components/ui/ActionMenu'
 import Alert from '../../components/ui/Alert'
@@ -37,6 +37,15 @@ function ListingThumb({ listing, className = 'size-12' }) {
       <ImageSlot src={listing.images[0]} alt="" />
     </span>
   )
+}
+
+/** Why a listing isn't public yet (pre-moderation). */
+function ModerationNote({ listing }) {
+  if (listing.moderation === 'PENDING') return <p className="mt-0.5 text-xs text-ink-muted">Hidden from the marketplace until an admin approves it.</p>
+  if (listing.moderation === 'BLOCKED') {
+    return <p className="mt-0.5 text-xs text-danger">Blocked by an admin{listing.moderationNote ? `: ${listing.moderationNote}` : '.'} Edit it to send it for review again.</p>
+  }
+  return null
 }
 
 function TableSkeleton() {
@@ -137,13 +146,17 @@ export default function MyListingsPage() {
                           {listing.title}
                         </Link>
                         <p className="text-xs text-ink-muted">{listingCode(listing.id)}</p>
+                        <ModerationNote listing={listing} />
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-ink-muted">{categoryName(listing.categorySlug)}</td>
                   <td className="px-4 py-3 font-medium whitespace-nowrap text-ink">{formatPrice(listing.price)}</td>
                   <td className="px-4 py-3">
-                    <ProductStatusBadge status={listing.status} />
+                    <div className="flex flex-col items-start gap-1">
+                      <ProductStatusBadge status={listing.status} />
+                      <ModerationBadge moderation={listing.moderation} />
+                    </div>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <p className="text-ink">{formatDate(listing.createdAt)}</p>
@@ -173,8 +186,10 @@ export default function MyListingsPage() {
                 <p className="font-semibold text-ink">{formatPrice(listing.price)}</p>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
                   <ProductStatusBadge status={listing.status} />
+                  <ModerationBadge moderation={listing.moderation} />
                   {listingCode(listing.id)} · {formatDate(listing.createdAt)}
                 </div>
+                <ModerationNote listing={listing} />
               </div>
             </li>
           ))}
@@ -202,6 +217,7 @@ export default function MyListingsPage() {
       <SampleDataNotice className="mt-5">
         These are sample listings of a demo student. Sign-in isn’t connected yet, so they aren’t your real listings.
       </SampleDataNotice>
+      <p className="mt-3 text-sm text-ink-muted">New and edited listings are checked by an admin before they appear in the marketplace.</p>
 
       <nav aria-label="Filter by status" className="mt-6 mb-4 flex gap-1 overflow-x-auto border-b border-line">
         {TABS.map(({ key, label }) => (

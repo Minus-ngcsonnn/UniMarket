@@ -12,6 +12,7 @@
  * The signed-in student is the sample user (MOCK_CURRENT_USER_ID). simulateOtherParty() performs the
  * next step of the other person (seller or buyer) so one person can try both sides of the flow.
  */
+import { isPurchasable } from '../constants/moderation'
 import { NEEDS_ACTION, SELLER_CONFIRM_HOURS } from '../constants/order'
 import { simulateNetwork } from './network'
 import { MOCK_CURRENT_USER_ID, MOCK_PRODUCTS, MOCK_SELLERS } from './products'
@@ -172,7 +173,7 @@ async function placeOrders({ productIds, delivery }) {
   if (productIds.length === 0) throw new Error('Choose at least one item to order.')
   const products = productIds.map(findProduct)
   // findIndex (not find): a missing product is `undefined` in the array, which find() can't report.
-  const problemIndex = products.findIndex((p) => !p || p.status !== 'AVAILABLE' || p.sellerId === MOCK_CURRENT_USER_ID)
+  const problemIndex = products.findIndex((p) => !p || !isPurchasable(p) || p.sellerId === MOCK_CURRENT_USER_ID)
   if (problemIndex !== -1) {
     const problem = products[problemIndex]
     if (!problem) throw new Error('One of the listings no longer exists. Please review your cart.')
@@ -242,6 +243,15 @@ async function resetSampleData() {
   clearSampleState()
   orders = seedOrders()
   nextOrderId = FIRST_NEW_ORDER_ID
+}
+
+/**
+ * For the other sample modules (reviews, admin overview): every sample order, latest saved state,
+ * with item titles and both students. Not part of the order API.
+ */
+export function sampleOrderRecords() {
+  syncFromStorage()
+  return orders.map(withDetails)
 }
 
 export default {
