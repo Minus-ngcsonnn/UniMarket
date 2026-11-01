@@ -4,6 +4,13 @@ import { listingCode } from '../constants/product'
 import { adminService } from '../services/admin/adminService'
 import AdminActionDialog from '../components/admin/AdminActionDialog'
 
+/** Runs one action per item; the result is "saved" only if every item was saved. */
+async function runEach(items, action) {
+  if (items.length === 0) throw new Error('Nothing to change: every selected listing already has this status.')
+  const results = await Promise.all(items.map(action))
+  return { saved: results.every((result) => result.saved) }
+}
+
 /** Every admin action: confirmation text, optional reason and the service call. */
 const ACTIONS = {
   approveListing: (listing) => ({
@@ -21,6 +28,32 @@ const ACTIONS = {
     reason: { label: 'Reason for the seller', placeholder: 'e.g. The photos don’t show the actual item.' },
     doneText: 'The listing is blocked and the seller was told why.',
     run: (reason) => adminService.blockListing(listing.id, reason),
+  }),
+  removeListing: (listing) => ({
+    title: 'Remove this listing permanently?',
+    message: `“${listing.title}” will be deleted and can’t be restored. Use this only for prohibited, fake or stolen items; block it instead if the seller can fix it.`,
+    confirmLabel: 'Remove listing',
+    tone: 'danger',
+    reason: { label: 'Reason (sent to the seller)', placeholder: 'e.g. Selling prohibited items is not allowed on UniMarket.' },
+    doneText: 'The listing was removed and the seller was told why.',
+    run: (reason) => adminService.removeListing(listing.id, reason),
+  }),
+  // Several listings at once (bulk actions on Admin › Products). Each one is checked separately.
+  approveListings: ({ listings }) => ({
+    title: `Approve ${listings.length} listings?`,
+    message: 'They will appear in the marketplace. Listings that are already active are skipped.',
+    confirmLabel: `Approve ${listings.length}`,
+    doneText: 'The listings are now active.',
+    run: () => runEach(listings.filter((l) => l.moderation !== 'APPROVED'), (l) => adminService.approveListing(l.id)),
+  }),
+  blockListings: ({ listings }) => ({
+    title: `Block ${listings.length} listings?`,
+    message: 'They will be hidden from the marketplace. Every seller sees the same reason. Listings that are already blocked are skipped.',
+    confirmLabel: `Block ${listings.length}`,
+    tone: 'danger',
+    reason: { label: 'Reason for the sellers', placeholder: 'e.g. Duplicate listings of the same item.' },
+    doneText: 'The listings are blocked.',
+    run: (reason) => runEach(listings.filter((l) => l.moderation !== 'BLOCKED'), (l) => adminService.blockListing(l.id, reason)),
   }),
   suspendUser: (user) => ({
     title: `Suspend ${user.name}?`,

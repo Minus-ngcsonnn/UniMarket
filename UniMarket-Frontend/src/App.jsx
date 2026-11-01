@@ -18,6 +18,7 @@ const CreateListingPage = lazy(() => import('./pages/products/CreateListingPage'
 const EditListingPage = lazy(() => import('./pages/products/EditListingPage'))
 const MyListingsPage = lazy(() => import('./pages/products/MyListingsPage'))
 const DealsPage = lazy(() => import('./pages/products/DealsPage'))
+const SavedItemsPage = lazy(() => import('./pages/products/SavedItemsPage'))
 const CartPage = lazy(() => import('./pages/checkout/CartPage'))
 const CheckoutPage = lazy(() => import('./pages/checkout/CheckoutPage'))
 const OrderConfirmationPage = lazy(() => import('./pages/orders/OrderConfirmationPage'))
@@ -67,6 +68,7 @@ export default function App() {
           <Route path={PATHS.myListings} element={page(MyListingsPage)} />
           <Route path="/my-listings/:id/edit" element={page(EditListingPage)} />
           <Route path={PATHS.deals} element={page(DealsPage)} />
+          <Route path={PATHS.saved} element={page(SavedItemsPage)} />
 
           {/* Buying: cart → checkout → confirmation → my orders (Business Plan order flow) */}
           <Route path={PATHS.cart} element={page(CartPage)} />

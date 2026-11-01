@@ -252,16 +252,18 @@ The product backend (and its SQL Server schema) is not ready yet, so the marketp
 - **Q3 (approved): one order per seller.** Checkout groups the selected listings by seller; each order has several items. The seller confirms or declines the whole order and the buyer pays each order once. Statuses: `PENDING → AWAITING_PAYMENT → PAID → DELIVERING → COMPLETED`, or `CANCELLED` (buyer before payment, or seller declines).
 - **Q4 (approved): polling.** Order pages and the header “to do” badge refresh every 30 s while the tab is visible, and immediately after any order action (`useLiveOrders`, `usePolling`).
 - **Cart:** stored in this browser (`localStorage`, listing IDs only) until a backend cart exists.
+- **Saved items (wishlist):** the heart on listings saves them to `/saved`, kept in this browser (`unimarket.saved.v1`, listing IDs only) until accounts exist. Saving doesn’t reserve an item.
+- **Editing an approved listing** sends it back to *Pending review* (hidden until an admin approves the changes).
 - **Pre-moderation (approved):** listings have a review state separate from the sale status: `PENDING` (hidden until an admin approves), `APPROVED` (public), `BLOCKED` (hidden, seller sees the reason). Only approved, available listings can be found or ordered.
 - **Reviews (approved):** only `COMPLETED` orders; buyer reviews seller and seller reviews buyer, one review per side per order; 1–5 stars required, comment optional (max 500), not editable. Reviews written in the demo are saved in this browser only (`unimarket.sample-reviews.v1`) and tagged “Sample · this browser only”; *Reset sample data* clears them.
 - **Profiles and reports:** saving a profile and reporting a listing/student are **previews** (checked, nothing stored, no admin notified).
-- **Admin workspace (demo):** `/admin` follows the Figma admin dashboard with sample data. Statistics are labelled *Sample*; approve/block/suspend/reactivate/resolve/dismiss/export are **previews** that change nothing. Without sample data the workspace shows “Admin sign-in isn’t available yet”. Hiding pages in the frontend is not security: **the backend must check the admin role on every admin request.**
+- **Admin workspace (demo):** `/admin` follows the Figma admin dashboard with sample data. Statistics are labelled *Sample*; approve/block/remove/suspend/reactivate/resolve/dismiss/export (single or bulk) are **previews** that change nothing. *Remove* is for serious violations and is refused while a listing is part of an open order; *Block* is the normal action. Without sample data the workspace shows “Admin sign-in isn’t available yet”. Hiding pages in the frontend is not security: **the backend must check the admin role on every admin request.**
 
 Routes:
 
 | Area | Routes |
 |------|--------|
-| Marketplace | `/marketplace` (filters in the URL), `/products/:id`, `/deals` |
+| Marketplace | `/marketplace` (filters in the URL), `/products/:id`, `/deals`, `/saved` |
 | Selling | `/sell`, `/my-listings`, `/my-listings/:id/edit` |
 | Buying | `/cart`, `/checkout?items=…`, `/orders/confirmation?ids=…`, `/orders` (`?view=sales`, `?status=ACTIVE\|COMPLETED\|CANCELLED`), `/orders/:id`, `/messages` |
 | Information | `/how-it-works`, `/safety`, `/help`, `/about`, `/contact`, `/ambassadors`, `/privacy`, `/terms` |

@@ -13,9 +13,9 @@ export const CONDITION_KEYS = Object.keys(CONDITIONS)
 
 /** Listing availability (Business Plan: Available → Reserved → Sold). */
 export const STATUSES = {
-  AVAILABLE: { label: 'Available', pill: 'bg-success-soft text-success', dot: 'bg-success' },
-  RESERVED: { label: 'Reserved', pill: 'bg-warning-soft text-ink', dot: 'bg-warning' },
-  SOLD: { label: 'Sold', pill: 'bg-subtle text-ink-muted', dot: 'bg-ink-muted' },
+  AVAILABLE: { label: 'Available', tone: 'success' },
+  RESERVED: { label: 'Reserved', tone: 'warning' },
+  SOLD: { label: 'Sold', tone: 'neutral' },
 }
 export const STATUS_KEYS = Object.keys(STATUSES)
 

@@ -81,7 +81,7 @@ export default function AdminLayout() {
             </span>
           </p>
           <Suspense fallback={<LoadingState className="min-h-[40vh]" />}>
-            <Outlet context={{ campus }} />
+            <Outlet context={{ campus, admin: data?.admin, counts: data }} />
           </Suspense>
         </main>
       </div>

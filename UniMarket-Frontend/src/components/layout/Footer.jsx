@@ -33,7 +33,7 @@ const FOOTER_COLUMNS = [
   },
 ]
 
-const linkClasses = 'text-white/70 transition-colors hover:text-white'
+const linkClasses = 'inline-block py-0.5 text-white/70 transition-colors hover:text-white'
 
 /**
  * Site footer from the Figma design (catalog page version).

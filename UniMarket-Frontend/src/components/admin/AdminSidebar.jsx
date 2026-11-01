@@ -1,13 +1,13 @@
 import { Link, NavLink } from 'react-router'
 import { PATHS } from '../../routes/paths'
-import { FlagIcon, HelpCircleIcon, LayersIcon, LayoutDashboardIcon, PackageIcon, TagIcon, UsersIcon } from '../icons'
+import { ExternalLinkIcon, FlagIcon, GraduationCapIcon, HelpCircleIcon, LayersIcon, LayoutDashboardIcon, PackageIcon, ShoppingCartIcon, UsersIcon } from '../icons'
 import Logo from '../layout/Logo'
 
 const NAV = [
   { label: 'Overview', to: PATHS.admin, Icon: LayoutDashboardIcon, end: true },
   { label: 'Users', to: PATHS.adminUsers, Icon: UsersIcon },
-  { label: 'Products', to: PATHS.adminProducts, Icon: TagIcon, countKey: 'pendingListings', countLabel: 'awaiting review' },
-  { label: 'Orders', to: PATHS.adminOrders, Icon: PackageIcon },
+  { label: 'Products', to: PATHS.adminProducts, Icon: PackageIcon, countKey: 'pendingListings', countLabel: 'awaiting review' },
+  { label: 'Orders', to: PATHS.adminOrders, Icon: ShoppingCartIcon },
   { label: 'Categories', to: PATHS.adminCategories, Icon: LayersIcon },
   { label: 'Violation reports', to: PATHS.adminReports, Icon: FlagIcon, countKey: 'openReports', countLabel: 'open' },
 ]
@@ -23,7 +23,7 @@ export default function AdminSidebar({ counts = {}, onNavigate }) {
     <div className="flex h-full flex-col gap-6 px-4 py-5">
       <div className="px-2">
         <Logo />
-        <p className="mt-3 text-[11px] font-semibold tracking-[0.12em] text-ink-muted uppercase">Admin workspace</p>
+        <p className="mt-6 text-[11px] font-semibold tracking-[0.08em] text-ink-muted uppercase">Admin workspace</p>
       </div>
 
       <nav aria-label="Admin sections">
@@ -38,17 +38,17 @@ export default function AdminSidebar({ counts = {}, onNavigate }) {
                   onClick={onNavigate}
                   className={({ isActive }) =>
                     `flex h-10 items-center gap-3 rounded-control px-3 text-sm font-medium transition-colors ${
-                      isActive ? 'bg-primary text-white shadow-sm shadow-primary/20' : 'text-ink-muted hover:bg-subtle hover:text-ink'
+                      isActive ? 'bg-primary-soft text-primary' : 'text-ink hover:bg-subtle'
                     }`
                   }
                 >
-                  {({ isActive }) => (
+                  {() => (
                     <>
                       <Icon className="size-4.5" />
                       <span className="flex-1">{label}</span>
                       {count > 0 && (
                         <span
-                          className={`rounded-full px-2 py-0.5 text-xs tabular-nums ${isActive ? 'bg-white/20 text-white' : 'bg-primary-soft text-primary'}`}
+                          className="rounded-full bg-subtle px-2 py-0.5 text-xs text-ink-muted tabular-nums"
                           aria-label={`${count} ${countLabel}`}
                         >
                           {count}
@@ -64,11 +64,15 @@ export default function AdminSidebar({ counts = {}, onNavigate }) {
       </nav>
 
       <div className="mt-auto flex flex-col gap-3">
-        <div className="rounded-card bg-navy p-4 text-white">
-          <p className="text-xs font-semibold tracking-wide text-lime uppercase">Campus community</p>
-          <p className="mt-1.5 text-sm text-white/80">Keep UniMarket safe: review new listings and open reports first.</p>
-          <Link to={PATHS.safety} onClick={onNavigate} className="mt-3 inline-block text-sm font-semibold text-lime hover:underline">
-            Safety guidelines →
+        <div className="rounded-card bg-subtle p-4">
+          <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+            <GraduationCapIcon className="size-4.5 text-primary" />
+            Campus community
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-ink-muted">Keeping student commerce safe, simple, and connected.</p>
+          <Link to={PATHS.marketplace} onClick={onNavigate} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+            View marketplace
+            <ExternalLinkIcon className="size-3.5" />
           </Link>
         </div>
         <Link to={PATHS.help} onClick={onNavigate} className="flex h-10 items-center gap-3 rounded-control px-3 text-sm font-medium text-ink-muted hover:bg-subtle hover:text-ink">

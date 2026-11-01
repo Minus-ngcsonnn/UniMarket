@@ -8,7 +8,8 @@ import Pagination from '../ui/Pagination'
  * Admin data table (Figma "Marketplace management" table style) with loading, empty and error states,
  * pagination and rows per page. Scrolls sideways on small screens instead of squeezing the columns.
  *
- * @param {{ key: string, header: string, render: (row) => React.ReactNode, className?: string, hideHeader?: boolean }[]} columns
+ * @param {{ key: string, header: string, render: (row) => React.ReactNode, className?: string, hideHeader?: boolean, headerContent?: React.ReactNode }[]} columns
+ *   headerContent replaces the header text (e.g. a "select all" checkbox)
  * @param {object[]} [rows]
  * @param {string} caption accessible table name
  * @param {{ page, pageSize, total, onPageChange, onPageSizeChange?, itemLabel? }} [pagination]
@@ -33,14 +34,15 @@ export default function DataTable({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+      {/* relative: absolutely positioned descendants (e.g. sr-only headers) are clipped by this scroll area */}
+      <div className="relative overflow-x-auto rounded-2xl border border-line bg-surface">
         <table className="w-full text-sm" style={{ minWidth }} aria-busy={isLoading || isRefreshing || undefined}>
           <caption className="sr-only">{caption}</caption>
           <thead>
             <tr className="text-left text-xs text-ink-muted">
               {columns.map((column) => (
                 <th key={column.key} scope="col" className={`px-4 py-3 font-medium first:pl-5 last:pr-5 ${column.className ?? ''}`}>
-                  {column.hideHeader ? <span className="sr-only">{column.header}</span> : column.header}
+                  {column.headerContent ?? (column.hideHeader ? <span className="sr-only">{column.header}</span> : column.header)}
                 </th>
               ))}
             </tr>

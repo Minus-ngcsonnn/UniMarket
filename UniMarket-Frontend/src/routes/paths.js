@@ -14,6 +14,7 @@ export const PATHS = {
   myListings: '/my-listings',
   editListing: (id) => `/my-listings/${id}/edit`,
   deals: '/deals',
+  saved: '/saved',
 
   // Buying (Business Plan order flow)
   cart: '/cart',

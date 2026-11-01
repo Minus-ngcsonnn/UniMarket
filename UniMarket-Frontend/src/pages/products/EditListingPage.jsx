@@ -23,6 +23,19 @@ const MESSAGES = {
   },
 }
 
+/**
+ * Approved rule (pre-moderation): every saved edit sends the listing back to "Pending review", so changed
+ * photos, prices or descriptions are checked before buyers see them.
+ */
+const REVIEW_NOTES = {
+  APPROVED: {
+    title: 'Edits are checked again',
+    text: 'After you save, this listing is hidden from the marketplace until an admin approves the changes (usually the same day). Open orders aren’t affected.',
+  },
+  PENDING: { title: 'Waiting for review', text: 'This listing hasn’t been approved yet. Your changes will be reviewed together with it.' },
+  BLOCKED: { title: 'Fix it and send it again', text: 'An admin blocked this listing. Change what they asked for and save to send it for review again.' },
+}
+
 /** Edit Listing: the Create Listing form, filled with one of the student's own listings. */
 export default function EditListingPage() {
   const { id } = useParams()
@@ -89,10 +102,15 @@ export default function EditListingPage() {
 
       <SampleDataNotice className="mb-4">You’re editing a sample listing. Sign-in and saving aren’t connected yet.</SampleDataNotice>
       {listing && listing.status !== 'SOLD' && (
-        <Alert variant="info" title="Saving isn’t connected yet" className="mb-6">
-          You can edit and check the form, but changes can’t be saved until the UniMarket backend is ready. Once saving works, edited
-          listings are checked by an admin again before they go live.
-        </Alert>
+        <div className="mb-6 flex flex-col gap-3">
+          <Alert variant="info" title={REVIEW_NOTES[listing.moderation]?.title ?? REVIEW_NOTES.APPROVED.title}>
+            {REVIEW_NOTES[listing.moderation]?.text ?? REVIEW_NOTES.APPROVED.text}
+            {listing.moderation === 'BLOCKED' && listing.moderationNote && <span className="mt-1 block">Admin’s note: “{listing.moderationNote}”</span>}
+          </Alert>
+          <Alert variant="warning" title="Saving isn’t connected yet">
+            You can edit and check the form, but changes can’t be saved until the UniMarket backend is ready.
+          </Alert>
+        </div>
       )}
 
       {content}

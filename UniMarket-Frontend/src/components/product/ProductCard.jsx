@@ -2,9 +2,10 @@ import { Link } from 'react-router'
 import { CAMPUSES, UNIVERSITY_NAME } from '../../constants/product'
 import { PATHS } from '../../routes/paths'
 import { formatPrice, formatRelativeTime } from '../../utils/format'
-import { HeartIcon, MapPinIcon } from '../icons'
+import { MapPinIcon } from '../icons'
 import ImageSlot from '../ui/ImageSlot'
 import { ConditionBadge, ProductStatusBadge } from './ProductBadges'
+import SaveItemButton from './SaveItemButton'
 
 /**
  * Product card from the Figma catalog: photo with save button, condition + time, title, price
@@ -25,16 +26,7 @@ export default function ProductCard({ product, preview = false }) {
         {status && status !== 'AVAILABLE' && <ProductStatusBadge status={status} className="absolute top-3 left-3 shadow-sm" />}
 
         {!preview && (
-          // Saving items is not part of this phase; the button keeps the Figma layout and says so.
-          <button
-            type="button"
-            aria-disabled="true"
-            aria-label={`Save ${title} (coming soon)`}
-            title="Saving items is coming soon"
-            className="absolute top-3 right-3 z-10 flex size-8 items-center justify-center rounded-full bg-surface text-ink shadow-sm transition-colors hover:text-primary"
-          >
-            <HeartIcon className="size-4" />
-          </button>
+          <SaveItemButton productId={id} title={title} className="absolute top-3 right-3 z-10" />
         )}
       </div>
 

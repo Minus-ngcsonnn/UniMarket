@@ -3,7 +3,7 @@ import { CATEGORIES } from '../../constants/categories'
 import { CAMPUSES, listingCode } from '../../constants/product'
 import { PATHS } from '../../routes/paths'
 import { formatDateTime, formatPrice, formatRelativeTime } from '../../utils/format'
-import { BanIcon, CheckCircleIcon } from '../icons'
+import { BanIcon, CheckCircleIcon, TrashIcon } from '../icons'
 import { ConditionBadge, ModerationBadge, ProductStatusBadge } from '../product/ProductBadges'
 import Alert from '../ui/Alert'
 import Button from '../ui/Button'
@@ -12,7 +12,7 @@ import DetailDialog, { DetailList } from './DetailDialog'
 
 const categoryName = (slug) => CATEGORIES.find((c) => c.slug === slug)?.name ?? '—'
 
-/** Listing cell for admin tables: thumbnail, title, UM code and category. */
+/** Listing cell for admin tables (Figma): thumbnail, title and UM code. */
 export function ListingCell({ listing }) {
   return (
     <div className="flex items-center gap-3">
@@ -22,7 +22,7 @@ export function ListingCell({ listing }) {
       <div className="min-w-0">
         <p className="max-w-[16rem] truncate font-medium text-ink">{listing.title}</p>
         <p className="text-xs text-ink-muted">
-          {listingCode(listing.id)} · {categoryName(listing.categorySlug)}
+          {listingCode(listing.id)}
         </p>
       </div>
     </div>
@@ -53,6 +53,10 @@ export function ListingDetailDialog({ listing, onClose, open }) {
               Open public page
             </Link>
           )}
+          <Button variant="ghost" className="text-danger" onClick={() => open('removeListing', listing)}>
+            <TrashIcon className="size-4" />
+            Remove
+          </Button>
           {listing.moderation !== 'BLOCKED' && (
             <Button variant="secondary" className="text-danger" onClick={() => open('blockListing', listing)}>
               <BanIcon className="size-4" />

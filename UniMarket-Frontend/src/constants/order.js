@@ -8,12 +8,12 @@
  * whole order, the buyer pays each order once, and the seller delivers it in one go.
  */
 export const ORDER_STATUSES = {
-  PENDING: { label: 'Waiting for seller', pill: 'bg-warning-soft text-ink', dot: 'bg-warning' },
-  AWAITING_PAYMENT: { label: 'Awaiting payment', pill: 'bg-primary-soft text-primary', dot: 'bg-primary' },
-  PAID: { label: 'Paid', pill: 'bg-success-soft text-success', dot: 'bg-success' },
-  DELIVERING: { label: 'Delivering', pill: 'bg-primary-soft text-primary', dot: 'bg-primary' },
-  COMPLETED: { label: 'Completed', pill: 'bg-success-soft text-success', dot: 'bg-success' },
-  CANCELLED: { label: 'Cancelled', pill: 'bg-subtle text-ink-muted', dot: 'bg-ink-muted' },
+  PENDING: { label: 'Waiting for seller', tone: 'warning' },
+  AWAITING_PAYMENT: { label: 'Awaiting payment', tone: 'primary' },
+  PAID: { label: 'Paid', tone: 'success' },
+  DELIVERING: { label: 'Delivering', tone: 'primary' },
+  COMPLETED: { label: 'Completed', tone: 'success' },
+  CANCELLED: { label: 'Cancelled', tone: 'neutral' },
 }
 
 /** Main path shown as a progress tracker (cancelled orders leave the path). */

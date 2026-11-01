@@ -19,6 +19,8 @@ export const adminService = {
 
   approveListing: (id) => adminApiImpl.approveListing(id),
   blockListing: (id, reason) => adminApiImpl.blockListing(id, reason),
+  /** Removes a listing for good (serious violations). Not possible while it is part of an open order. */
+  removeListing: (id, reason) => adminApiImpl.removeListing(id, reason),
   suspendUser: (id, reason) => adminApiImpl.suspendUser(id, reason),
   reactivateUser: (id) => adminApiImpl.reactivateUser(id),
   resolveReport: (id, resolution) => adminApiImpl.resolveReport(id, resolution),
