@@ -17,12 +17,12 @@ The real implementations must keep the same function names and return shapes as 
 
 | Frontend file (real API) | Functions waiting for the backend | Main tables / procedures |
 |---|---|---|
-| `services/products/productApi.js` | `listProducts`, `getProduct`, `getProductsByIds`, `listUserListings`, `getCurrentUserId`, `listMyListings`, `getMyListing`, `createListing`, `updateListing`, `deleteListing` | `Products`, `ProductImages`, `vw_ProductCatalog`, `Categories`, `Campuses` |
+| `services/products/productApi.js` | `listProducts`, `getProduct`, `getProductsByIds`, `listUserListings`, `getCurrentUserId`, `listMyListings`, `getMyListing`, `createListing`, `updateListing`, `deleteListing` | **Stage 3 API ready** (`docs/PRODUCTS_API.md`, mapping in 3.3). `getProductsByIds` waits for Stage 4 | `Products`, `ProductImages`, `vw_ProductCatalog`, `Categories`, `Campuses` |
 | `services/orders/orderApi.js` | `listOrders`, `getOrder`, `getOrders`, `getActionCounts`, `placeOrders`, `cancelOrder`, `payOrder`, `confirmReceived`, `confirmOrder`, `declineOrder`, `markDelivering` (+ demo-only `simulateOtherParty`, `resetSampleData`) | `Orders`, `OrderStatusHistory`, `Payments`, `Deliveries`, `usp_PlaceOrder`, `usp_ConfirmOrder`, `usp_StartPayment`, `usp_RecordPaymentResult`, `usp_ShipOrder`, `usp_CompleteOrder`, `usp_CancelOrder`, `usp_ExpirePendingOrders` |
 | `services/account/accountApi.js` | `getMyProfile`, `getUserProfile`, `updateProfile`, `listUserReviews`, `getRatingSummary`, `getOrderReviews`, `submitReview`, `createReport` | `Users`, `vw_PublicProfiles`, `vw_UserRatings`, `Reviews`, `Reports` |
 | `services/admin/adminApi.js` | `getOverview`, `listListings`, `listUsers`, `listReports`, `listOrders`, `listCategories`, `getBadgeCounts`, `approveListing`, `blockListing`, `removeListing`, `suspendUser`, `reactivateUser`, `resolveReport`, `dismissReport`, `exportReport` | `vw_AdminDashboard`, `Products`, `Users`, `Reports`, `AdminActions` |
 | `services/cart/cartStore.js` (localStorage today) | cart contents | `CartItems` (+ `trg_Cart_Validate`) |
-| `services/saved/savedStore.js` (localStorage today) | saved items | `Favorites` |
+| `services/saved/savedStore.js` (localStorage today) | saved items: **Stage 3 API ready** (`/api/me/favorites`) | `Favorites` |
 | Login / Register / OTP pages (no API file yet) | **Stage 2 API ready** (`docs/AUTH_API.md`): register, verify, resend, login, me. Password reset not built yet | `Users`, `EmailVerificationTokens`, `PasswordResetTokens`, `UniversityEmailDomains`, `usp_VerifyEmail` |
 | `services/healthService.js` | `GET /api/health` | **Done in Stage 1** |
 
@@ -172,6 +172,56 @@ The API is implemented and tested; the frontend still uses its mock sign-in. Cha
 | Protected pages (sell, cart, checkout, orders, profile, shop, settings) | open to the demo student | Redirect guests to `/login?next=...` (already done for Sell). |
 | Admin area | "Admin dashboard (demo)" link | Show only when `user.role === 'ADMIN'`; the API enforces it anyway (403). |
 | Profile fields `programme`, `bio` | mock | Not in the database (decision pending, see 3.1). |
+
+## 3.3 Products, categories and favorites integration (Backend Stage 3)
+
+The API is implemented and tested (`docs/PRODUCTS_API.md`); the frontend still uses `mockProductApi.js` and
+the localStorage saved store. No frontend code was changed in Stage 3. Mapping for the real `productApi.js`:
+
+| Frontend function / field | Mock today | Real API / mapping |
+|---|---|---|
+| `listProducts({ q, category, conditions, campuses, minPrice, maxPrice, sort, featured, deals, page, pageSize })` | filters in memory | `GET /api/products?q=&categoryId=&condition=&campusId=&minPrice=&maxPrice=&sort=&featured=&deals=&page=&size=` |
+| result `{ items, total, page, pageSize, facets }` | | `{ items, totalItems, page, size, totalPages, facets }`: rename `totalItems → total`, `size → pageSize` |
+| `category` (slug) | `p.categorySlug` | Send `categoryId`. Load `GET /api/categories` once and map slug ↔ id (each category has a derived `slug`, e.g. `bikes-and-ride`). The frontend's `CATEGORIES` slugs must be checked against these. |
+| `campuses` (`'HANOI'`) | campus keys | Send `campusId` (FPT Hoa Lac = id from `GET /api/campuses`). Replace the `CAMPUSES` constant with API data, or map `HANOI → 1`. Only one value per request (the pilot has one campus). |
+| `facets.categories` / `facets.campuses` | keyed by slug / campus key | Keyed by **id** (string); map with the category/campus lists. `facets.total` = sum of `facets.conditions`. |
+| `sort` | `newest`, `price_asc` | Same values (+ `price_desc`). With `deals` the mock sorts by savings; the API keeps the chosen sort. |
+| `page` | 1-based | 1-based. Use `size=9` (`CATALOG_PAGE_SIZE`). |
+| product `campus` | `'HANOI'` | object `{ id, name, universityId, university }` |
+| product `categorySlug` | string | `category.slug` (`category` is `{ id, name, slug }`) |
+| product `images[]` / main image | mock image paths | Detail: `images[]` (`{ id, url, sortOrder }`, first = main). Catalog: `mainImageUrl`. Demo URLs are returned root-relative (`/images/demo/products/…`, DB unchanged) and the files do not exist yet: `ImageSlot` (also used by the gallery) now shows its placeholder when a photo fails to load; uploaded ones start with `/media/products/` (proxy `/media` to the backend in `vite.config.js`, like `/api`). |
+| product `seller` (`MOCK_SELLERS`) | phone/Zalo in mock | Catalog: `{ id, fullName }`. Detail: `{ id, fullName, emailVerified, campus, memberSince, ratingAverage, ratingCount, contact? }`. `contact` = `{ phone, zaloUrl }` only when the seller shares it (`ShowContact`); show the phone/Zalo buttons only then. Email is never sent. **Badge compatibility:** the API never sends `verified`, so `SellerCard` (reads `seller.verified`) shows no "Verified student" badge, and `VerificationBadge` shows "Email verified" from `emailVerified`. This is intended while student verification is a pending decision; do not map `emailVerified` to `verified`. |
+| `status` / `purchasable` | `status` | Same `status` values; use `purchasable` to enable "Add to cart"/"Buy". |
+| `moderation` | `PENDING/APPROVED/BLOCKED` | Same values, only on own listings (`GET /api/me/products`, or detail with the owner's token). |
+| `featured` | flag in mock data | Computed from running paid promotions (`ProductPromotions`). |
+| `originalPrice` / deals | mock values | Omitted when not set. No demo listing has one, so `deals=true` returns nothing until sellers enter original prices. |
+| `getProduct(id)` | null when hidden | `GET /api/products/{id}`; 404 → null. Send the token so sellers see their pending listings. |
+| `listUserListings(userId)` | | `GET /api/products?sellerId={userId}&size=50` |
+| `getProductsByIds(ids)` (cart, checkout) | | Not in Stage 3 (cart and checkout are Stage 4). Interim: one `GET /api/products/{id}` per id. |
+| `getCurrentUserId()` | constant | `GET /api/auth/me` → `id` (Stage 2). |
+| `listMyListings()` | | `GET /api/me/products` |
+| `getMyListing(id)` | | `GET /api/products/{id}` with the token; use it only when `editable` is true. |
+| `createListing(form, files)` | `{ saved: false }` | `POST /api/products`, multipart: part `listing` (JSON blob, `application/json`) + parts `photos`. Do **not** send a seller id. The response has `moderation: "PENDING"`: show "Sent for review". |
+| `updateListing(id, form)` | | `PUT /api/products/{id}` (JSON). Photos: `POST /api/products/{id}/images`, `DELETE …/images/{imageId}`, `PUT …/images/order`. Tell the seller an edit goes back to review. |
+| `deleteListing(id)` | | `DELETE /api/products/{id}` (204). 409 `LISTING_NOT_EDITABLE` → "Reserved or sold listings cannot be removed". |
+| `savedStore.js` (localStorage) | ids in localStorage | `GET /api/me/favorites`, `PUT`/`DELETE /api/me/favorites/{productId}`. Guests: keep the "sign in to save" prompt. Old localStorage ids can be sent once with `PUT` after sign-in, then cleared. |
+
+Validation: the backend uses the same limits as `LISTING_LIMITS` (title 5–80, description 20–1000,
+price 1,000–100,000,000, original price higher than price, 1–8 photos, JPG/PNG/WebP ≤ 5 MB) and returns
+`fieldErrors` with the same field names, so the form can show them next to the fields.
+
+Open points for the team (not decided in Stage 3):
+
+1. **Seller contact visibility**: `seller.contact` follows `Users.ShowContact` (Business Plan 3.2, 6.7) and is shown
+   to every visitor of a public listing. The team may decide to show it to signed-in students only.
+   The profile settings page must let the student set `ShowContact`, phone and Zalo (Profile API, later stage).
+2. **Admin moderation API** (approve / block listings): not built. Nothing in the backend or database approves a
+   listing (no procedure or trigger; an admin edit also returns it to `PENDING`), so new listings stay `PENDING`
+   and are not public until the Admin stage. Meanwhile they can be approved only by a manual database update.
+3. **Demo photo files**: the 100 `ProductImages` rows point to `images/demo/products/*.svg`, which do not exist.
+   Handled without changing data: placeholder on load error (frontend) + root-relative URLs (API). Adding real files
+   under `UniMarket-Frontend/public/images/demo/products/` would make them appear.
+4. **Personal-email students** (Stage 2 pending decision): unchanged; listings require a verified account.
 
 ## 4. Conventions already in place (Stage 1)
 

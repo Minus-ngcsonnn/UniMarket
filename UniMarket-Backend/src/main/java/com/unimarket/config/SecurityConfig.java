@@ -60,7 +60,9 @@ public class SecurityConfig {
     private static final String[] PUBLIC_POST = {
             "/api/auth/register", "/api/auth/login", "/api/auth/verify-email", "/api/auth/resend-verification"};
     private static final String[] PUBLIC_GET = {
-            "/api/health", "/actuator/health", "/api/products/**", "/api/categories/**"};
+            "/api/health", "/actuator/health", "/api/products/**", "/api/categories/**",
+            // Stage 3: read-only reference data and uploaded listing photos (public, like listing pages)
+            "/api/universities/**", "/api/campuses/**", "/media/products/**"};
 
     @Bean
     SecurityFilterChain apiSecurity(HttpSecurity http, DatabaseUserJwtConverter jwtConverter,

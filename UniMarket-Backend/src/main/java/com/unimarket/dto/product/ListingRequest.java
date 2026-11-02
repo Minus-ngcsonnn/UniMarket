@@ -1,0 +1,39 @@
+package com.unimarket.dto.product;
+
+import com.unimarket.entity.ProductCondition;
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+
+/**
+ * Listing fields for create ({@code POST /api/products}, JSON part "listing") and edit
+ * ({@code PUT /api/products/{id}}). Limits are the approved frontend limits (constants/product.js
+ * LISTING_LIMITS). There is no seller field: the seller is always the signed-in user.
+ *
+ * @param title         5–80 characters
+ * @param description   20–1000 characters
+ * @param price         1,000–100,000,000 VND
+ * @param originalPrice optional reference price, higher than {@code price}
+ * @param condition     NEW, LIKE_NEW or USED
+ * @param categoryId    an active category
+ * @param campusId      optional; a campus of the seller's university (default: the seller's campus)
+ */
+public record ListingRequest(
+        @NotBlank @Size(min = 5, max = 80) String title,
+        @NotBlank @Size(min = 20, max = 1000) String description,
+        @NotNull @Min(1_000) @Max(100_000_000) Long price,
+        @Min(1_000) @Max(100_000_000) Long originalPrice,
+        @NotNull ProductCondition condition,
+        @NotNull @Positive Integer categoryId,
+        @Positive Integer campusId) {
+
+    /** The original price, when given, must be higher than the price (frontend rule; SQL allows equal). */
+    @AssertTrue(message = "must be higher than price")
+    public boolean isOriginalPriceHigherThanPrice() {
+        return originalPrice == null || price == null || originalPrice > price;
+    }
+}

@@ -142,8 +142,10 @@ The backend reads these variables. They are never hard-coded:
 | `MAIL_MODE`          | `log` (dev: codes printed to the console) or `smtp` | `log` in `dev`, `smtp` otherwise |
 | `MAIL_HOST` / `MAIL_PORT` / `MAIL_USERNAME` / `MAIL_PASSWORD` / `MAIL_FROM` | SMTP settings | *(none)* |
 | `CORS_ALLOWED_ORIGINS` | Browser origins allowed to call the API          | `http://localhost:5173` |
+| `UPLOAD_DIR`         | Folder for uploaded listing photos (`<UPLOAD_DIR>/products`) | `uploads` (git-ignored) |
 
 Authentication API (register, e-mail verification, login, JWT, roles): `UniMarket-Backend/docs/AUTH_API.md`.
+Products, categories, listing photos and favorites API: `UniMarket-Backend/docs/PRODUCTS_API.md`.
 
 **Option A: `.env` file (recommended).** Copy the example and edit it. `UniMarket-Backend/.env` is git-ignored.
 
