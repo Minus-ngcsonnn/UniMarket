@@ -137,6 +137,13 @@ The backend reads these variables. They are never hard-coded:
 | `DB_POOL_SIZE`       | Maximum database connections                      | `10`                                      |
 | `SERVER_PORT`        | API port                                          | `8080`                                    |
 | `SPRING_PROFILES_ACTIVE` | `dev` (default) or `nodb`                     | `dev`                                     |
+| `JWT_SECRET`         | Base64 key (≥ 32 bytes) signing access tokens     | random per run in `dev` (warning); required otherwise |
+| `VERIFICATION_CODE_SECRET` | Base64 key (≥ 32 bytes) hashing e-mail codes | random per run in `dev` (warning); required otherwise |
+| `MAIL_MODE`          | `log` (dev: codes printed to the console) or `smtp` | `log` in `dev`, `smtp` otherwise |
+| `MAIL_HOST` / `MAIL_PORT` / `MAIL_USERNAME` / `MAIL_PASSWORD` / `MAIL_FROM` | SMTP settings | *(none)* |
+| `CORS_ALLOWED_ORIGINS` | Browser origins allowed to call the API          | `http://localhost:5173` |
+
+Authentication API (register, e-mail verification, login, JWT, roles): `UniMarket-Backend/docs/AUTH_API.md`.
 
 **Option A: `.env` file (recommended).** Copy the example and edit it. `UniMarket-Backend/.env` is git-ignored.
 

@@ -14,6 +14,18 @@ public enum ErrorCode {
     MALFORMED_REQUEST(HttpStatus.BAD_REQUEST, "The request body could not be read."),
     INVALID_PARAMETER(HttpStatus.BAD_REQUEST, "A request parameter is missing or invalid."),
     NOT_FOUND(HttpStatus.NOT_FOUND, "The requested resource was not found."),
+
+    // Authentication and student verification (Backend Stage 2)
+    AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, "Sign in to continue."),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "The email or password is incorrect."),
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "You do not have permission to do this."),
+    EMAIL_NOT_VERIFIED(HttpStatus.FORBIDDEN, "Verify your email address before signing in."),
+    ACCOUNT_DISABLED(HttpStatus.FORBIDDEN, "This account cannot be used. Contact UniMarket support."),
+    EMAIL_ALREADY_REGISTERED(HttpStatus.CONFLICT, "An account with this email already exists."),
+    UNSUPPORTED_EMAIL_DOMAIN(HttpStatus.BAD_REQUEST, "Use the email address given to you by your university."),
+    INVALID_CAMPUS(HttpStatus.BAD_REQUEST, "Choose a campus of your university."),
+    INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "The verification code is incorrect or has expired."),
+    TOO_MANY_ATTEMPTS(HttpStatus.TOO_MANY_REQUESTS, "Too many attempts. Please wait and try again later."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "This HTTP method is not supported here."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "This content type is not supported."),
     CONFLICT(HttpStatus.CONFLICT, "The request conflicts with the current state of the data."),

@@ -39,7 +39,8 @@ public class GlobalExceptionHandler {
     /** Expected business errors thrown by services. */
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiErrorResponse> handleApiException(ApiException ex, HttpServletRequest request) {
-        return build(ex.getErrorCode(), ex.getMessage(), request, List.of());
+        List<ApiErrorResponse.FieldError> fields = ex instanceof ValidationException validation ? validation.getFieldErrors() : List.of();
+        return build(ex.getErrorCode(), ex.getMessage(), request, fields);
     }
 
     /** {@code @Valid} request bodies and bound query objects with invalid fields. */

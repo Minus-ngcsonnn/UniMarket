@@ -23,7 +23,7 @@ The real implementations must keep the same function names and return shapes as 
 | `services/admin/adminApi.js` | `getOverview`, `listListings`, `listUsers`, `listReports`, `listOrders`, `listCategories`, `getBadgeCounts`, `approveListing`, `blockListing`, `removeListing`, `suspendUser`, `reactivateUser`, `resolveReport`, `dismissReport`, `exportReport` | `vw_AdminDashboard`, `Products`, `Users`, `Reports`, `AdminActions` |
 | `services/cart/cartStore.js` (localStorage today) | cart contents | `CartItems` (+ `trg_Cart_Validate`) |
 | `services/saved/savedStore.js` (localStorage today) | saved items | `Favorites` |
-| Login / Register / OTP pages (no API file yet) | sign-in, registration, email OTP, password reset | `Users`, `EmailVerificationTokens`, `PasswordResetTokens`, `UniversityEmailDomains`, `usp_VerifyEmail` |
+| Login / Register / OTP pages (no API file yet) | **Stage 2 API ready** (`docs/AUTH_API.md`): register, verify, resend, login, me. Password reset not built yet | `Users`, `EmailVerificationTokens`, `PasswordResetTokens`, `UniversityEmailDomains`, `usp_VerifyEmail` |
 | `services/healthService.js` | `GET /api/health` | **Done in Stage 1** |
 
 Not in the database (frontend only): Messages (out of MVP scope), the Contact form, notification inbox UI
@@ -156,6 +156,22 @@ Business Plan references: 6.6 (payment flow), 4.1.1 (3 % commission), delivery s
 | 14 | Reviews | **No change** | Per order, buyer ↔ seller, only after completion, one per side (trigger + unique key). Matches the frontend. Decision D5: reviews stay per completed order (buyer ↔ seller), not per item. |
 
 ---
+
+## 3.2 Authentication integration (Backend Stage 2)
+
+The API is implemented and tested; the frontend still uses its mock sign-in. Changes needed when wiring it
+(no frontend code was changed in Stage 2):
+
+| Frontend place | Today | Needed |
+|---|---|---|
+| `RegisterPage` | full name, email, password, confirm, terms; "Use a personal email instead" | Call `POST /api/auth/register` (no campus field needed for FPT). **Remove or hide the personal-email path**: the backend only accepts approved university domains (`UNSUPPORTED_EMAIL_DOMAIN`). Show `EMAIL_ALREADY_REGISTERED` and `fieldErrors`. Same password rule (8+, a letter and a digit). |
+| `VerifyEmailDialog` (6 digits) | mock | `POST /api/auth/verify-email`; "resend code" → `POST /api/auth/resend-verification` (always 202; show the cooldown text); handle 429 by offering a new code. |
+| `LoginPage` | mock | `POST /api/auth/login`; 401 → "email or password is incorrect"; 403 `EMAIL_NOT_VERIFIED` → open the code dialog; 403 `ACCOUNT_DISABLED`; 429 → wait. "Remember me" has no server meaning (token lifetime is fixed). |
+| Token storage | none | Keep the access token **in memory** (or `sessionStorage` if a reload must keep the session); never in `localStorage` (earlier rule). Send `Authorization: Bearer` via an axios interceptor in `services/apiClient.js`. |
+| Header (guest / demo toggle), `AccountMenu`, `useViewer` | demo student, dev guest toggle | Viewer = `GET /api/auth/me` when a token exists, else guest. "Sign out" deletes the token (no server call). On any 401, clear the token and show the guest header. |
+| Protected pages (sell, cart, checkout, orders, profile, shop, settings) | open to the demo student | Redirect guests to `/login?next=...` (already done for Sell). |
+| Admin area | "Admin dashboard (demo)" link | Show only when `user.role === 'ADMIN'`; the API enforces it anyway (403). |
+| Profile fields `programme`, `bio` | mock | Not in the database (decision pending, see 3.1). |
 
 ## 4. Conventions already in place (Stage 1)
 
