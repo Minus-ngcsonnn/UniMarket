@@ -1,3 +1,8 @@
+/* LEGACY - NOT THE CURRENT SCHEMA.
+   Placeholder from the foundation stage (database UniMarketDB, no tables).
+   The current database is UniMarketJava: see ../baseline and ../migrations.
+   Kept only for history; do not run it. */
+
 /* =====================================================================
    UniMarket - Database schema (Microsoft SQL Server)
 

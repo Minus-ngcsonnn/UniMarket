@@ -27,7 +27,8 @@ public class HealthController {
     /**
      * Handles {@code GET /api/health}.
      *
-     * @return the current application health, e.g. {@code {"status":"UP","application":"UniMarket"}}
+     * @return the current application health, e.g.
+     *         {@code {"status":"UP","application":"UniMarket","database":"UP"}}
      */
     @GetMapping
     public HealthResponse getHealth() {

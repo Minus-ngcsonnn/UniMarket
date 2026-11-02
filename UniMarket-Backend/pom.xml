@@ -40,6 +40,12 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- Health/readiness endpoints (only /actuator/health is exposed, without details) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Microsoft SQL Server JDBC driver (version managed by Spring Boot) -->
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
