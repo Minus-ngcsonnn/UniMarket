@@ -13,17 +13,19 @@ import useAdminList from '../../hooks/useAdminList'
 import useAsyncData from '../../hooks/useAsyncData'
 import { adminService } from '../../services/admin/adminService'
 import { formatPrice } from '../../utils/format'
+import useTranslation from '../../i18n/useTranslation'
 
 const numberFormat = new Intl.NumberFormat('vi-VN')
 
 /** Products / Users tabs with counts, underlined like the Figma "Marketplace management" card. */
 function ManagementTabs({ tab, onChange, counts }) {
+  const { t } = useTranslation()
   const tabs = [
     { value: 'products', label: 'Products', Icon: PackageIcon, count: counts.products },
     { value: 'users', label: 'Users', Icon: UsersIcon, count: counts.users },
   ]
   return (
-    <div role="tablist" aria-label="Marketplace management" className="flex gap-6 border-b border-line px-5">
+    <div role="tablist" aria-label={t("Marketplace management")} className="flex gap-6 border-b border-line px-5">
       {tabs.map(({ value, label, Icon, count }) => {
         const isActive = tab === value
         return (
@@ -40,7 +42,7 @@ function ManagementTabs({ tab, onChange, counts }) {
             }`}
           >
             <Icon className="size-4" />
-            {label}
+            {t(label)}
             {count != null && <span className={`text-xs tabular-nums ${isActive ? 'text-primary' : 'text-ink-muted'}`}>{numberFormat.format(count)}</span>}
           </button>
         )
@@ -51,6 +53,7 @@ function ManagementTabs({ tab, onChange, counts }) {
 
 /** Admin › Overview (Figma admin dashboard). Numbers come from sample data and are labelled as such. */
 export default function AdminOverviewPage() {
+  const { t } = useTranslation()
   const { campus } = useOutletContext() ?? {}
   const [searchParams] = useSearchParams()
   const tab = searchParams.get('tab') === 'users' ? 'users' : 'products'
@@ -82,14 +85,14 @@ export default function AdminOverviewPage() {
 
   return (
     <>
-      <title>Admin overview · UniMarket</title>
+      <title>{t("Admin overview · UniMarket")}</title>
       <AdminPageHeader
-        title="Overview"
-        description={`Here’s what’s happening in your campus marketplace${campus ? ` at ${CAMPUSES[campus]?.label}` : ''}.`}
+        title={t("Overview")}
+        description={campus ? t('Here’s what’s happening in your campus marketplace at {campus}.', { campus: t(CAMPUSES[campus]?.label) }) : t('Here’s what’s happening in your campus marketplace.')}
         actions={
           <Button onClick={exportReport} loading={isExporting}>
             <DownloadIcon className="size-4" />
-            Export report
+            {t("Export report")}
           </Button>
         }
       />
@@ -107,7 +110,7 @@ export default function AdminOverviewPage() {
       </div>
 
       {overview.error ? (
-        <ErrorState title="Couldn’t load statistics" message={overview.error.message} onRetry={overview.reload} />
+        <ErrorState title={t("Couldn’t load statistics")} message={overview.error.message} onRetry={overview.reload} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-busy={overview.isLoading || undefined}>
           {overview.isLoading
@@ -120,9 +123,9 @@ export default function AdminOverviewPage() {
         <div className="flex flex-wrap items-start justify-between gap-3 px-5 pt-5 pb-3">
           <div>
             <h2 id="management-title" className="text-lg font-semibold text-ink">
-              Marketplace management
+              {t("Marketplace management")}
             </h2>
-            <p className="mt-0.5 text-sm text-ink-muted">Review student accounts and keep campus listings safe.</p>
+            <p className="mt-0.5 text-sm text-ink-muted">{t("Review student accounts and keep campus listings safe.")}</p>
           </div>
           {pending > 0 && (
             <button
@@ -131,7 +134,7 @@ export default function AdminOverviewPage() {
               className="inline-flex items-center gap-1.5 rounded-control bg-warning-soft px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-warning/25"
             >
               <ClockIcon className="size-4 text-warning" />
-              {pending} {pending === 1 ? 'listing' : 'listings'} awaiting review
+              {t(pending === 1 ? '{count} listing awaiting review' : '{count} listings awaiting review', { count: pending })}
             </button>
           )}
         </div>
@@ -148,7 +151,7 @@ export default function AdminOverviewPage() {
       </section>
 
       <p className="mt-4 flex flex-wrap justify-between gap-2 text-xs text-ink-muted">
-        <span>Sample data · All times in campus local time</span>
+        <span>{t("Sample data · All times in campus local time")}</span>
         <span>UniMarket Admin · {new Date().getFullYear()}</span>
       </p>
     </>

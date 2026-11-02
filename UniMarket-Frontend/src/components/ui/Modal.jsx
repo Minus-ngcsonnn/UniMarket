@@ -28,7 +28,7 @@ export default function Modal({ onClose, labelledBy, variant = 'center', classNa
       onClose={onClose}
       // A click on the <dialog> element itself (not its content) is a click on the backdrop.
       onClick={(event) => event.target === dialogRef.current && dialogRef.current.close()}
-      className={`overflow-y-auto bg-surface p-0 text-ink shadow-xl backdrop:bg-ink/50 ${VARIANTS[variant]} ${className}`}
+      className={`overflow-y-auto bg-surface p-0 text-ink shadow-pop backdrop:bg-ink/50 ${VARIANTS[variant]} ${className}`}
     >
       {children}
     </dialog>

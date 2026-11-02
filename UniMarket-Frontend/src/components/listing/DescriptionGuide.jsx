@@ -1,5 +1,6 @@
 import { CATEGORIES } from '../../constants/categories'
 import { PlusIcon, SparklesIcon } from '../icons'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * What buyers want to know, per category. Each prompt becomes a "Label: " line in the description.
@@ -29,7 +30,9 @@ function appendLine(description, label) {
  * @param {(next: string) => void} onChange sets the new description and moves the caret to its end
  */
 export default function DescriptionGuide({ categorySlug, description, onChange }) {
-  const prompts = PROMPTS[categorySlug] ?? DEFAULT_PROMPTS
+  const { t } = useTranslation()
+  // Prompts follow the interface language; they become text the seller then edits.
+  const prompts = (PROMPTS[categorySlug] ?? DEFAULT_PROMPTS).map((label) => t(label))
   const categoryName = CATEGORIES.find((c) => c.slug === categorySlug)?.name
   const missing = prompts.filter((label) => !description.includes(`${label}:`))
 
@@ -38,21 +41,21 @@ export default function DescriptionGuide({ categorySlug, description, onChange }
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className="flex items-center gap-2 text-sm font-medium text-ink">
           <SparklesIcon className="size-4 text-primary" />
-          {categoryName ? `What buyers ask about ${categoryName.toLowerCase()}` : 'What buyers want to know'}
+          {categoryName ? t('What buyers ask about {category}', { category: t(categoryName).toLowerCase() }) : t('What buyers want to know')}
         </p>
         {description.trim() === '' && (
           <button
             type="button"
             onClick={() => onChange(prompts.map((label) => `${label}: `).join('\n'))}
-            className="text-xs font-semibold text-primary hover:underline"
+            className="min-h-6 py-1 text-xs font-semibold text-primary hover:underline"
           >
-            Use a template
+            {t("Use a template")}
           </button>
         )}
       </div>
 
       {missing.length > 0 ? (
-        <ul className="flex flex-wrap gap-2" aria-label="Add a detail to your description">
+        <ul className="flex flex-wrap gap-2" aria-label={t("Add a detail to your description")}>
           {missing.map((label) => (
             <li key={label}>
               <button
@@ -67,11 +70,11 @@ export default function DescriptionGuide({ categorySlug, description, onChange }
           ))}
         </ul>
       ) : (
-        <p className="text-xs text-success">Great, you’ve covered everything buyers usually ask.</p>
+        <p className="text-xs text-success">{t("Great, you’ve covered everything buyers usually ask.")}</p>
       )}
 
       <p className="text-xs text-ink-muted">
-        Be specific and honest about wear or missing parts. Clear descriptions get fewer questions and sell faster.
+        {t("Be specific and honest about wear or missing parts. Clear descriptions get fewer questions and sell faster.")}
       </p>
     </div>
   )

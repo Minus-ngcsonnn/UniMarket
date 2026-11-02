@@ -1,3 +1,5 @@
+import useTranslation from '../../i18n/useTranslation'
+
 /** Colour sets shared by every status pill (Figma admin table style: "● Active", "● Pending"). */
 const PILL_TONES = {
   success: { pill: 'bg-success-soft text-success', dot: 'bg-success' },
@@ -12,11 +14,12 @@ const PILL_TONES = {
  * @param {'success'|'warning'|'danger'|'primary'|'neutral'} tone
  */
 export default function StatusPill({ tone = 'neutral', children, className = '' }) {
+  const { t } = useTranslation()
   const { pill, dot } = PILL_TONES[tone] ?? PILL_TONES.neutral
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap ${pill} ${className}`}>
       <span className={`size-1.5 rounded-full ${dot}`} aria-hidden="true" />
-      {children}
+      {typeof children === 'string' ? t(children) : children}
     </span>
   )
 }

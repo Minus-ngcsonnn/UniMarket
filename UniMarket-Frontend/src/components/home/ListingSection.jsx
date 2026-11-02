@@ -1,4 +1,5 @@
 import useAsyncData from '../../hooks/useAsyncData'
+import useTranslation from '../../i18n/useTranslation'
 import { BackendPendingError } from '../../services/products/productApi'
 import { productService } from '../../services/products/productService'
 import { AlertCircleIcon, InboxIcon } from '../icons'
@@ -23,7 +24,7 @@ function PlaceholderGrid({ icon, title, description, action }) {
         ))}
       </ul>
       <div className="absolute inset-0 flex items-center justify-center p-3">
-        <div className="flex w-full max-w-sm flex-col items-center gap-3 rounded-card border border-line bg-surface/95 px-6 py-6 text-center shadow-lg shadow-ink/5 backdrop-blur-sm">
+        <div className="flex w-full max-w-sm flex-col items-center gap-3 rounded-card border border-line bg-surface/95 px-6 py-6 text-center shadow-pop backdrop-blur-sm">
           {icon}
           <div className="flex flex-col gap-1">
             <p className="font-semibold text-ink">{title}</p>
@@ -42,7 +43,8 @@ function PlaceholderGrid({ icon, title, description, action }) {
  *
  * @param {object} query parameters for productService.listProducts
  */
-export default function ListingSection({ id, title, description, badge, viewAll, query, emptyTitle, emptyDescription, emptyAction }) {
+export default function ListingSection({ id, title, description, badge, icon, viewAll, query, emptyTitle, emptyDescription, emptyAction }) {
+  const { t } = useTranslation()
   const { data, error, isLoading, reload } = useAsyncData(
     () => productService.listProducts({ pageSize: PLACEHOLDER_CARDS, ...query }),
     `${id}-${JSON.stringify(query)}`,
@@ -60,11 +62,11 @@ export default function ListingSection({ id, title, description, badge, viewAll,
             <AlertCircleIcon className="size-5" />
           </span>
         }
-        title="Couldn’t load listings"
-        description="Please check your connection and try again."
+        title={t('sections.errorTitle')}
+        description={t('sections.errorText')}
         action={
           <Button size="sm" variant="secondary" onClick={reload}>
-            Try again
+            {t('sections.retry')}
           </Button>
         }
       />
@@ -89,7 +91,7 @@ export default function ListingSection({ id, title, description, badge, viewAll,
   return (
     <section aria-labelledby={id}>
       <PageContainer>
-        <SectionHeader id={id} title={title} description={description} badge={badge} action={viewAll} />
+        <SectionHeader id={id} icon={icon} title={title} description={description} badge={badge} action={viewAll} />
         {content}
       </PageContainer>
     </section>

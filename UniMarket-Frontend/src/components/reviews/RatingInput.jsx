@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import { RATING_LABELS } from '../../constants/review'
 import { StarIcon } from '../icons'
 import FieldError from '../ui/FieldError'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * Star rating input: a native radio group styled as 5 stars, so arrow keys, Tab and screen readers work.
@@ -9,6 +10,7 @@ import FieldError from '../ui/FieldError'
  * @param {(value: number) => void} onChange
  */
 export default function RatingInput({ label = 'Your rating', name = 'rating', value, onChange, error }) {
+  const { t } = useTranslation()
   const id = useId()
   const [hovered, setHovered] = useState(0)
   const shown = hovered || value
@@ -32,7 +34,7 @@ export default function RatingInput({ label = 'Your rating', name = 'rating', va
                 aria-invalid={error ? true : undefined}
                 className="peer sr-only"
               />
-              <span className="sr-only">{`${star} star${star > 1 ? 's' : ''}, ${RATING_LABELS[star]}`}</span>
+              <span className="sr-only">{`${t(star > 1 ? '{count} stars' : '{count} star', { count: star })}, ${t(RATING_LABELS[star])}`}</span>
               <StarIcon
                 className={`size-8 rounded transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40 ${
                   star <= shown ? 'text-amber-400' : 'text-line hover:text-amber-200'
@@ -44,7 +46,7 @@ export default function RatingInput({ label = 'Your rating', name = 'rating', va
           ))}
         </div>
         <span className="text-sm font-medium text-ink-muted" aria-hidden="true">
-          {shown ? RATING_LABELS[shown] : 'Choose 1 to 5 stars'}
+          {shown ? t(RATING_LABELS[shown]) : t('Choose 1 to 5 stars')}
         </span>
       </div>
       <FieldError id={errorId}>{error}</FieldError>

@@ -14,6 +14,7 @@ import AdminSearch from './AdminSearch'
 import { listingActionItems } from './adminRowActions'
 import DataTable from './DataTable'
 import { ListingCell, ListingDetailDialog } from './ListingAdmin'
+import useTranslation from '../../i18n/useTranslation'
 
 const LISTED_OPTIONS = [
   { value: '', label: 'Any time' },
@@ -55,6 +56,7 @@ export function PersonCell({ person }) {
  * @param {boolean} [showStatusFilter] false when the page shows status tabs instead
  */
 export default function ListingsPanel({ list, caption = 'Listings', showStatusFilter = true }) {
+  const { t } = useTranslation()
   const { open, dialog } = useAdminActions()
   const [detail, setDetail] = useState(null)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
@@ -81,7 +83,7 @@ export default function ListingsPanel({ list, caption = 'Listings', showStatusFi
       headerContent: (
         <input
           type="checkbox"
-          aria-label="Select all listings on this page"
+          aria-label={t("Select all listings on this page")}
           checked={allSelected}
           ref={(el) => {
             if (el) el.indeterminate = selected.length > 0 && !allSelected
@@ -102,7 +104,7 @@ export default function ListingsPanel({ list, caption = 'Listings', showStatusFi
     },
     { key: 'product', header: 'Product', render: (row) => <ListingCell listing={row} /> },
     { key: 'seller', header: 'Seller', render: (row) => <PersonCell person={row.seller} /> },
-    { key: 'category', header: 'Category', render: (row) => <span className="whitespace-nowrap text-ink-muted">{categoryName(row.categorySlug)}</span> },
+    { key: 'category', header: 'Category', render: (row) => <span className="whitespace-nowrap text-ink-muted">{t(categoryName(row.categorySlug))}</span> },
     { key: 'price', header: 'Price', className: 'whitespace-nowrap', render: (row) => <span className="text-ink">{formatPrice(row.price)}</span> },
     {
       key: 'status',
@@ -110,11 +112,11 @@ export default function ListingsPanel({ list, caption = 'Listings', showStatusFi
       render: (row) => (
         <div className="flex flex-col items-start gap-1">
           <ModerationBadge moderation={row.moderation} audience="admin" showApproved />
-          {row.status !== 'AVAILABLE' && <span className="text-xs text-ink-muted">{STATUSES[row.status]?.label}</span>}
+          {row.status !== 'AVAILABLE' && <span className="text-xs text-ink-muted">{t(STATUSES[row.status]?.label)}</span>}
           {row.openReports > 0 && (
             <span className="inline-flex items-center gap-1 text-xs text-danger">
               <FlagIcon className="size-3" />
-              {row.openReports} open report{row.openReports > 1 ? 's' : ''}
+              {t(row.openReports > 1 ? '{count} open reports' : '{count} open report', { count: row.openReports })}
             </span>
           )}
         </div>
@@ -142,31 +144,31 @@ export default function ListingsPanel({ list, caption = 'Listings', showStatusFi
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        <div className="w-full lg:max-w-xs">
-          <AdminSearch label="Search listings" placeholder="Search by product, seller, or listing ID" value={params.q} onSearch={list.setSearch} />
+      <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+        <div className="w-full xl:max-w-xs">
+          <AdminSearch label={t("Search listings")} placeholder={t("Search by product, seller, or listing ID")} value={params.q} onSearch={list.setSearch} />
         </div>
-        <div className="grid grid-cols-2 gap-2 lg:flex">
-          {showStatusFilter && <Select label="Status" hideLabel name="moderation" options={STATUS_OPTIONS} value={params.moderation} onChange={(value) => list.setFilter('moderation', value)} className="md:w-40" />}
-          <Select label="Category" hideLabel name="category" options={CATEGORY_OPTIONS} value={params.category} onChange={(value) => list.setFilter('category', value)} className="lg:w-40" />
-          <Select label="Listed" hideLabel name="listed" options={LISTED_OPTIONS} value={params.listed} onChange={(value) => list.setFilter('listed', value)} className="lg:w-36" />
-          <Select label="Sort by" hideLabel name="sort" options={SORT_OPTIONS} value={params.sort} onChange={(value) => list.setFilter('sort', value)} className="lg:w-44" />
+        <div className={`grid grid-cols-2 gap-2 xl:flex ${showStatusFilter ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
+          {showStatusFilter && <Select label={t("Status")} hideLabel name="moderation" options={STATUS_OPTIONS} value={params.moderation} onChange={(value) => list.setFilter('moderation', value)} className="xl:w-40" />}
+          <Select label={t("Category")} hideLabel name="category" options={CATEGORY_OPTIONS} value={params.category} onChange={(value) => list.setFilter('category', value)} className="xl:w-40" />
+          <Select label={t("Listed")} hideLabel name="listed" options={LISTED_OPTIONS} value={params.listed} onChange={(value) => list.setFilter('listed', value)} className="xl:w-36" />
+          <Select label={t("Sort by")} hideLabel name="sort" options={SORT_OPTIONS} value={params.sort} onChange={(value) => list.setFilter('sort', value)} className="xl:w-44" />
         </div>
       </div>
 
       {selected.length > 0 && (
-        <div role="region" aria-label="Bulk actions" className="flex flex-wrap items-center gap-2 rounded-control bg-primary-soft px-4 py-2.5 text-sm">
+        <div role="region" aria-label={t("Bulk actions")} className="flex flex-wrap items-center gap-2 rounded-control bg-primary-soft px-4 py-2.5 text-sm">
           <p className="mr-auto font-medium text-primary">
-            {selected.length} selected
+            {t('{count} selected', { count: selected.length })}
           </p>
           <Button size="sm" onClick={() => open('approveListings', { id: 'bulk', listings: selected })}>
-            Approve
+            {t("Approve")}
           </Button>
           <Button size="sm" variant="secondary" className="text-danger" onClick={() => open('blockListings', { id: 'bulk', listings: selected })}>
-            Block
+            {t("Block")}
           </Button>
           <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
-            Clear selection
+            {t("Clear selection")}
           </Button>
         </div>
       )}
@@ -180,8 +182,8 @@ export default function ListingsPanel({ list, caption = 'Listings', showStatusFi
         error={list.error}
         onRetry={list.reload}
         minWidth="56rem"
-        emptyTitle="No listings match"
-        emptyDescription="Try another status, category or search."
+        emptyTitle={t("No listings match")}
+        emptyDescription={t("Try another status, category or search.")}
         pagination={data && { page: data.page, pageSize: data.pageSize, total: data.total, onPageChange: list.setPage, onPageSizeChange: list.setPageSize, itemLabel: 'listings' }}
       />
 

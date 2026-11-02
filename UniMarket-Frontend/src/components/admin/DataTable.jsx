@@ -3,6 +3,7 @@ import { ADMIN_PAGE_SIZES } from '../../hooks/useAdminList'
 import EmptyState from '../ui/EmptyState'
 import ErrorState from '../ui/ErrorState'
 import Pagination from '../ui/Pagination'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * Admin data table (Figma "Marketplace management" table style) with loading, empty and error states,
@@ -28,21 +29,22 @@ export default function DataTable({
   pagination,
   minWidth = '48rem',
 }) {
+  const { t } = useTranslation()
   const sizeId = useId()
 
-  if (error) return <ErrorState title={`Couldn’t load ${caption.toLowerCase()}`} message={error.message} onRetry={onRetry} />
+  if (error) return <ErrorState title={t('Couldn’t load {name}', { name: t(caption).toLowerCase() })} message={error.message} onRetry={onRetry} />
 
   return (
     <div className="flex flex-col gap-4">
       {/* relative: absolutely positioned descendants (e.g. sr-only headers) are clipped by this scroll area */}
       <div className="relative overflow-x-auto rounded-2xl border border-line bg-surface">
         <table className="w-full text-sm" style={{ minWidth }} aria-busy={isLoading || isRefreshing || undefined}>
-          <caption className="sr-only">{caption}</caption>
+          <caption className="sr-only">{t(caption)}</caption>
           <thead>
             <tr className="text-left text-xs text-ink-muted">
               {columns.map((column) => (
                 <th key={column.key} scope="col" className={`px-4 py-3 font-medium first:pl-5 last:pr-5 ${column.className ?? ''}`}>
-                  {column.headerContent ?? (column.hideHeader ? <span className="sr-only">{column.header}</span> : column.header)}
+                  {column.headerContent ?? (column.hideHeader ? <span className="sr-only">{t(column.header)}</span> : t(column.header))}
                 </th>
               ))}
             </tr>
@@ -79,7 +81,7 @@ export default function DataTable({
           </div>
           {pagination.onPageSizeChange && (
             <div className="flex items-center justify-center gap-2 text-sm text-ink-muted lg:order-first lg:justify-start">
-              <label htmlFor={sizeId}>Rows per page</label>
+              <label htmlFor={sizeId}>{t("Rows per page")}</label>
               <select
                 id={sizeId}
                 value={pagination.pageSize}

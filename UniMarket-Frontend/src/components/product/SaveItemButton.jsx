@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import useSaved from '../../hooks/useSaved'
+import useTranslation from '../../i18n/useTranslation'
 import { HeartIcon } from '../icons'
 
 /**
@@ -9,6 +10,7 @@ import { HeartIcon } from '../icons'
  * @param {string} [className] positioning of the wrapper (must be relative or absolute: the hint is placed under it)
  */
 export default function SaveItemButton({ productId, title, variant = 'card', className = '' }) {
+  const { t } = useTranslation()
   const saved = useSaved()
   const isSaved = saved.has(productId)
   const [hint, setHint] = useState(null)
@@ -26,13 +28,13 @@ export default function SaveItemButton({ productId, title, variant = 'card', cla
       <button
         type="button"
         aria-pressed={isSaved}
-        aria-label={`Save ${title}`}
-        title={isSaved ? 'Remove from saved items' : 'Save for later'}
+        aria-label={t('product.save', { title })}
+        title={isSaved ? t('product.unsaveTitle') : t('product.saveTitle')}
         onClick={(event) => {
           // On product cards the button sits above the card link: don't open the listing.
           event.preventDefault()
           event.stopPropagation()
-          setHint(saved.toggle(productId) ? 'Saved for later' : 'Removed from saved')
+          setHint(saved.toggle(productId) ? t('product.saved') : t('product.removed'))
         }}
         className={`flex items-center justify-center transition-colors hover:text-primary ${isSaved ? 'text-danger' : 'text-ink'} ${shape}`}
       >

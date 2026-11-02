@@ -9,6 +9,7 @@ import Alert from '../ui/Alert'
 import Button from '../ui/Button'
 import ImageSlot from '../ui/ImageSlot'
 import DetailDialog, { DetailList } from './DetailDialog'
+import useTranslation from '../../i18n/useTranslation'
 
 const categoryName = (slug) => CATEGORIES.find((c) => c.slug === slug)?.name ?? '—'
 
@@ -34,10 +35,11 @@ export function ListingCell({ listing }) {
  * @param {(action, row) => void} open useAdminActions().open
  */
 export function ListingDetailDialog({ listing, onClose, open }) {
+  const { t } = useTranslation()
   return (
     <DetailDialog
       title={listing.title}
-      subtitle={`${listingCode(listing.id)} · listed ${formatRelativeTime(listing.createdAt).toLowerCase()}`}
+      subtitle={`${listingCode(listing.id)} · ${t('listed {time}', { time: formatRelativeTime(listing.createdAt).toLowerCase() })}`}
       status={
         <>
           <ModerationBadge moderation={listing.moderation} audience="admin" showApproved />
@@ -50,23 +52,23 @@ export function ListingDetailDialog({ listing, onClose, open }) {
         <>
           {listing.moderation === 'APPROVED' && (
             <Link to={PATHS.product(listing.id)} className="inline-flex h-10 items-center justify-center rounded-control px-4 text-sm font-medium text-primary hover:bg-primary-soft">
-              Open public page
+              {t("Open public page")}
             </Link>
           )}
           <Button variant="ghost" className="text-danger" onClick={() => open('removeListing', listing)}>
             <TrashIcon className="size-4" />
-            Remove
+            {t("Remove")}
           </Button>
           {listing.moderation !== 'BLOCKED' && (
             <Button variant="secondary" className="text-danger" onClick={() => open('blockListing', listing)}>
               <BanIcon className="size-4" />
-              Block
+              {t("Block")}
             </Button>
           )}
           {listing.moderation !== 'APPROVED' && (
             <Button onClick={() => open('approveListing', listing)}>
               <CheckCircleIcon className="size-4" />
-              Approve
+              {t("Approve")}
             </Button>
           )}
         </>
@@ -79,14 +81,14 @@ export function ListingDetailDialog({ listing, onClose, open }) {
         <p className="line-clamp-5 text-sm leading-relaxed text-ink-muted">{listing.description}</p>
       </div>
       {listing.moderation === 'BLOCKED' && listing.moderationNote && (
-        <Alert variant="danger" title="Blocked">
+        <Alert variant="danger" title={t("Blocked")}>
           {listing.moderationNote}
         </Alert>
       )}
       {listing.openReports > 0 && (
         <Alert variant="warning" title={`${listing.openReports} open report${listing.openReports > 1 ? 's' : ''}`}>
           <Link to={`${PATHS.adminReports}?status=OPEN&q=${encodeURIComponent(listing.title)}`} className="font-semibold text-primary hover:underline">
-            See reports
+            {t("See reports")}
           </Link>
         </Alert>
       )}
@@ -103,8 +105,8 @@ export function ListingDetailDialog({ listing, onClose, open }) {
             ),
           ],
           ['Price', `${formatPrice(listing.price)}${listing.originalPrice ? ` (new ${formatPrice(listing.originalPrice)})` : ''}`],
-          ['Category', categoryName(listing.categorySlug)],
-          ['Campus', CAMPUSES[listing.campus]?.label],
+          ['Category', t(categoryName(listing.categorySlug))],
+          ['Campus', t(CAMPUSES[listing.campus]?.label)],
           ['Photos', listing.images?.length],
           ['Listed', formatDateTime(listing.createdAt)],
         ]}

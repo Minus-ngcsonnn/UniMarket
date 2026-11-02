@@ -2,6 +2,7 @@ import { useId } from 'react'
 import { AlertTriangleIcon, CheckCircleIcon } from '../icons'
 import Button from './Button'
 import Modal from './Modal'
+import useTranslation from '../../i18n/useTranslation'
 
 const TONES = {
   danger: { icon: AlertTriangleIcon, iconBox: 'bg-danger-soft text-danger', button: 'danger' },
@@ -24,6 +25,7 @@ export default function ConfirmDialog({
   isWorking = false,
   result,
 }) {
+  const { t } = useTranslation()
   const titleId = useId()
   const { icon: Icon, iconBox, button } = TONES[tone]
 
@@ -36,9 +38,9 @@ export default function ConfirmDialog({
           </span>
           <div className="flex flex-col gap-1">
             <h2 id={titleId} className="text-lg font-semibold text-ink">
-              {title}
+              {typeof title === 'string' ? t(title) : title}
             </h2>
-            <div className="text-sm text-ink-muted">{message}</div>
+            <div className="text-sm text-ink-muted">{typeof message === 'string' ? t(message) : message}</div>
           </div>
         </div>
 
@@ -46,11 +48,11 @@ export default function ConfirmDialog({
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="secondary" onClick={onClose}>
-            {result ? 'Close' : cancelLabel}
+            {result ? t('Close') : t(cancelLabel)}
           </Button>
           {!result && (
             <Button variant={button} onClick={onConfirm} loading={isWorking}>
-              {confirmLabel}
+              {t(confirmLabel)}
             </Button>
           )}
         </div>

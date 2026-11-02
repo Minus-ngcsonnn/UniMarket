@@ -1,3 +1,4 @@
+import { createElement } from 'react'
 import { Link, useOutletContext } from 'react-router'
 import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import DataTable from '../../components/admin/DataTable'
@@ -5,26 +6,31 @@ import { CATEGORIES } from '../../constants/categories'
 import useAsyncData from '../../hooks/useAsyncData'
 import { PATHS } from '../../routes/paths'
 import { adminService } from '../../services/admin/adminService'
+import useTranslation from '../../i18n/useTranslation'
 
-const iconFor = (slug) => CATEGORIES.find((c) => c.slug === slug)?.Icon
+const ICONS = Object.fromEntries(CATEGORIES.map((c) => [c.slug, c.Icon]))
+
+/** Category name and tagline in the interface language. */
+function CategoryCell({ row }) {
+  const { t } = useTranslation()
+  return (
+    <div className="flex items-center gap-3">
+      <span className="flex size-9 items-center justify-center rounded-lg bg-primary-soft text-primary">{ICONS[row.slug] && createElement(ICONS[row.slug], { className: "size-4.5" })}</span>
+      <div>
+        <p className="font-medium text-ink">{t(row.name)}</p>
+        <p className="text-xs text-ink-muted">{t(row.tagline)}</p>
+      </div>
+    </div>
+  )
+}
 
 const columns = [
   {
     key: 'name',
     header: 'Category',
-    render: (row) => {
-      const Icon = iconFor(row.slug)
-      return (
-        <div className="flex items-center gap-3">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-primary-soft text-primary">{Icon && <Icon className="size-4.5" />}</span>
-          <div>
-            <p className="font-medium text-ink">{row.name}</p>
-            <p className="text-xs text-ink-muted">{row.tagline}</p>
-          </div>
-        </div>
-      )
-    },
+    render: (row) => <CategoryCell row={row} />,
   },
+
   { key: 'total', header: 'All listings', className: 'text-right tabular-nums', render: (row) => row.total },
   { key: 'active', header: 'Active', className: 'text-right tabular-nums', render: (row) => row.active },
   {
@@ -44,14 +50,15 @@ const columns = [
 
 /** Admin › Categories, read only: the category list is fixed in this version (approved scope). */
 export default function AdminCategoriesPage() {
+  const { t } = useTranslation()
   const { campus } = useOutletContext() ?? {}
   const { data, previousData, error, isLoading, reload } = useAsyncData(() => adminService.listCategories({ campus }), `admin-categories-${campus}`)
   const rows = (data ?? previousData)?.items
 
   return (
     <>
-      <title>Categories · UniMarket Admin</title>
-      <AdminPageHeader title="Categories" description="Read only. Categories are fixed in this version; adding or renaming them will come with the backend." />
+      <title>{t("Categories · UniMarket Admin")}</title>
+      <AdminPageHeader title={t("Categories")} description={t("Read only. Categories are fixed in this version; adding or renaming them will come with the backend.")} />
       <DataTable
         caption="Categories"
         columns={columns}
@@ -62,7 +69,7 @@ export default function AdminCategoriesPage() {
         error={error}
         onRetry={reload}
         minWidth="36rem"
-        emptyTitle="No categories"
+        emptyTitle={t("No categories")}
       />
     </>
   )

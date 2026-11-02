@@ -1,11 +1,13 @@
 import { useId } from 'react'
 import FieldError from './FieldError'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * Labelled multi-line text field with optional character counter, hint and validation message.
  * @param {number} [maxLength] also shows "used / max" under the field
  */
 export default function Textarea({ label, id, error, hint, maxLength, value = '', rows = 5, className = '', ...props }) {
+  const { t } = useTranslation()
   const generatedId = useId()
   const fieldId = id ?? generatedId
   const hintId = hint && !error ? `${fieldId}-hint` : undefined
@@ -15,7 +17,7 @@ export default function Textarea({ label, id, error, hint, maxLength, value = ''
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       <label htmlFor={fieldId} className="text-sm font-medium text-ink">
-        {label}
+        {typeof label === 'string' ? t(label) : label}
       </label>
       <textarea
         id={fieldId}
@@ -33,7 +35,7 @@ export default function Textarea({ label, id, error, hint, maxLength, value = ''
         <div className="flex flex-col gap-1">
           {hintId && (
             <p id={hintId} className="text-xs text-ink-muted">
-              {hint}
+              {typeof hint === 'string' ? t(hint) : hint}
             </p>
           )}
           <FieldError id={errorId}>{error}</FieldError>

@@ -8,6 +8,7 @@ import { CAMPUSES } from '../../constants/product'
 import useAdminList from '../../hooks/useAdminList'
 import { adminService } from '../../services/admin/adminService'
 import { formatDateTime, formatPrice } from '../../utils/format'
+import useTranslation from '../../i18n/useTranslation'
 
 const columns = [
   {
@@ -47,23 +48,24 @@ const columns = [
  * version; buyers and sellers move orders forward themselves.
  */
 export default function AdminOrdersPage() {
+  const { t } = useTranslation()
   const list = useAdminList('admin-orders', adminService.listOrders, ['status'])
   const { params, list: data } = list
   const counts = data?.counts ?? {}
 
   return (
     <>
-      <title>Orders · UniMarket Admin</title>
-      <AdminPageHeader title="Orders" description="Read only. Follow orders between students; buyers and sellers move them forward themselves." />
+      <title>{t("Orders · UniMarket Admin")}</title>
+      <AdminPageHeader title={t("Orders")} description={t("Read only. Follow orders between students; buyers and sellers move them forward themselves.")} />
 
       <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <FilterTabs
-          label="Filter by order status"
+          label={t("Filter by order status")}
           value={params.status}
           onChange={(value) => list.setFilter('status', value)}
           options={[{ value: '', label: 'All', count: counts.all }, ...Object.entries(ORDER_STATUSES).map(([key, config]) => ({ value: key, label: config.label, count: counts[key] }))]}
         />
-        <AdminSearch label="Search orders" placeholder="UO code, student or item" value={params.q} onSearch={list.setSearch} />
+        <AdminSearch label={t("Search orders")} placeholder={t("UO code, student or item")} value={params.q} onSearch={list.setSearch} />
       </div>
 
       <DataTable
@@ -75,8 +77,8 @@ export default function AdminOrdersPage() {
         error={list.error}
         onRetry={list.reload}
         minWidth="60rem"
-        emptyTitle="No orders match"
-        emptyDescription="Try another status or search."
+        emptyTitle={t("No orders match")}
+        emptyDescription={t("Try another status or search.")}
         pagination={data && { page: data.page, pageSize: data.pageSize, total: data.total, onPageChange: list.setPage, onPageSizeChange: list.setPageSize, itemLabel: 'orders' }}
       />
     </>

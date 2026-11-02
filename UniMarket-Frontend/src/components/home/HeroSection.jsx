@@ -1,65 +1,48 @@
 import { Link } from 'react-router'
-import heroImage from '../../assets/images/hero-campus-essentials.jpg'
-import { BRAND_COPY } from '../../constants/brandCopy'
+import heroImage from '../../assets/images/hero-student-essentials.jpg'
+import useTranslation from '../../i18n/useTranslation'
 import { PATHS } from '../../routes/paths'
-import { ArrowRightIcon, CheckCircleIcon, SparklesIcon } from '../icons'
+import { ArrowRightIcon, CheckCircleIcon, GraduationCapIcon, PlusIcon } from '../icons'
 import PageContainer from '../layout/PageContainer'
-import ImageSlot from '../ui/ImageSlot'
+import { buttonClasses } from '../ui/buttonClasses'
 
 /**
- * Homepage hero (Figma): blue message panel + product photo.
- * The "up to 70%" sticker and "New semester" label are part of the exported image.
- * Mobile: the photo sits under the text at its natural aspect ratio so nothing is cropped.
+ * Homepage hero ("Warm Minimal" redesign): message and actions on the warm page background, the
+ * student-essentials illustration from the approved design on the right.
+ * @param {string} sellTo where "Sell an Item" leads (sign-in first for guests)
  */
-export default function HeroSection() {
+export default function HeroSection({ sellTo = PATHS.sell }) {
+  const { t } = useTranslation()
   return (
-    <section aria-labelledby="hero-title" className="pt-4 sm:pt-8">
-      <PageContainer>
-        <div className="grid overflow-hidden rounded-3xl bg-primary lg:grid-cols-[1fr_1.07fr]">
-          <div className="flex flex-col gap-4 p-6 text-white sm:gap-6 sm:p-12">
-            <p className="inline-flex w-fit items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-medium tracking-wide uppercase sm:text-xs">
-              <SparklesIcon className="size-3.5 text-lime" />
-              {BRAND_COPY.eyebrow}
-            </p>
-
-            <h1 id="hero-title" className="text-[2.25rem] leading-[1.05] tracking-tight sm:text-5xl xl:text-[3.5rem]">
-              {BRAND_COPY.headlineLine1}
-              <br />
-              {BRAND_COPY.headlineLine2}
-            </h1>
-
-            <p className="max-w-md text-[15px] text-white/85 sm:text-lg">
-              Your next great find is right around campus. Shop pre-loved favorites from students like you.
-            </p>
-
-            <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:flex-wrap min-[420px]:items-center min-[420px]:gap-x-6">
-              <Link
-                to={PATHS.marketplace}
-                className="group inline-flex h-12 items-center justify-center gap-2 rounded-control bg-white px-5 text-sm font-semibold text-primary shadow-sm transition-[background-color,transform] duration-150 hover:bg-primary-soft active:translate-y-px"
-              >
-                Explore student deals
-                <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <Link to={PATHS.sell} className="group inline-flex items-center justify-center gap-1 text-sm font-semibold">
-                Or, sell something
-                <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-            </div>
-
-            <p className="flex items-start gap-2 text-sm text-white/85">
-              <CheckCircleIcon className="mt-0.5 size-4 shrink-0 text-lime" />
-              {BRAND_COPY.trustLine}
-            </p>
+    <section aria-labelledby="hero-title" className="pt-6 sm:pt-10">
+      <PageContainer className="grid items-center gap-8 lg:grid-cols-[1fr_1.05fr] lg:gap-12">
+        <div className="flex flex-col gap-5 sm:gap-6">
+          <p className="inline-flex items-center gap-2 text-xs font-bold tracking-wide text-primary uppercase sm:text-sm">
+            <GraduationCapIcon className="size-5" />
+            {t('hero.eyebrow')}
+          </p>
+          <h1 id="hero-title" className="max-w-xl text-[2.4rem] leading-[1.05] font-extrabold tracking-tight text-ink sm:text-5xl xl:text-[3.6rem]">
+            {t('hero.title')}
+          </h1>
+          <p className="max-w-lg text-base text-ink-muted sm:text-xl">{t('hero.text')}</p>
+          <div className="flex flex-col gap-3 min-[420px]:flex-row">
+            <Link to={PATHS.marketplace} className={buttonClasses({ size: 'lg', className: 'group h-13 px-6 text-base' })}>
+              {t('hero.explore')}
+              <ArrowRightIcon className="size-5 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <Link to={sellTo} className={buttonClasses({ variant: 'secondary', size: 'lg', className: 'h-13 px-6 text-base' })}>
+              <PlusIcon className="size-5" />
+              {t('hero.sell')}
+            </Link>
           </div>
-
-          <div className="relative aspect-[159/100] lg:aspect-auto lg:min-h-96">
-            <ImageSlot
-              src={heroImage}
-              alt="Laptop, headphones, desk lamp, textbooks, backpack and sneakers. Sticker: good finds, up to 70% less than retail. Label: New semester. Secondhand wins."
-              className="absolute inset-0"
-            />
-          </div>
+          <p className="flex items-center gap-2 text-sm text-ink-muted">
+            <CheckCircleIcon className="size-4 shrink-0 text-success" />
+            {t('hero.trust')}
+          </p>
         </div>
+
+        {/* Illustration from the approved design, rebuilt at 2x on the exact page colour (#F7F6F2), so it needs no frame. */}
+        <img src={heroImage} alt={t('hero.imageAlt')} width="1448" height="880" className="mx-auto h-auto w-full max-w-[42rem] lg:max-w-none" />
       </PageContainer>
     </section>
   )

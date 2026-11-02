@@ -1,4 +1,3 @@
-import { orderCode } from '../constants/order'
 import { orderService } from '../services/orders/orderService'
 import { formatDateTime } from './format'
 
@@ -44,9 +43,6 @@ export const ORDER_ACTIONS = {
   ship: { run: orderService.markDelivering, done: 'Marked as delivering. The buyer will confirm when they receive it.' },
   simulate: { run: orderService.simulateOtherParty, done: 'Simulated the other person’s next step (sample data).' },
 }
-
-/** Feedback text after an action on an order. */
-export const actionDoneMessage = (order, action) => `${orderCode(order.id)}: ${ORDER_ACTIONS[action].done}`
 
 /** Statuses where the *other* person acts next (sample mode lets you play their step). */
 export const OTHER_PARTY_TURN = { buyer: ['PENDING', 'PAID'], seller: ['AWAITING_PAYMENT', 'DELIVERING'] }

@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { CheckIcon, ChevronDownIcon } from '../icons'
 import FieldError from './FieldError'
+import useTranslation from '../../i18n/useTranslation'
 
 const FIELD_SIZES = { md: 'h-10', lg: 'h-12' }
 
@@ -30,6 +31,7 @@ export default function Select({
   className = '',
   buttonClassName = '',
 }) {
+  const { t } = useTranslation()
   const id = useId()
   const buttonRef = useRef(null)
   const listRef = useRef(null)
@@ -105,7 +107,7 @@ export default function Select({
   return (
     <div ref={containerRef} className={`relative flex flex-col gap-1.5 ${className}`}>
       <span id={labelId} className={hideLabel ? 'sr-only' : 'text-sm font-medium text-ink'}>
-        {label}
+        {typeof label === 'string' ? t(label) : label}
       </span>
       <button
         ref={buttonRef}
@@ -122,7 +124,7 @@ export default function Select({
         className={`flex w-full items-center justify-between gap-3 rounded-control border bg-surface px-3 text-left text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${FIELD_SIZES[fieldSize]} ${stateClasses} ${buttonClassName}`}
       >
         <span id={`${id}-value`} className={`truncate ${selected ? 'text-ink' : 'text-ink-muted/80'}`}>
-          {selected ? selected.label : placeholder}
+          {t(selected ? selected.label : placeholder)}
         </span>
         <ChevronDownIcon className={`size-4 shrink-0 text-ink-muted transition-transform ${isOpen ? 'rotate-180 text-primary' : ''}`} />
       </button>
@@ -135,7 +137,7 @@ export default function Select({
           aria-labelledby={labelId}
           aria-activedescendant={`${id}-option-${activeIndex}`}
           onKeyDown={handleListKeyDown}
-          className="absolute top-full right-0 left-0 z-30 mt-1 max-h-72 overflow-y-auto rounded-control border border-line bg-surface p-1 shadow-lg shadow-ink/10 focus:outline-none"
+          className="absolute top-full right-0 left-0 z-30 mt-1 max-h-72 overflow-y-auto rounded-control border border-line bg-surface p-1 shadow-pop focus:outline-none"
         >
           {options.map((option, index) => {
             const isSelected = option.value === value
@@ -151,7 +153,7 @@ export default function Select({
                   index === activeIndex ? 'bg-primary-soft' : ''
                 } ${isSelected ? 'font-medium text-primary' : 'text-ink'}`}
               >
-                {option.label}
+                {t(option.label)}
                 {isSelected && <CheckIcon className="size-4 shrink-0" />}
               </li>
             )
@@ -161,7 +163,7 @@ export default function Select({
 
       {hintId && (
         <p id={hintId} className="text-xs text-ink-muted">
-          {hint}
+          {typeof hint === 'string' ? t(hint) : hint}
         </p>
       )}
       <FieldError id={errorId}>{error}</FieldError>

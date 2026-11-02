@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PRICE_FILTER_MAX, PRICE_FILTER_STEP } from '../../constants/product'
 import { formatNumber, parseDigits } from '../../utils/format'
+import useTranslation from '../../i18n/useTranslation'
 
 const thumbClasses =
   'pointer-events-none absolute inset-0 h-5 w-full appearance-none bg-transparent focus:outline-none ' +
@@ -21,6 +22,7 @@ const inputClasses =
  * @param {(min: number|null, max: number|null) => void} onCommit
  */
 export default function PriceRangeFilter({ min, max, onCommit }) {
+  const { t } = useTranslation()
   const [low, setLow] = useState(min ?? 0)
   const [high, setHigh] = useState(max ?? PRICE_FILTER_MAX)
 
@@ -59,7 +61,7 @@ export default function PriceRangeFilter({ min, max, onCommit }) {
           max={PRICE_FILTER_MAX}
           step={PRICE_FILTER_STEP}
           value={low}
-          aria-label="Minimum price"
+          aria-label={t("Minimum price")}
           aria-valuetext={`${formatNumber(low)} ₫`}
           onChange={(event) => setLow(Math.min(Number(event.target.value), high - PRICE_FILTER_STEP))}
           onPointerUp={(event) => commit(Number(event.currentTarget.value), high)}
@@ -72,7 +74,7 @@ export default function PriceRangeFilter({ min, max, onCommit }) {
           max={PRICE_FILTER_MAX}
           step={PRICE_FILTER_STEP}
           value={high}
-          aria-label="Maximum price"
+          aria-label={t("Maximum price")}
           aria-valuetext={high >= PRICE_FILTER_MAX ? `${formatNumber(high)} ₫ or more` : `${formatNumber(high)} ₫`}
           onChange={(event) => setHigh(Math.max(Number(event.target.value), low + PRICE_FILTER_STEP))}
           onPointerUp={(event) => commit(low, Number(event.currentTarget.value))}
@@ -83,7 +85,7 @@ export default function PriceRangeFilter({ min, max, onCommit }) {
 
       <div className="grid grid-cols-2 gap-2">
         <label className="flex flex-col gap-1.5 text-xs text-ink-muted">
-          Min price (₫)
+          {t("Min price (₫)")}
           <input
             inputMode="numeric"
             value={formatNumber(low)}
@@ -94,11 +96,11 @@ export default function PriceRangeFilter({ min, max, onCommit }) {
           />
         </label>
         <label className="flex flex-col gap-1.5 text-xs text-ink-muted">
-          Max price (₫)
+          {t("Max price (₫)")}
           <input
             inputMode="numeric"
             value={high >= PRICE_FILTER_MAX ? '' : formatNumber(high)}
-            placeholder="No limit"
+            placeholder={t("No limit")}
             onChange={(event) => setHigh(toHigh(event.target.value))}
             onBlur={(event) => commit(low, toHigh(event.currentTarget.value))}
             onKeyDown={(event) => event.key === 'Enter' && commit(low, toHigh(event.currentTarget.value))}

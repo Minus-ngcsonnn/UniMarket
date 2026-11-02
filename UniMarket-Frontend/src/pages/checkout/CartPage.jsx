@@ -20,6 +20,7 @@ import { PATHS } from '../../routes/paths'
 import { productService } from '../../services/products/productService'
 import { formatPrice } from '../../utils/format'
 import Avatar from '../../components/ui/Avatar'
+import useTranslation from '../../i18n/useTranslation'
 
 /** Checkbox that can show "some selected" (indeterminate), for Select all / per-seller selection. */
 function SelectBox({ checked, indeterminate = false, disabled, onChange, label }) {
@@ -56,6 +57,7 @@ function groupBySeller(lines) {
  * quantity stepper; vouchers are not part of the Business Plan, so the voucher field is left out.
  */
 export default function CartPage() {
+  const { t } = useTranslation()
   const cart = useCart()
   const navigate = useNavigate()
   const ids = cart.items.map((item) => item.productId)
@@ -88,22 +90,22 @@ export default function CartPage() {
 
   let content
   if (error) {
-    content = <ErrorState title="Couldn’t load your cart" message={error.message} onRetry={reload} />
+    content = <ErrorState title={t("Couldn’t load your cart")} message={error.message} onRetry={reload} />
   } else if (cart.count === 0) {
     content = (
       <EmptyState
         icon={<ShoppingCartIcon className="size-6" />}
-        title="Your cart is empty"
-        description="Find textbooks, tech and dorm essentials from students on your campus."
+        title={t("Your cart is empty")}
+        description={t("Find textbooks, tech and dorm essentials from students on your campus.")}
         action={
           <Link to={PATHS.marketplace} className={buttonClasses({ size: 'sm' })}>
-            Explore marketplace
+            {t("Explore marketplace")}
           </Link>
         }
       />
     )
   } else if (isLoading && !previousData) {
-    content = <LoadingState message="Loading your cart…" />
+    content = <LoadingState message={t("Loading your cart…")} />
   } else {
     content = (
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_23rem]">
@@ -111,16 +113,16 @@ export default function CartPage() {
           <div className="flex items-center justify-between gap-4 rounded-card border border-line bg-surface px-4 py-3 sm:px-5">
             <label className="flex items-center gap-3 text-sm">
               <SelectBox
-                label="Select all available listings"
+                label={t("Select all available listings")}
                 checked={buyable.length > 0 && selected.length === buyable.length}
                 indeterminate={selected.length > 0 && selected.length < buyable.length}
                 disabled={buyable.length === 0}
                 onChange={(checked) => cart.setAllSelected(checked)}
               />
-              <span className="font-medium whitespace-nowrap text-ink">Select all</span>
+              <span className="font-medium whitespace-nowrap text-ink">{t("Select all")}</span>
               {/* On phones the count is in the order summary instead */}
               <span className="hidden text-ink-muted sm:inline">
-                {selected.length} of {lines.length} {lines.length === 1 ? 'listing' : 'listings'} selected
+                {t(lines.length === 1 ? '{selected} of {total} listing selected' : '{selected} of {total} listings selected', { selected: selected.length, total: lines.length })}
               </span>
             </label>
             <button
@@ -129,15 +131,15 @@ export default function CartPage() {
               onClick={() => removeLines(selected)}
               className="text-sm whitespace-nowrap text-ink-muted transition-colors hover:text-danger disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Remove selected
+              {t("Remove selected")}
             </button>
           </div>
 
           {missingCount > 0 && (
             <p role="status" className="rounded-control border border-warning/40 bg-warning-soft px-3 py-2 text-sm text-ink">
-              {missingCount === 1 ? 'One listing' : `${missingCount} listings`} in your cart no longer exist.{' '}
+              {t(missingCount === 1 ? 'One listing in your cart no longer exists.' : '{count} listings in your cart no longer exist.', { count: missingCount })}{' '}
               <button type="button" className="font-semibold text-primary hover:underline" onClick={() => cart.remove(ids.filter((id) => !lines.some((l) => l.product.id === id)))}>
-                Remove
+                {t("Remove")}
               </button>
             </p>
           )}
@@ -150,7 +152,7 @@ export default function CartPage() {
               <section key={seller?.id} aria-label={`Items from ${seller?.name}`} className="overflow-hidden rounded-card border border-line bg-surface">
                 <header className="flex items-center gap-3 border-b border-line px-4 py-3 sm:px-5">
                   <SelectBox
-                    label={`Select all items from ${seller?.name}`}
+                    label={t('Select all items from {name}', { name: seller?.name })}
                     checked={groupBuyable.length > 0 && groupSelected.length === groupBuyable.length}
                     indeterminate={groupSelected.length > 0 && groupSelected.length < groupBuyable.length}
                     disabled={groupBuyable.length === 0}
@@ -163,7 +165,7 @@ export default function CartPage() {
                       {seller?.verified && (
                         <>
                           <BadgeCheckIcon className="size-4 text-primary" />
-                          <span className="sr-only">Verified student</span>
+                          <span className="sr-only">{t("Verified student")}</span>
                         </>
                       )}
                     </p>
@@ -171,7 +173,7 @@ export default function CartPage() {
                   </div>
                   <Link to={PATHS.messages} className="hidden items-center gap-1.5 text-sm font-medium text-primary hover:underline sm:flex">
                     <MessageCircleIcon className="size-4" />
-                    Message seller
+                    {t("Message seller")}
                   </Link>
                 </header>
 
@@ -198,9 +200,9 @@ export default function CartPage() {
                             <ConditionBadge condition={product.condition} />
                             {!canBuy &&
                               (isOwn ? (
-                                <span className="text-xs text-ink-muted">Your own listing</span>
+                                <span className="text-xs text-ink-muted">{t("Your own listing")}</span>
                               ) : product.status === 'AVAILABLE' ? (
-                                <span className="text-xs text-ink-muted">Unavailable</span>
+                                <span className="text-xs text-ink-muted">{t("Unavailable")}</span>
                               ) : (
                                 <ProductStatusBadge status={product.status} />
                               ))}
@@ -212,7 +214,7 @@ export default function CartPage() {
                       <button
                         type="button"
                         onClick={() => cart.remove(product.id)}
-                        aria-label={`Remove ${product.title} from cart`}
+                        aria-label={t('Remove {title} from cart', { title: product.title })}
                         className="flex size-8 shrink-0 items-center justify-center self-start rounded-control text-ink-muted transition-colors hover:bg-danger-soft hover:text-danger"
                       >
                         <TrashIcon className="size-4" />
@@ -224,7 +226,7 @@ export default function CartPage() {
                 <footer className="flex flex-wrap items-center justify-between gap-2 bg-subtle/70 px-4 py-3 text-xs sm:px-5">
                   <span className="flex items-center gap-1.5 text-ink-muted">
                     <MapPinIcon className="size-4 text-primary" />
-                    {UNIVERSITY_NAME} · {CAMPUSES[seller?.campus]?.label} · Delivery arranged by seller
+                    {t(UNIVERSITY_NAME)} · {t(CAMPUSES[seller?.campus]?.label)} · {t('Delivery arranged by seller')}
                   </span>
                   <span className="text-ink-muted">
                     Selected subtotal <span className="ml-1 text-sm font-semibold text-ink">{formatPrice(groupSubtotal)}</span>
@@ -237,55 +239,55 @@ export default function CartPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Link to={PATHS.marketplace} className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
               <ArrowLeftIcon className="size-4" />
-              Continue shopping
+              {t("Continue shopping")}
             </Link>
-            <p className="text-xs text-ink-muted">Unselected items stay in your cart.</p>
+            <p className="text-xs text-ink-muted">{t("Unselected items stay in your cart.")}</p>
           </div>
         </div>
 
         <aside className="flex flex-col gap-4 lg:sticky lg:top-36">
           <section aria-labelledby="summary-title" className="rounded-card border border-line bg-surface p-5 sm:p-6">
             <h2 id="summary-title" className="text-xl font-bold text-ink">
-              Order summary
+              {t("Order summary")}
             </h2>
             <p className="mt-1 text-sm text-ink-muted">
-              {selected.length} selected {selected.length === 1 ? 'listing' : 'listings'} · {sellerCount} {sellerCount === 1 ? 'seller' : 'sellers'}
+              {t(selected.length === 1 ? '{count} selected listing' : '{count} selected listings', { count: selected.length })} · {t(sellerCount === 1 ? '{count} seller' : '{count} sellers', { count: sellerCount })}
             </p>
-            {sellerCount > 1 && <p className="mt-1 text-xs text-ink-muted">Checkout creates one order per seller.</p>}
+            {sellerCount > 1 && <p className="mt-1 text-xs text-ink-muted">{t("Checkout creates one order per seller.")}</p>}
             <dl className="mt-5 flex flex-col gap-3 border-t border-line pt-5 text-sm">
               <div className="flex justify-between">
-                <dt className="text-ink-muted">Subtotal</dt>
+                <dt className="text-ink-muted">{t("Subtotal")}</dt>
                 <dd className="font-medium text-ink">{formatPrice(subtotal)}</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-ink-muted">Delivery</dt>
-                <dd className="text-right text-ink">Arranged by seller</dd>
+                <dt className="text-ink-muted">{t("Delivery")}</dt>
+                <dd className="text-right text-ink">{t("Arranged by seller")}</dd>
               </div>
             </dl>
             <p className="mt-4 rounded-control bg-primary-soft px-3 py-2.5 text-xs text-primary">
-              You pay online after each seller confirms your order. Nothing is charged now.
+              {t("You pay online after each seller confirms your order. Nothing is charged now.")}
             </p>
             <div className="mt-5 flex items-end justify-between border-t border-line pt-5">
-              <span className="font-semibold text-ink">Total</span>
+              <span className="font-semibold text-ink">{t("Total")}</span>
               <span className="text-2xl font-bold tracking-tight text-ink sm:text-[1.75rem]">{formatPrice(subtotal)}</span>
             </div>
             <Button size="lg" fullWidth className="mt-5" disabled={selected.length === 0} onClick={() => navigate(PATHS.checkout(selected.map((line) => line.product.id)))}>
-              Proceed to Checkout
+              {t("Proceed to Checkout")}
               <ArrowRightIcon className="size-4.5" />
             </Button>
             <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-muted">
               <LockIcon className="size-3.5" />
-              Secure checkout. No charge until the seller confirms.
+              {t("Secure checkout. No charge until the seller confirms.")}
             </p>
           </section>
 
           <div className="flex gap-3 p-1">
             <BadgeCheckIcon className="size-6 shrink-0 text-primary" />
             <div className="text-sm">
-              <p className="font-semibold text-ink">Your campus. Your community.</p>
-              <p className="mt-1 text-ink-muted">Sellers are verified students. Each one confirms your order within 24 hours, then you pay securely on UniMarket.</p>
+              <p className="font-semibold text-ink">{t("Your campus. Your community.")}</p>
+              <p className="mt-1 text-ink-muted">{t("Sellers are verified students. Each one confirms your order within 24 hours, then you pay securely on UniMarket.")}</p>
               <Link to={PATHS.howItWorks} className="mt-1 inline-block text-sm font-medium text-primary hover:underline">
-                How buying works →
+                {t("How buying works →")}
               </Link>
             </div>
           </div>
@@ -296,25 +298,25 @@ export default function CartPage() {
 
   return (
     <PageContainer className="py-6 sm:py-8">
-      <title>Shopping cart · UniMarket</title>
+      <title>{t("Shopping cart · UniMarket")}</title>
       <Breadcrumbs items={[{ label: 'Marketplace', to: PATHS.marketplace }, { label: 'Shopping cart' }]} />
 
       <header className="mt-4 mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="flex flex-wrap items-center gap-3 text-[1.75rem] leading-tight font-extrabold tracking-tight text-ink sm:text-[2rem]">
-            Your shopping cart
+            {t("Your shopping cart")}
             {cart.count > 0 && (
               <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold tracking-normal text-primary">
-                {cart.count} {cart.count === 1 ? 'listing' : 'listings'}
+                {t(cart.count === 1 ? '{count} listing' : '{count} listings', { count: cart.count })}
               </span>
             )}
           </h1>
-          <p className="mt-1.5 text-ink-muted">Good finds from your campus. One step closer to their next chapter.</p>
+          <p className="mt-1.5 text-ink-muted">{t("Good finds from your campus. One step closer to their next chapter.")}</p>
         </div>
         <CheckoutSteps current="Cart" />
       </header>
 
-      <SampleDataNotice className="mb-5">Prices and availability come from sample listings. Your cart is saved in this browser only.</SampleDataNotice>
+      <SampleDataNotice className="mb-5">{t("Prices and availability come from sample listings. Your cart is saved in this browser only.")}</SampleDataNotice>
       {content}
     </PageContainer>
   )

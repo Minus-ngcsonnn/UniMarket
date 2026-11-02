@@ -3,6 +3,7 @@ import { LISTING_LIMITS } from '../../constants/product'
 import { checkPhotoFiles } from '../../utils/listingValidation'
 import { TrashIcon, UploadCloudIcon } from '../icons'
 import FieldError from '../ui/FieldError'
+import useTranslation from '../../i18n/useTranslation'
 
 let localPhotoCounter = 0
 
@@ -18,6 +19,7 @@ let localPhotoCounter = 0
  * @param {(photos) => void} onChange
  */
 export default function ImageUploader({ photos, onChange, error, name = 'photos', label = 'Photos' }) {
+  const { t } = useTranslation()
   const inputId = useId()
   const errorId = error ? `${inputId}-error` : undefined
   const [rejections, setRejections] = useState([])
@@ -63,7 +65,7 @@ export default function ImageUploader({ photos, onChange, error, name = 'photos'
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="text-sm font-medium text-ink">{label}</span>
+      <span className="text-sm font-medium text-ink">{t(label)}</span>
 
       {remaining > 0 && (
         <label
@@ -83,9 +85,9 @@ export default function ImageUploader({ photos, onChange, error, name = 'photos'
           }`}
         >
           <UploadCloudIcon className="size-7 text-primary" />
-          <span className="text-sm font-semibold text-primary">Click to upload or drag and drop</span>
+          <span className="text-sm font-semibold text-primary">{t("Click to upload or drag and drop")}</span>
           <span className="text-xs text-ink-muted">
-            JPG, PNG or WebP · Maximum 5 MB each · {remaining} of {LISTING_LIMITS.photosMax} photos left
+            {t('JPG, PNG or WebP · Maximum 5 MB each · {remaining} of {max} photos left', { remaining, max: LISTING_LIMITS.photosMax })}
           </span>
           <input
             id={inputId}
@@ -107,31 +109,31 @@ export default function ImageUploader({ photos, onChange, error, name = 'photos'
       {rejections.length > 0 && (
         <ul role="alert" className="flex flex-col gap-1 rounded-control border border-danger/30 bg-danger-soft px-3 py-2 text-xs text-danger">
           {rejections.map((message) => (
-            <li key={message}>{message}</li>
+            <li key={message}>{t(message)}</li>
           ))}
         </ul>
       )}
 
       {photos.length > 0 && (
-        <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4" aria-label="Selected photos">
+        <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4" aria-label={t("Selected photos")}>
           {photos.map((photo, index) => (
             <li key={photo.id} className="group relative aspect-square overflow-hidden rounded-control border border-line bg-subtle">
-              <img src={photo.url} alt={`Photo ${index + 1}: ${photo.name}`} className="h-full w-full object-cover" />
+              <img src={photo.url} alt={t('Photo {number}: {name}', { number: index + 1, name: photo.name })} className="h-full w-full object-cover" />
               {index === 0 ? (
-                <span className="absolute bottom-1.5 left-1.5 rounded bg-primary px-1.5 py-0.5 text-[11px] font-medium text-white">Cover</span>
+                <span className="absolute bottom-1.5 left-1.5 rounded bg-primary px-1.5 py-0.5 text-[11px] font-medium text-white">{t("Cover")}</span>
               ) : (
                 <button
                   type="button"
                   onClick={() => makeCover(photo)}
                   className="absolute bottom-1.5 left-1.5 rounded bg-surface/90 px-1.5 py-0.5 text-[11px] font-medium text-ink shadow-sm hover:text-primary"
                 >
-                  Make cover
+                  {t("Make cover")}
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => remove(photo)}
-                aria-label={`Remove photo ${index + 1} (${photo.name})`}
+                aria-label={t('Remove photo {number} ({name})', { number: index + 1, name: photo.name })}
                 className="absolute top-1.5 right-1.5 flex size-7 items-center justify-center rounded-full bg-surface/90 text-ink shadow-sm hover:text-danger"
               >
                 <TrashIcon className="size-3.5" />

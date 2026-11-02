@@ -1,7 +1,7 @@
 import { ImageIcon } from '../icons'
 
 const PLACEHOLDER_TONES = {
-  light: 'bg-primary-soft text-primary/40',
+  light: 'bg-subtle text-ink-muted/40',
   onPrimary: 'bg-white/10 text-white/40',
 }
 
@@ -26,7 +26,7 @@ export default function ImageSlot({ src, alt, fit = 'cover', position = 'object-
 
   return (
     <div
-      className={`flex items-center justify-center ${PLACEHOLDER_TONES[tone]} ${className}`}
+      className={`flex h-full w-full items-center justify-center ${PLACEHOLDER_TONES[tone]} ${className}`}
       {...(alt ? { role: 'img', 'aria-label': alt } : { 'aria-hidden': true })}
     >
       <ImageIcon className="size-10" />

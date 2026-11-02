@@ -9,12 +9,14 @@ import Button from '../ui/Button'
 import FieldError from '../ui/FieldError'
 import Modal from '../ui/Modal'
 import Textarea from '../ui/Textarea'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * Report a listing or a student to the admins (Business Plan: admins handle violation reports).
  * @param {{ type: 'LISTING'|'USER', id: string|number, label: string }} target
  */
 export default function ReportDialog({ target, onClose }) {
+  const { t } = useTranslation()
   const titleId = useId()
   const reasonErrorId = `${titleId}-reason-error`
   const [result, setResult] = useState(null) // { saved }
@@ -43,7 +45,7 @@ export default function ReportDialog({ target, onClose }) {
           </span>
           <div className="flex min-w-0 flex-col gap-1">
             <h2 id={titleId} className="text-lg font-semibold text-ink">
-              {target.type === 'LISTING' ? 'Report this listing' : 'Report this student'}
+              {target.type === 'LISTING' ? t('Report this listing') : t('Report this student')}
             </h2>
             <p className="truncate text-sm text-ink-muted">{target.label}</p>
           </div>
@@ -58,7 +60,7 @@ export default function ReportDialog({ target, onClose }) {
         ) : (
           <form id={`${titleId}-form`} noValidate onSubmit={form.handleSubmit} className="flex flex-col gap-4">
             <fieldset aria-describedby={reasonError ? reasonErrorId : undefined} className="flex flex-col gap-2">
-              <legend className="mb-1 text-sm font-medium text-ink">What’s wrong?</legend>
+              <legend className="mb-1 text-sm font-medium text-ink">{t("What’s wrong?")}</legend>
               {REPORT_REASONS.map((reason) => (
                 <label
                   key={reason.value}
@@ -74,7 +76,7 @@ export default function ReportDialog({ target, onClose }) {
                     onChange={() => form.setFieldValue('reason', reason.value)}
                     className="size-4 accent-primary"
                   />
-                  <span className="text-ink">{reason.label}</span>
+                  <span className="text-ink">{t(reason.label)}</span>
                 </label>
               ))}
               <FieldError id={reasonErrorId}>{reasonError}</FieldError>
@@ -83,21 +85,21 @@ export default function ReportDialog({ target, onClose }) {
               label={form.values.reason === 'OTHER' ? 'Details' : 'Details (optional)'}
               rows={3}
               maxLength={REPORT_DETAILS_MAX}
-              placeholder="What happened? Admins see this with the report."
+              placeholder={t("What happened? Admins see this with the report.")}
               {...form.getFieldProps('details')}
             />
             {submitError && <Alert variant="danger">{submitError}</Alert>}
-            <p className="text-xs text-ink-muted">False reports may lead to action on your account. In an emergency, contact campus security.</p>
+            <p className="text-xs text-ink-muted">{t("False reports may lead to action on your account. In an emergency, contact campus security.")}</p>
           </form>
         )}
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="secondary" onClick={onClose}>
-            {result ? 'Close' : 'Cancel'}
+            {result ? t('Close') : t('Cancel')}
           </Button>
           {!result && (
             <Button type="submit" form={`${titleId}-form`} variant="danger" loading={form.isSubmitting}>
-              Send report
+              {t("Send report")}
             </Button>
           )}
         </div>

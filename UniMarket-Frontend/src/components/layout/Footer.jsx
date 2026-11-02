@@ -1,68 +1,64 @@
 import { Link } from 'react-router'
-import { BRAND_COPY } from '../../constants/brandCopy'
+import useTranslation from '../../i18n/useTranslation'
 import { PATHS } from '../../routes/paths'
 import Logo from './Logo'
 import PageContainer from './PageContainer'
 
 const FOOTER_COLUMNS = [
   {
-    title: 'Marketplace',
+    title: 'footer.marketplace',
     links: [
-      { label: 'Explore all listings', to: PATHS.marketplace },
-      { label: 'Student deals', to: PATHS.deals },
-      { label: 'Sell an item', to: PATHS.sell },
-      // Until sign-in exists there is no account menu, so My listings is reachable from here.
-      { label: 'My listings', to: PATHS.myListings },
+      { label: 'footer.allListings', to: PATHS.marketplace },
+      { label: 'footer.deals', to: PATHS.deals },
+      { label: 'footer.sell', to: PATHS.sell },
+      { label: 'footer.myListings', to: PATHS.myListings },
     ],
   },
   {
-    title: 'UniMarket',
+    title: 'footer.company',
     links: [
-      { label: 'About us', to: PATHS.about },
-      { label: 'How it works', to: PATHS.howItWorks },
-      { label: 'Campus ambassadors', to: PATHS.ambassadors },
+      { label: 'footer.about', to: PATHS.about },
+      { label: 'footer.howItWorks', to: PATHS.howItWorks },
+      { label: 'footer.ambassadors', to: PATHS.ambassadors },
     ],
   },
   {
-    title: 'Here to help',
+    title: 'footer.help',
     links: [
-      { label: 'Help center', to: PATHS.help },
-      { label: 'Safety & trust', to: PATHS.safety },
-      { label: 'Contact us', to: PATHS.contact },
+      { label: 'footer.helpCenter', to: PATHS.help },
+      { label: 'footer.safety', to: PATHS.safety },
+      { label: 'footer.contact', to: PATHS.contact },
     ],
   },
 ]
 
-const linkClasses = 'inline-block py-0.5 text-white/70 transition-colors hover:text-white'
+const linkClasses = 'inline-block py-0.5 text-ink-muted transition-colors hover:text-primary'
 
 /**
- * Site footer from the Figma design (catalog page version).
+ * Site footer ("Warm Minimal" redesign): light surface with a top border instead of a dark blue block.
  * Social icons from Figma are omitted until real account URLs are available.
  */
 export default function Footer() {
+  const { t } = useTranslation()
   const year = new Date().getFullYear()
 
   return (
-    <footer className="bg-navy text-white">
+    <footer className="border-t border-line bg-surface">
       <PageContainer className="py-10 sm:py-12">
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div className="col-span-2 sm:col-span-3 lg:col-span-1">
-            <Logo variant="inverse" />
-            <p className="mt-4 text-sm text-white/70">
-              {BRAND_COPY.footerTagline[0]}
-              <br />
-              {BRAND_COPY.footerTagline[1]}
-            </p>
+            <Logo />
+            <p className="mt-4 max-w-xs text-sm text-ink-muted">{t('footer.tagline')}</p>
           </div>
 
           {FOOTER_COLUMNS.map((column) => (
-            <nav key={column.title} aria-label={column.title}>
-              <h2 className="text-sm font-medium">{column.title}</h2>
-              <ul className="mt-4 flex flex-col gap-3 text-sm">
+            <nav key={column.title} aria-label={t(column.title)}>
+              <h2 className="text-sm font-semibold text-ink">{t(column.title)}</h2>
+              <ul className="mt-4 flex flex-col gap-2.5 text-sm">
                 {column.links.map((link) => (
                   <li key={link.label}>
                     <Link to={link.to} className={linkClasses}>
-                      {link.label}
+                      {t(link.label)}
                     </Link>
                   </li>
                 ))}
@@ -71,17 +67,17 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-white/15 pt-6 text-xs text-white/60 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mt-10 flex flex-col gap-3 border-t border-line pt-6 text-xs text-ink-muted lg:flex-row lg:items-center lg:justify-between">
           <p>
-            © {year} UniMarket. {BRAND_COPY.madeBy}
+            © {year} UniMarket. {t('footer.madeBy')}
           </p>
-          <p>*Compared with original retail prices. Prices set by sellers.</p>
-          <nav aria-label="Legal" className="flex gap-5">
+          <p>{t('footer.priceNote')}</p>
+          <nav aria-label={t('footer.legal')} className="flex gap-5">
             <Link to={PATHS.privacy} className={linkClasses}>
-              Privacy policy
+              {t('footer.privacy')}
             </Link>
             <Link to={PATHS.terms} className={linkClasses}>
-              Terms of service
+              {t('footer.terms')}
             </Link>
           </nav>
         </div>

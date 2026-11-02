@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import ContentPage from '../../components/content/ContentPage'
 import { BadgeCheckIcon, MessageCircleIcon, SparklesIcon } from '../../components/icons'
 import { buttonClasses } from '../../components/ui/buttonClasses'
+import useTranslation from '../../i18n/useTranslation'
 import { PATHS } from '../../routes/paths'
 
 const ROLE = [
@@ -12,6 +13,7 @@ const ROLE = [
 
 /** Campus ambassadors (Figma footer link). The programme is not open yet; interested students can get in touch. */
 export default function AmbassadorsPage() {
+  const { t } = useTranslation()
   return (
     <ContentPage
       eyebrow="Campus ambassadors"
@@ -24,19 +26,19 @@ export default function AmbassadorsPage() {
             <span className="flex size-10 items-center justify-center rounded-control bg-primary-soft text-primary">
               <Icon className="size-5" />
             </span>
-            <p className="mt-3 font-semibold text-ink">{title}</p>
-            <p className="mt-1 text-sm text-ink-muted">{text}</p>
+            <p className="mt-3 font-semibold text-ink">{t(title)}</p>
+            <p className="mt-1 text-sm text-ink-muted">{t(text)}</p>
           </li>
         ))}
       </ul>
 
       <div className="mt-8 flex flex-col items-start justify-between gap-4 rounded-2xl bg-primary-soft p-6 sm:flex-row sm:items-center">
         <div>
-          <p className="font-semibold text-ink">Applications aren’t open yet</p>
-          <p className="mt-1 text-sm text-ink-muted">Interested? Send us a message with your campus and programme, and we’ll contact you when the programme starts.</p>
+          <p className="font-semibold text-ink">{t('Applications aren’t open yet')}</p>
+          <p className="mt-1 text-sm text-ink-muted">{t('Interested? Send us a message with your campus and programme, and we’ll contact you when the programme starts.')}</p>
         </div>
         <Link to={PATHS.contact} className={buttonClasses()}>
-          Register your interest
+          {t('Register your interest')}
         </Link>
       </div>
     </ContentPage>

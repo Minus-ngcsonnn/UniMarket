@@ -1,4 +1,5 @@
 import Button from '../ui/Button'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * "What happens next" message with the actions available to this person (from utils/orderFlow nextStep).
@@ -9,10 +10,11 @@ import Button from '../ui/Button'
  * @param {'stacked'|'inline'} [layout] inline: message and buttons side by side on wide screens
  */
 export default function OrderNextStep({ step, canSimulate, otherParty, busyAction, onAction, layout = 'inline' }) {
+  const { t } = useTranslation()
   const hasButtons = step.actions.length > 0 || canSimulate
   return (
     <div className={`flex flex-col gap-3 rounded-control bg-subtle px-4 py-3 ${layout === 'inline' ? 'sm:flex-row sm:items-center sm:justify-between' : ''}`}>
-      <p className="text-sm text-ink">{step.text}</p>
+      <p className="text-sm text-ink">{t(step.text)}</p>
       {hasButtons && (
         <div className="flex shrink-0 flex-wrap gap-2">
           {step.actions.map((action) => (
@@ -24,7 +26,7 @@ export default function OrderNextStep({ step, canSimulate, otherParty, busyActio
               disabled={Boolean(busyAction)}
               onClick={() => onAction(action.key)}
             >
-              {action.label}
+              {t(action.label)}
             </Button>
           ))}
           {canSimulate && (
@@ -34,10 +36,10 @@ export default function OrderNextStep({ step, canSimulate, otherParty, busyActio
               loading={busyAction === 'simulate'}
               disabled={Boolean(busyAction)}
               onClick={() => onAction('simulate')}
-              title="Sample data only: performs the other person’s next step"
+              title={t("Sample data only: performs the other person’s next step")}
             >
-              Simulate {otherParty} step
-              <span className="rounded bg-warning-soft px-1 text-[10px] font-semibold text-ink">DEMO</span>
+              {t(otherParty === 'seller' ? 'Simulate seller step' : 'Simulate buyer step')}
+              <span className="rounded bg-warning-soft px-1 text-[10px] font-semibold text-ink">{t("DEMO")}</span>
             </Button>
           )}
         </div>

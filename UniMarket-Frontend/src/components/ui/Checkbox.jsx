@@ -1,11 +1,13 @@
 import { useId } from 'react'
 import FieldError from './FieldError'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * Checkbox with a clickable label and optional validation message.
  * @param {React.ReactNode} label may contain links (e.g. Terms of service)
  */
 export default function Checkbox({ label, id, error, className = '', ...props }) {
+  const { t } = useTranslation()
   const generatedId = useId()
   const checkboxId = id ?? generatedId
   const errorId = error ? `${checkboxId}-error` : undefined
@@ -22,7 +24,7 @@ export default function Checkbox({ label, id, error, className = '', ...props })
           {...props}
         />
         <label htmlFor={checkboxId} className="cursor-pointer text-sm text-ink-muted">
-          {label}
+          {typeof label === 'string' ? t(label) : label}
         </label>
       </div>
       <FieldError id={errorId}>{error}</FieldError>

@@ -8,6 +8,7 @@ import ErrorState from '../ui/ErrorState'
 import FilterTabs from '../ui/FilterTabs'
 import RatingSummary from './RatingSummary'
 import ReviewCard from './ReviewCard'
+import useTranslation from '../../i18n/useTranslation'
 
 const PAGE_SIZE = 5
 const FILTERS = [
@@ -23,6 +24,7 @@ const FILTERS = [
  * @param {string} [emptyText] message when there are no reviews yet
  */
 export default function ReviewList({ userId, rating, emptyText = 'Reviews appear here after completed orders.' }) {
+  const { t } = useTranslation()
   const [role, setRole] = useState('')
   const [visible, setVisible] = useState(PAGE_SIZE)
   const { data, previousData, error, isLoading, reload } = useAsyncData(() => accountService.listUserReviews(userId, { role: role || undefined }), `reviews-${userId}-${role}`)
@@ -36,10 +38,10 @@ export default function ReviewList({ userId, rating, emptyText = 'Reviews appear
 
   let list
   if (error) {
-    list = <ErrorState title="Couldn’t load reviews" message={error.message} onRetry={reload} />
+    list = <ErrorState title={t("Couldn’t load reviews")} message={error.message} onRetry={reload} />
   } else if (isLoading && !previousData) {
     list = (
-      <div className="flex flex-col gap-3" aria-busy="true" aria-label="Loading reviews">
+      <div className="flex flex-col gap-3" aria-busy="true" aria-label={t("Loading reviews")}>
         {[1, 2].map((key) => (
           <div key={key} className="h-24 animate-pulse rounded-card bg-subtle" />
         ))}
@@ -62,7 +64,7 @@ export default function ReviewList({ userId, rating, emptyText = 'Reviews appear
         ))}
         {reviews.length > visible && (
           <Button variant="secondary" className="self-center" onClick={() => setVisible((count) => count + PAGE_SIZE)}>
-            Show more reviews ({reviews.length - visible})
+            {t('Show more reviews ({count})', { count: reviews.length - visible })}
           </Button>
         )}
       </div>
@@ -72,7 +74,7 @@ export default function ReviewList({ userId, rating, emptyText = 'Reviews appear
   return (
     <div className="flex flex-col gap-5">
       {rating && rating.count > 0 && <RatingSummary rating={rating} className="rounded-card border border-line bg-surface p-5" />}
-      {rating?.count > 0 && <FilterTabs label="Filter reviews" options={FILTERS} value={role} onChange={changeFilter} />}
+      {rating?.count > 0 && <FilterTabs label={t("Filter reviews")} options={FILTERS} value={role} onChange={changeFilter} />}
       <div aria-live="polite">{list}</div>
     </div>
   )

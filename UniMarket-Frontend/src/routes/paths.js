@@ -27,6 +27,8 @@ export const PATHS = {
 
   // Profiles and reviews
   profile: '/profile',
+  shop: '/shop',
+  settings: '/settings',
   user: (id) => `/users/${id}`,
 
   // Admin workspace (sample data only until the backend enforces admin access)

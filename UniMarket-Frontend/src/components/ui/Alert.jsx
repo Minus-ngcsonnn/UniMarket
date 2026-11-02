@@ -1,4 +1,5 @@
 import { AlertCircleIcon, AlertTriangleIcon, CheckCircleIcon, InfoIcon } from '../icons'
+import useTranslation from '../../i18n/useTranslation'
 
 const VARIANTS = {
   info: { box: 'border-primary/20 bg-primary-soft', icon: 'text-primary', Icon: InfoIcon },
@@ -12,6 +13,7 @@ const VARIANTS = {
  * Danger alerts use role="alert" (announced immediately); others use role="status".
  */
 export default function Alert({ variant = 'info', title, children, className = '' }) {
+  const { t } = useTranslation()
   const { box, icon, Icon } = VARIANTS[variant]
 
   return (
@@ -21,8 +23,8 @@ export default function Alert({ variant = 'info', title, children, className = '
     >
       <Icon className={`mt-0.5 size-4 shrink-0 ${icon}`} />
       <div className="flex flex-col gap-0.5">
-        {title && <p className="font-medium">{title}</p>}
-        {children && <div className="text-ink-muted">{children}</div>}
+        {title && <p className="font-medium">{typeof title === 'string' ? t(title) : title}</p>}
+        {children && <div className="text-ink-muted">{typeof children === 'string' ? t(children) : children}</div>}
       </div>
     </div>
   )

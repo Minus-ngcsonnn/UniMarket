@@ -17,6 +17,7 @@ import { ACCOUNT_STATUSES } from '../../constants/moderation'
 import { CAMPUSES } from '../../constants/product'
 import { PATHS } from '../../routes/paths'
 import { formatDate } from '../../utils/format'
+import useTranslation from '../../i18n/useTranslation'
 
 const VERIFICATION_OPTIONS = [
   { value: '', label: 'Any verification' },
@@ -26,8 +27,9 @@ const VERIFICATION_OPTIONS = [
 ]
 
 function Verification({ user }) {
+  const { t } = useTranslation()
   if (user.verified || user.emailVerified) return <VerificationBadge user={user} />
-  return <StatusPill tone="warning">Not verified</StatusPill>
+  return <StatusPill tone="warning">{t("Not verified")}</StatusPill>
 }
 
 function AccountStatus({ status }) {
@@ -57,6 +59,7 @@ function userActions(user, { onDetails, open }) {
 }
 
 function UserDetailDialog({ user, open, onClose }) {
+  const { t } = useTranslation()
   return (
     <DetailDialog
       title={user.name}
@@ -71,17 +74,17 @@ function UserDetailDialog({ user, open, onClose }) {
       actions={
         <>
           <Link to={PATHS.user(user.id)} className="inline-flex h-10 items-center justify-center rounded-control px-4 text-sm font-medium text-primary hover:bg-primary-soft">
-            Public profile
+            {t("Public profile")}
           </Link>
           {user.status === 'SUSPENDED' ? (
             <Button onClick={() => open('reactivateUser', user)}>
               <RotateCcwIcon className="size-4" />
-              Reactivate
+              {t("Reactivate")}
             </Button>
           ) : (
             <Button variant="danger" onClick={() => open('suspendUser', user)}>
               <BanIcon className="size-4" />
-              Suspend
+              {t("Suspend")}
             </Button>
           )}
         </>
@@ -97,7 +100,7 @@ function UserDetailDialog({ user, open, onClose }) {
       {user.openReports > 0 && (
         <Alert variant="warning" title={`${user.openReports} open report${user.openReports > 1 ? 's' : ''} about this student`}>
           <Link to={`${PATHS.adminReports}?status=OPEN&q=${encodeURIComponent(user.name)}`} className="font-semibold text-primary hover:underline">
-            See reports
+            {t("See reports")}
           </Link>
         </Alert>
       )}
@@ -126,6 +129,7 @@ const STATUS_OPTIONS = [
  * @param {boolean} [showStatusFilter] false when the page shows status tabs instead
  */
 export default function UsersPanel({ list, showStatusFilter = true }) {
+  const { t } = useTranslation()
   const { open, dialog } = useAdminActions()
   const [detail, setDetail] = useState(null)
   const { params, list: data } = list
@@ -155,7 +159,7 @@ export default function UsersPanel({ list, showStatusFilter = true }) {
         row.openReports > 0 ? (
           <span className="inline-flex items-center gap-1 text-danger">
             <FlagIcon className="size-3.5" />
-            {row.openReports} open
+            {t('{count} open', { count: row.openReports })}
           </span>
         ) : (
           <span className="text-ink-muted">—</span>
@@ -175,10 +179,10 @@ export default function UsersPanel({ list, showStatusFilter = true }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <AdminSearch label="Search students" placeholder="Search by name, email or programme" value={params.q} onSearch={list.setSearch} />
+        <AdminSearch label={t("Search students")} placeholder={t("Search by name, email or programme")} value={params.q} onSearch={list.setSearch} />
         <div className="grid grid-cols-2 gap-2 md:flex">
-          {showStatusFilter && <Select label="Account status" hideLabel name="status" options={STATUS_OPTIONS} value={params.status} onChange={(value) => list.setFilter('status', value)} className="md:w-40" />}
-          <Select label="Verification" hideLabel name="verification" options={VERIFICATION_OPTIONS} value={params.verification} onChange={(value) => list.setFilter('verification', value)} className="md:w-52" />
+          {showStatusFilter && <Select label={t("Account status")} hideLabel name="status" options={STATUS_OPTIONS} value={params.status} onChange={(value) => list.setFilter('status', value)} className="md:w-40" />}
+          <Select label={t("Verification")} hideLabel name="verification" options={VERIFICATION_OPTIONS} value={params.verification} onChange={(value) => list.setFilter('verification', value)} className="md:w-52" />
         </div>
       </div>
       <DataTable
@@ -190,8 +194,8 @@ export default function UsersPanel({ list, showStatusFilter = true }) {
         error={list.error}
         onRetry={list.reload}
         minWidth="58rem"
-        emptyTitle="No students match"
-        emptyDescription="Try another status, verification or search."
+        emptyTitle={t("No students match")}
+        emptyDescription={t("Try another status, verification or search.")}
         pagination={data && { page: data.page, pageSize: data.pageSize, total: data.total, onPageChange: list.setPage, onPageSizeChange: list.setPageSize, itemLabel: 'students' }}
       />
 

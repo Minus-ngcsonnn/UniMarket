@@ -28,6 +28,8 @@ const MessagesPage = lazy(() => import('./pages/MessagesPage'))
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
 const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'))
 const UserProfilePage = lazy(() => import('./pages/profile/UserProfilePage'))
+const ShopDashboardPage = lazy(() => import('./pages/profile/ShopDashboardPage'))
+const SettingsPage = lazy(() => import('./pages/profile/SettingsPage'))
 const AdminOverviewPage = lazy(() => import('./pages/admin/AdminOverviewPage'))
 const AdminProductsPage = lazy(() => import('./pages/admin/AdminProductsPage'))
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
@@ -80,6 +82,8 @@ export default function App() {
 
           {/* Profiles and reviews */}
           <Route path={PATHS.profile} element={page(ProfilePage)} />
+          <Route path={PATHS.shop} element={page(ShopDashboardPage)} />
+          <Route path={PATHS.settings} element={page(SettingsPage)} />
           <Route path="/users/:id" element={page(UserProfilePage)} />
 
           {/* Information pages */}

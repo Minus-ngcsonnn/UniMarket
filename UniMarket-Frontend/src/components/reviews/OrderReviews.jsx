@@ -4,6 +4,7 @@ import { accountService, onReviewsChanged } from '../../services/account/account
 import Button from '../ui/Button'
 import ErrorState from '../ui/ErrorState'
 import ReviewCard from './ReviewCard'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * Reviews of a completed order on Order detail: the review the student wrote (or a button to write it)
@@ -11,6 +12,7 @@ import ReviewCard from './ReviewCard'
  * @param {() => void} onWriteReview opens the review dialog
  */
 export default function OrderReviews({ order, onWriteReview }) {
+  const { t } = useTranslation()
   const { data, error, isLoading, reload } = useAsyncData(() => accountService.getOrderReviews(order.id), `order-reviews-${order.id}`)
   useEffect(() => onReviewsChanged(reload), [reload])
 
@@ -19,12 +21,12 @@ export default function OrderReviews({ order, onWriteReview }) {
   return (
     <section aria-labelledby="order-reviews-title" className="rounded-card border border-line bg-surface p-5">
       <h2 id="order-reviews-title" className="mb-4 text-base font-semibold text-ink">
-        Reviews
+        {t("Reviews")}
       </h2>
       {error ? (
-        <ErrorState title="Couldn’t load reviews" message={error.message} onRetry={reload} />
+        <ErrorState title={t("Couldn’t load reviews")} message={error.message} onRetry={reload} />
       ) : isLoading ? (
-        <div className="h-24 animate-pulse rounded-card bg-subtle" aria-busy="true" aria-label="Loading reviews" />
+        <div className="h-24 animate-pulse rounded-card bg-subtle" aria-busy="true" aria-label={t("Loading reviews")} />
       ) : (
         <div className="flex flex-col gap-3">
           {data.mine ? (
@@ -32,9 +34,9 @@ export default function OrderReviews({ order, onWriteReview }) {
           ) : (
             data.canReview && (
               <div className="flex flex-col gap-3 rounded-control bg-subtle px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-ink">How was it with {other?.name}? Your review helps other students trade safely.</p>
+                <p className="text-sm text-ink">{t('How was it with {name}? Your review helps other students trade safely.', { name: other?.name })}</p>
                 <Button size="sm" onClick={onWriteReview}>
-                  {order.role === 'buyer' ? 'Review seller' : 'Review buyer'}
+                  {order.role === 'buyer' ? t('Review seller') : t('Review buyer')}
                 </Button>
               </div>
             )
@@ -42,7 +44,7 @@ export default function OrderReviews({ order, onWriteReview }) {
           {data.theirs ? (
             <ReviewCard review={data.theirs} />
           ) : (
-            <p className="text-sm text-ink-muted">{other?.name ?? 'The other student'} hasn’t reviewed you for this order yet.</p>
+            <p className="text-sm text-ink-muted">{t('{name} hasn’t reviewed you for this order yet.', { name: other?.name ?? t('The other student') })}</p>
           )}
         </div>
       )}

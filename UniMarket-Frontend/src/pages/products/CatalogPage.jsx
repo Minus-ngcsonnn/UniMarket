@@ -18,6 +18,7 @@ import useAsyncData from '../../hooks/useAsyncData'
 import useCatalogParams from '../../hooks/useCatalogParams'
 import { PATHS } from '../../routes/paths'
 import { productService } from '../../services/products/productService'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * Product Catalog ("Explore marketplace") following the Figma catalog screen:
@@ -25,6 +26,7 @@ import { productService } from '../../services/products/productService'
  * Below lg the filters open in a drawer.
  */
 export default function CatalogPage() {
+  const { t } = useTranslation()
   const { filters, update, clearAll } = useCatalogParams()
   const { data, previousData, error, isLoading, reload } = useAsyncData(
     () => productService.listProducts({ ...filters, pageSize: CATALOG_PAGE_SIZE }),
@@ -48,17 +50,17 @@ export default function CatalogPage() {
 
   let content
   if (error) {
-    content = <ErrorState title="Couldn’t load listings" message={error.message} onRetry={reload} />
+    content = <ErrorState title={t("Couldn’t load listings")} message={error.message} onRetry={reload} />
   } else if (!result) {
     content = <ProductGrid isLoading layout={isSidebarHidden ? 'wide' : 'catalog'} skeletonCount={6} />
   } else if (result.items.length === 0) {
     content = (
       <EmptyState
-        title="No items match your filters"
-        description="Try a different search, widen the price range or remove some filters."
+        title={t("No items match your filters")}
+        description={t("Try a different search, widen the price range or remove some filters.")}
         action={
           <Button variant="secondary" onClick={clearAll}>
-            Clear all filters
+            {t("Clear all filters")}
           </Button>
         }
       />
@@ -66,7 +68,7 @@ export default function CatalogPage() {
   } else {
     content = (
       <div className={`flex flex-col gap-8 transition-opacity ${isLoading ? 'opacity-60' : ''}`} aria-busy={isLoading}>
-        <ProductGrid products={result.items} layout={isSidebarHidden ? 'wide' : 'catalog'} label="Products" />
+        <ProductGrid products={result.items} layout={isSidebarHidden ? 'wide' : 'catalog'} label={t('Products')} />
         <Pagination page={filters.page} pageSize={CATALOG_PAGE_SIZE} total={total} onPageChange={changePage} />
       </div>
     )
@@ -74,18 +76,18 @@ export default function CatalogPage() {
 
   return (
     <PageContainer className="py-6 sm:py-8">
-      <title>Explore marketplace · UniMarket</title>
+      <title>{t("Explore marketplace · UniMarket")}</title>
 
       <Breadcrumbs items={[{ label: 'Home', to: PATHS.home }, { label: 'Explore marketplace' }]} />
 
       <header className="mt-4 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight text-ink sm:text-[2rem]">Good finds. Right on campus.</h1>
-          <p className="mt-1.5 text-ink-muted">Textbooks, tech, and everything in between. Find your next favorite for less.</p>
+          <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight text-ink sm:text-[2rem]">{t("Good finds. Right on campus.")}</h1>
+          <p className="mt-1.5 text-ink-muted">{t("Textbooks, tech, and everything in between. Find your next favorite for less.")}</p>
         </div>
         <p className="hidden items-center gap-2 rounded-control bg-primary-soft px-4 py-2.5 text-sm font-medium text-primary sm:inline-flex">
           <BadgeCheckIcon className="size-4.5" />
-          From students, for students
+          {t("From students, for students")}
         </p>
       </header>
 
@@ -103,9 +105,9 @@ export default function CatalogPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 id="results-title" aria-live="polite" className="flex items-baseline gap-2">
               <span className="text-xl font-bold text-ink">
-                {result ? `${total} ${total === 1 ? 'item' : 'items'}` : 'Loading…'}
+                {result ? t(total === 1 ? '{count} item' : '{count} items', { count: total }) : t('Loading…')}
               </span>
-              {result && <span className="text-sm text-ink-muted">{filters.q ? `for “${filters.q}”` : 'on your campus'}</span>}
+              {result && <span className="text-sm text-ink-muted">{filters.q ? t('for “{query}”', { query: filters.q }) : t('on your campus')}</span>}
             </h2>
 
             <div className="flex items-center gap-2">
@@ -114,10 +116,10 @@ export default function CatalogPage() {
                 <Button
                   variant="secondary"
                   onClick={() => setIsDrawerOpen(true)}
-                  aria-label={activeFilterCount ? `Filters, ${activeFilterCount} active` : 'Filters'}
+                  aria-label={activeFilterCount ? t('Filters, {count} active', { count: activeFilterCount }) : t('Filters')}
                 >
                   <SlidersIcon className="size-4" />
-                  Filters
+                  {t("Filters")}
                   {activeFilterCount > 0 && (
                     <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] text-white">{activeFilterCount}</span>
                   )}
@@ -126,15 +128,15 @@ export default function CatalogPage() {
               {isSidebarHidden && (
                 <div className="hidden lg:block">
                   <Button variant="ghost" onClick={() => setIsSidebarHidden(false)}>
-                    Show sidebar
+                    {t("Show sidebar")}
                   </Button>
                 </div>
               )}
               <span className="hidden text-sm text-ink-muted sm:inline" aria-hidden="true">
-                Sort by
+                {t("Sort by")}
               </span>
               <Select
-                label="Sort by"
+                label={t("Sort by")}
                 hideLabel
                 options={SORT_OPTIONS}
                 value={filters.sort}
@@ -155,12 +157,12 @@ export default function CatalogPage() {
           <div className="flex min-h-full flex-col">
             <div className="flex items-center justify-between border-b border-line px-5 py-4">
               <p id={drawerTitleId} className="text-base font-semibold text-ink">
-                Filter listings
+                {t("Filter listings")}
               </p>
               <button
                 type="button"
                 onClick={() => setIsDrawerOpen(false)}
-                aria-label="Close filters"
+                aria-label={t('Close filters')}
                 className="flex size-8 items-center justify-center rounded-control text-ink-muted hover:bg-subtle hover:text-ink"
               >
                 <XIcon className="size-5" />
@@ -171,10 +173,10 @@ export default function CatalogPage() {
             </div>
             <div className="sticky bottom-0 flex gap-2 border-t border-line bg-surface px-5 py-4">
               <Button variant="secondary" onClick={clearAll} className="flex-1">
-                Clear all
+                {t("Clear all")}
               </Button>
               <Button onClick={() => setIsDrawerOpen(false)} className="flex-1">
-                Show {total} {total === 1 ? 'item' : 'items'}
+                {t(total === 1 ? 'Show {count} item' : 'Show {count} items', { count: total })}
               </Button>
             </div>
           </div>

@@ -9,7 +9,7 @@ import { HeartIcon, ImageIcon, MapPinIcon } from '../icons'
 export default function ProductCardSkeleton({ animated = false }) {
   return (
     <div aria-hidden="true" className={`overflow-hidden rounded-card border border-line bg-surface ${animated ? 'animate-pulse' : ''}`}>
-      <div className="relative flex aspect-[3/2] items-center justify-center bg-subtle text-line">
+      <div className="relative flex aspect-[4/3] items-center justify-center bg-subtle text-line">
         {!animated && <ImageIcon className="size-10" />}
         <span className="absolute top-3 right-3 flex size-8 items-center justify-center rounded-full bg-surface text-line">
           {!animated && <HeartIcon className="size-4" />}

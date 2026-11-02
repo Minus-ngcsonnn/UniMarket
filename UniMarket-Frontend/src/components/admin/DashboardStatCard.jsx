@@ -1,3 +1,5 @@
+import useTranslation from '../../i18n/useTranslation'
+
 /** Small trend line (Figma overview cards). Decorative: the number next to it is the information. */
 function Sparkline({ values, className = '' }) {
   if (!values?.length) return null
@@ -17,12 +19,13 @@ function Sparkline({ values, className = '' }) {
  * @param {boolean} [isSample] shows a "Sample" tag so demo numbers are never read as real figures
  */
 export default function DashboardStatCard({ label, value, note, trend, Icon, isSample = false }) {
+  const { t } = useTranslation()
   return (
     <article className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
       <div className="flex items-start justify-between gap-2">
         <h3 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-muted">
-          {label}
-          {isSample && <span className="rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-ink uppercase">Sample</span>}
+          {t(label)}
+          {isSample && <span className="rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-ink uppercase">{t("Sample")}</span>}
         </h3>
         {Icon && <Icon className="size-5 shrink-0 text-primary" />}
       </div>
@@ -30,7 +33,7 @@ export default function DashboardStatCard({ label, value, note, trend, Icon, isS
         <p className="min-w-0 text-2xl leading-tight font-semibold tracking-tight whitespace-nowrap text-ink tabular-nums 2xl:text-[1.75rem]">{value}</p>
         <Sparkline values={trend} />
       </div>
-      {note && <p className="text-xs text-ink-muted">{note}</p>}
+      {note && <p className="text-xs text-ink-muted">{t(note)}</p>}
     </article>
   )
 }

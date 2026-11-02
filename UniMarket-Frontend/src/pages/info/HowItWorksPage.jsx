@@ -5,6 +5,7 @@ import { BadgeCheckIcon, LockIcon, ShieldCheckIcon } from '../../components/icon
 import { buttonClasses } from '../../components/ui/buttonClasses'
 import { FAQ_GROUPS } from '../../constants/faq'
 import { SELLER_CONFIRM_HOURS } from '../../constants/order'
+import useTranslation from '../../i18n/useTranslation'
 import { PATHS } from '../../routes/paths'
 
 const BUYING = [
@@ -30,11 +31,12 @@ const PRINCIPLES = [
 ]
 
 function Steps({ id, title, steps, cta }) {
+  const { t } = useTranslation()
   return (
     <section aria-labelledby={id} className="rounded-2xl border border-line bg-surface p-5 sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id={id} className="text-xl font-extrabold tracking-tight text-ink">
-          {title}
+          {t(title)}
         </h2>
         {cta}
       </div>
@@ -42,8 +44,8 @@ function Steps({ id, title, steps, cta }) {
         {steps.map((step, index) => (
           <li key={step.title} className="flex flex-col gap-2 rounded-card bg-subtle p-4">
             <span className="flex size-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">{index + 1}</span>
-            <p className="font-semibold text-ink">{step.title}</p>
-            <p className="text-sm text-ink-muted">{step.text}</p>
+            <p className="font-semibold text-ink">{t(step.title)}</p>
+            <p className="text-sm text-ink-muted">{t(step.text)}</p>
           </li>
         ))}
       </ol>
@@ -53,6 +55,7 @@ function Steps({ id, title, steps, cta }) {
 
 /** How it works: the Business Plan buying and selling flows explained step by step. */
 export default function HowItWorksPage() {
+  const { t } = useTranslation()
   const buyingFaq = FAQ_GROUPS.find((group) => group.id === 'payments').items
 
   return (
@@ -68,7 +71,7 @@ export default function HowItWorksPage() {
           steps={BUYING}
           cta={
             <Link to={PATHS.marketplace} className={buttonClasses({ size: 'sm' })}>
-              Explore marketplace
+              {t('Explore marketplace')}
             </Link>
           }
         />
@@ -78,7 +81,7 @@ export default function HowItWorksPage() {
           steps={SELLING}
           cta={
             <Link to={PATHS.sell} className={buttonClasses({ variant: 'secondary', size: 'sm' })}>
-              Sell an item
+              {t('Sell an item')}
             </Link>
           }
         />
@@ -88,8 +91,8 @@ export default function HowItWorksPage() {
             <li key={title} className="flex gap-3 rounded-card border border-line bg-surface p-5">
               <Icon className="size-6 shrink-0 text-primary" />
               <div>
-                <p className="font-semibold text-ink">{title}</p>
-                <p className="mt-1 text-sm text-ink-muted">{text}</p>
+                <p className="font-semibold text-ink">{t(title)}</p>
+                <p className="mt-1 text-sm text-ink-muted">{t(text)}</p>
               </div>
             </li>
           ))}
@@ -98,10 +101,10 @@ export default function HowItWorksPage() {
         <section aria-labelledby="faq-title" className="mt-4">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
             <h2 id="faq-title" className="text-xl font-extrabold tracking-tight text-ink">
-              Payments & delivery questions
+              {t('Payments & delivery questions')}
             </h2>
             <Link to={PATHS.help} className="text-sm font-semibold text-primary hover:underline">
-              All questions →
+              {t('All questions')} →
             </Link>
           </div>
           <FaqList items={buyingFaq} />

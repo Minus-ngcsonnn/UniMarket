@@ -16,7 +16,7 @@ export default function Logo({ variant = 'default', className = '' }) {
       <span className={`flex size-9 items-center justify-center rounded-lg ${tile}`}>
         <ShoppingBagIcon className="size-5" />
       </span>
-      <span className={`text-xl tracking-tight sm:text-2xl ${text}`}>UniMarket</span>
+      <span className={`text-xl font-bold tracking-tight sm:text-2xl ${text}`}>UniMarket</span>
     </Link>
   )
 }
