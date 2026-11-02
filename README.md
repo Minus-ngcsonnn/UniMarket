@@ -10,7 +10,7 @@ UniMarket is a full-stack web marketplace application built with a **Spring Boot
 
 | Layer      | Technology                                                        |
 |------------|-------------------------------------------------------------------|
-| Backend    | Java 21, Spring Boot 3.5 (Web, Data JPA, Validation), Maven       |
+| Backend    | Java 21, Spring Boot 3.5 (Web, Data JPA, Validation, Actuator), Maven |
 | Database   | Microsoft SQL Server (2019/2022), `mssql-jdbc` driver             |
 | Frontend   | React 19, Vite 8, Tailwind CSS 4, React Router, Axios, ESLint     |
 | UI         | Inter font (self-hosted), shared design tokens in `src/index.css` |
@@ -56,7 +56,10 @@ UniMarket/
 │   ├── package.json
 │   └── vite.config.js               Dev server + /api proxy
 ├── database/
-│   └── schema.sql                   Idempotent database creation script
+│   ├── baseline/                    V001 installer (UniMarket_BusinessAligned.sql)
+│   ├── migrations/                  Numbered migrations (V002 multi-item orders, ...)
+│   ├── validation/ tests/ schema/   Checks, test scripts, generated schema reference
+│   └── README.md                    How to run and test database scripts
 ├── .vscode/extensions.json          Recommended VS Code extensions for the team
 ├── .gitattributes
 ├── .gitignore
@@ -96,29 +99,26 @@ java -version   # must show 21
 
 ### 4.1 Create the database
 
-`database/schema.sql` creates `UniMarketDB` if it does not exist. It is safe to re-run and **never drops** existing objects.
+The schema, stored procedures, views, triggers and demo data come from **`database/baseline/V001__UniMarket_BusinessAligned.sql`** (SQL Server 2019+), which creates the **`UniMarketJava`** database. It is the single source of truth for the schema.
 
-```powershell
-# Default instance, Windows authentication
-sqlcmd -S localhost -E -i database\schema.sql
-
-# Named instance (e.g. SQLEXPRESS)
-sqlcmd -S "localhost\SQLEXPRESS" -E -i database\schema.sql
-```
-
-You can also open `database/schema.sql` in SSMS or the VS Code *mssql* extension and execute it.
+- Run it **once** on a fresh server: in SSMS enable *Query → SQLCMD Mode*, then execute the **entire** file.
+- The script stops with an error if `UniMarketJava` already exists. It never resets or drops a database.
+- Later changes are numbered migrations in `database/migrations/` (see `database/README.md`). The old `UniMarketDB` placeholder is kept only in `database/legacy/`.
 
 ### 4.2 Create a SQL login for the application
 
-The backend connects with **SQL Server Authentication**. In SSMS (as an administrator), run something like the following, using your own strong password:
+The backend connects with **SQL Server Authentication** (Windows authentication would need an extra native DLL). Use a dedicated login rather than `sa`. In SSMS (as an administrator), run something like the following, using your own strong password:
 
 ```sql
 CREATE LOGIN unimarket_app WITH PASSWORD = '<choose-a-strong-password>';
-USE UniMarketDB;
+USE UniMarketJava;
 CREATE USER unimarket_app FOR LOGIN unimarket_app;
 ALTER ROLE db_datareader ADD MEMBER unimarket_app;
 ALTER ROLE db_datawriter ADD MEMBER unimarket_app;
+GRANT EXECUTE ON SCHEMA::dbo TO unimarket_app;   -- the order and payment procedures (usp_*)
 ```
+
+The login does not need permission to create or alter tables.
 
 Requirements on the server:
 
@@ -131,11 +131,12 @@ The backend reads these variables. They are never hard-coded:
 
 | Variable             | Description                                       | Default                                   |
 |----------------------|---------------------------------------------------|-------------------------------------------|
-| `DB_URL`             | JDBC URL                                          | `jdbc:sqlserver://localhost:1433;databaseName=UniMarketDB;encrypt=true;trustServerCertificate=true` |
+| `DB_URL`             | JDBC URL                                          | `jdbc:sqlserver://localhost:1433;databaseName=UniMarketJava;encrypt=true;trustServerCertificate=true` |
 | `DB_USERNAME`        | SQL login                                         | *(none)*                                  |
 | `DB_PASSWORD`        | SQL password                                      | *(none)*                                  |
-| `HIBERNATE_DDL_AUTO` | Hibernate schema mode                             | `validate`                                |
+| `DB_POOL_SIZE`       | Maximum database connections                      | `10`                                      |
 | `SERVER_PORT`        | API port                                          | `8080`                                    |
+| `SPRING_PROFILES_ACTIVE` | `dev` (default) or `nodb`                     | `dev`                                     |
 
 **Option A: `.env` file (recommended).** Copy the example and edit it. `UniMarket-Backend/.env` is git-ignored.
 
@@ -148,7 +149,7 @@ notepad .env
 **Option B: environment variables in the current PowerShell session.** These take precedence over `.env`.
 
 ```powershell
-$env:DB_URL      = "jdbc:sqlserver://localhost:1433;databaseName=UniMarketDB;encrypt=true;trustServerCertificate=true"
+$env:DB_URL      = "jdbc:sqlserver://localhost:1433;databaseName=UniMarketJava;encrypt=true;trustServerCertificate=true"
 $env:DB_USERNAME = "unimarket_app"
 $env:DB_PASSWORD = "<your-password>"
 ```
@@ -157,9 +158,9 @@ $env:DB_PASSWORD = "<your-password>"
 
 ### 4.4 Schema management policy
 
-- `spring.jpa.hibernate.ddl-auto=validate`: Hibernate only **checks** that entities match existing tables. It never creates, alters or drops anything.
-- All table changes go into `database/schema.sql` using the `IF OBJECT_ID(...) IS NULL` pattern shown in the file.
-- Never use `create` or `create-drop` against a shared database.
+- `spring.jpa.hibernate.ddl-auto=validate` is fixed in `application.properties`: Hibernate only **checks** that entities match existing tables. It never creates, alters or drops anything. Never use `create`, `create-drop` or `update`.
+- Schema changes are new numbered migrations in `database/migrations/`, tested on a copy first (`database/tests/`), then entities are updated to match.
+- Entities use the exact SQL table and column names (e.g. `Users.UserId`); see `UniMarket-Backend/docs/FRONTEND_INTEGRATION.md` for value mappings such as `Like New` ↔ `LIKE_NEW`.
 
 ---
 
@@ -191,7 +192,17 @@ curl.exe http://localhost:8080/api/health
 Expected response:
 
 ```json
-{ "status": "UP", "application": "UniMarket" }
+{ "status": "UP", "application": "UniMarket", "database": "UP" }
+```
+
+`database` is `UP` when SQL Server answers a short connectivity check, `DOWN` when it does not, and `DISABLED` with the `nodb` profile. `GET /actuator/health` is also available (status only, no details); no other Actuator endpoint is exposed.
+
+Errors from every endpoint use one JSON format: `timestamp`, `status`, `error`, `code`, `message`, `path` and, for validation errors, `fieldErrors`. Stack traces and SQL details are never returned.
+
+**Tests that use the real database** (read-only) are skipped by default. With `.env` configured:
+
+```powershell
+$env:UNIMARKET_DB_IT = "true"; .\mvnw.cmd test; Remove-Item Env:UNIMARKET_DB_IT
 ```
 
 **No SQL Server available?** Use the `nodb` profile shown above. It disables the DataSource and JPA auto-configuration so the application starts without a database. Without it, startup fails with a clear error such as `Login failed for user ''` when credentials are missing or the server is unreachable.

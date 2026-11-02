@@ -13,7 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Web-layer test for {@link HealthController}. Runs without a database.
+ * Web-layer test for {@link HealthController}. Runs without a database, so the
+ * database check reports DISABLED.
  */
 @WebMvcTest(HealthController.class)
 @Import(HealthService.class)
@@ -28,6 +29,7 @@ class HealthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
                 .andExpect(jsonPath("$.status").value("UP"))
-                .andExpect(jsonPath("$.application").value("UniMarket"));
+                .andExpect(jsonPath("$.application").value("UniMarket"))
+                .andExpect(jsonPath("$.database").value("DISABLED"));
     }
 }
