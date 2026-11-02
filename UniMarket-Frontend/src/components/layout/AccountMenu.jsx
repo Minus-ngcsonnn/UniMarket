@@ -4,7 +4,7 @@ import useOrderAttention from '../../hooks/useOrderAttention'
 import useSaved from '../../hooks/useSaved'
 import useTranslation from '../../i18n/useTranslation'
 import { PATHS } from '../../routes/paths'
-import { BadgeCheckIcon, ChevronDownIcon, ChevronRightIcon, HeartIcon, LayoutDashboardIcon, LogOutIcon, MessageCircleIcon, PackageIcon, ShoppingCartIcon, StarIcon, StoreIcon, TagIcon, UserIcon } from '../icons'
+import { BadgeCheckIcon, ChevronDownIcon, ChevronRightIcon, HeartIcon, LayoutDashboardIcon, LogOutIcon, MessageCircleIcon, PackageIcon, ShoppingCartIcon, SettingsIcon, StarIcon, StoreIcon, TagIcon, UserIcon } from '../icons'
 import Avatar from '../ui/Avatar'
 
 /** One number in the compact summary row. */
@@ -42,6 +42,10 @@ export default function AccountMenu({ profile, isDemo, onSignOut }) {
       { label: t('account.mySales'), Icon: ShoppingCartIcon, to: PATHS.sales, badge: todo(attention.seller) },
       { label: t('account.favorites'), Icon: HeartIcon, to: PATHS.saved },
       { label: t('account.messages'), Icon: MessageCircleIcon, to: PATHS.messages },
+    ],
+    [
+      { label: t('account.shop'), Icon: StoreIcon, to: PATHS.shop },
+      { label: t('account.settings'), Icon: SettingsIcon, to: PATHS.settings },
     ],
     // No admin sign-in exists yet; the demo workspace is reachable from the demo account only.
     ...(isDemo ? [[{ label: t('account.admin'), Icon: LayoutDashboardIcon, to: PATHS.admin }]] : []),

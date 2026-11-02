@@ -6,6 +6,7 @@ import { BellIcon, FlagIcon, MenuIcon, SearchIcon, TagIcon } from '../icons'
 import ActionMenu from '../ui/ActionMenu'
 import Avatar from '../ui/Avatar'
 import Select from '../ui/Select'
+import useTranslation from '../../i18n/useTranslation'
 
 const CAMPUS_OPTIONS = [{ value: '', label: 'All campuses' }, ...CAMPUS_KEYS.map((key) => ({ value: key, label: `${UNIVERSITY_NAME} ${CAMPUSES[key].label}` }))]
 
@@ -18,6 +19,7 @@ const SEARCHABLE = [PATHS.adminUsers, PATHS.adminProducts, PATHS.adminOrders, PA
  * @param {() => void} onOpenMenu opens the sidebar drawer on small screens
  */
 export default function AdminTopbar({ campus, onCampusChange, counts = {}, admin, onOpenMenu }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const inputRef = useRef(null)
@@ -43,20 +45,20 @@ export default function AdminTopbar({ campus, onCampusChange, counts = {}, admin
   }
 
   const notifications = [
-    ...(counts.pendingListings > 0 ? [{ label: `${counts.pendingListings} listing${counts.pendingListings > 1 ? 's' : ''} awaiting review`, Icon: TagIcon, to: `${PATHS.adminProducts}?moderation=PENDING` }] : []),
-    ...(counts.openReports > 0 ? [{ label: `${counts.openReports} open violation report${counts.openReports > 1 ? 's' : ''}`, Icon: FlagIcon, to: `${PATHS.adminReports}?status=OPEN` }] : []),
+    ...(counts.pendingListings > 0 ? [{ label: t(counts.pendingListings > 1 ? '{count} listings awaiting review' : '{count} listing awaiting review', { count: counts.pendingListings }), Icon: TagIcon, to: `${PATHS.adminProducts}?moderation=PENDING` }] : []),
+    ...(counts.openReports > 0 ? [{ label: t(counts.openReports > 1 ? '{count} open violation reports' : '{count} open violation report', { count: counts.openReports }), Icon: FlagIcon, to: `${PATHS.adminReports}?status=OPEN` }] : []),
   ]
   const notificationCount = (counts.pendingListings ?? 0) + (counts.openReports ?? 0)
 
   return (
     <div className="flex h-16 items-center gap-2 border-b border-line bg-surface px-4 sm:gap-3 sm:px-6">
-      <button type="button" onClick={onOpenMenu} aria-label="Open admin menu" className="flex size-10 items-center justify-center rounded-control text-ink hover:bg-subtle lg:hidden">
+      <button type="button" onClick={onOpenMenu} aria-label={t("Open admin menu")} className="flex size-10 items-center justify-center rounded-control text-ink hover:bg-subtle lg:hidden">
         <MenuIcon className="size-5" />
       </button>
 
       <form role="search" onSubmit={submit} className="relative min-w-0 flex-1 md:max-w-md">
         <label htmlFor="admin-search" className="sr-only">
-          Search {section.replace('/admin/', '')}
+          {t(`Search ${section.replace('/admin/', '')}`)}
         </label>
         <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-muted" />
         <input
@@ -65,7 +67,7 @@ export default function AdminTopbar({ campus, onCampusChange, counts = {}, admin
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder={`Search ${section.replace('/admin/', '')}…`}
+          placeholder={`${t(`Search ${section.replace('/admin/', '')}`)}…`}
           className="h-10 w-full rounded-control border border-line bg-canvas pr-14 pl-9 text-sm text-ink placeholder:text-ink-muted/80 focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary/20 focus:outline-none"
         />
         <kbd className="pointer-events-none absolute top-1/2 right-2.5 hidden -translate-y-1/2 rounded border border-line bg-surface px-1.5 text-[11px] text-ink-muted sm:block">⌘K</kbd>
@@ -73,7 +75,7 @@ export default function AdminTopbar({ campus, onCampusChange, counts = {}, admin
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
         <Select
-          label="Campus"
+          label={t("Campus")}
           hideLabel
           name="campus"
           options={CAMPUS_OPTIONS}
@@ -83,11 +85,11 @@ export default function AdminTopbar({ campus, onCampusChange, counts = {}, admin
         />
         <div className="relative">
           <ActionMenu
-            label={notificationCount > 0 ? `Notifications, ${notificationCount} need attention` : 'Notifications'}
-            heading="Needs attention"
+            label={notificationCount > 0 ? t('Notifications, {count} need attention', { count: notificationCount }) : t('Notifications')}
+            heading={t("Needs attention")}
             icon={BellIcon}
             triggerClassName="size-10 rounded-full"
-            items={notifications.length ? notifications : [{ label: 'You’re all caught up', Icon: BellIcon, to: PATHS.admin }]}
+            items={notifications.length ? notifications : [{ label: t('You’re all caught up'), Icon: BellIcon, to: PATHS.admin }]}
           />
           {notificationCount > 0 && <span className="pointer-events-none absolute top-2 right-2 size-2 rounded-full bg-danger ring-2 ring-surface" aria-hidden="true" />}
         </div>
@@ -95,7 +97,7 @@ export default function AdminTopbar({ campus, onCampusChange, counts = {}, admin
           <Avatar name={admin?.name ?? 'Admin'} size="sm" />
           <div className="hidden leading-tight xl:block">
             <p className="text-sm font-semibold text-ink">{admin?.name ?? 'Admin'}</p>
-            <p className="text-xs text-ink-muted">{admin?.title ?? 'Not signed in'}</p>
+            <p className="text-xs text-ink-muted">{admin?.title ?? t('Not signed in')}</p>
           </div>
         </div>
       </div>

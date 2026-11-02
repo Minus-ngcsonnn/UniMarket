@@ -1,4 +1,5 @@
 import { StarIcon } from '../icons'
+import useTranslation from '../../i18n/useTranslation'
 
 const SIZES = { sm: 'size-3.5', md: 'size-4', lg: 'size-5' }
 
@@ -7,9 +8,10 @@ const SIZES = { sm: 'size-3.5', md: 'size-4', lg: 'size-5' }
  * @param {number|null} value 0–5
  */
 export default function RatingStars({ value, size = 'md', className = '' }) {
+  const { t } = useTranslation()
   const rating = Math.max(0, Math.min(5, value ?? 0))
   return (
-    <span role="img" aria-label={`${rating} out of 5 stars`} className={`inline-flex items-center gap-0.5 ${className}`}>
+    <span role="img" aria-label={t('{rating} out of 5 stars', { rating })} className={`inline-flex items-center gap-0.5 ${className}`}>
       {[1, 2, 3, 4, 5].map((star) => {
         const fill = Math.max(0, Math.min(1, rating - (star - 1)))
         return (

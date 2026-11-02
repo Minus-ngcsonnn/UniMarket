@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import useTranslation from '../../i18n/useTranslation'
 import { GraduationCapIcon } from '../icons'
 import { buttonClasses } from '../ui/buttonClasses'
 
@@ -10,6 +11,7 @@ const LABEL = 'Sign up with University Email (.edu.vn)'
  * - With `onClick`: a toggle button (Register page switches the email field to university email).
  */
 export default function UniversityEmailButton({ to, onClick, pressed = false }) {
+  const { t } = useTranslation()
   const className = buttonClasses({
     variant: pressed ? 'selected' : 'secondary',
     size: 'lg',
@@ -19,7 +21,7 @@ export default function UniversityEmailButton({ to, onClick, pressed = false }) 
   const content = (
     <>
       <GraduationCapIcon className="size-5" />
-      {LABEL}
+      {t(LABEL)}
     </>
   )
 

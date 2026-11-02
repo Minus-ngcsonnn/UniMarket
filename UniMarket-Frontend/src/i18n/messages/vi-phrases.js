@@ -156,6 +156,8 @@ export const viPhrases = {
   'Student deals · UniMarket': 'Ưu đãi sinh viên · UniMarket',
   'The biggest savings on campus': 'Tiết kiệm nhiều nhất trong trường',
   'Couldn’t load deals': 'Không tải được ưu đãi',
+  'Listings at least {percent}% below their original price, biggest savings first.': 'Các tin rẻ hơn giá mới ít nhất {percent}%, tiết kiệm nhiều nhất xếp trước.',
+  'UniMarket only accepts online payment through the website. You’ll pay each order after the seller confirms it. Never transfer money to a seller directly.': 'UniMarket chỉ chấp nhận thanh toán online qua website. Bạn thanh toán từng đơn sau khi người bán xác nhận. Không bao giờ chuyển tiền trực tiếp cho người bán.',
   'No deals right now': 'Hiện chưa có ưu đãi',
   'Check back soon, or explore everything on the marketplace.': 'Quay lại sau, hoặc khám phá toàn bộ chợ.',
 

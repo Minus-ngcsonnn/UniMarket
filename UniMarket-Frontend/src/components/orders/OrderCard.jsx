@@ -53,7 +53,7 @@ export default function OrderCard({ order, role, onAction, busyAction }) {
           onAction={(action) => onAction(order, action)}
         />
 
-        <Link to={PATHS.order(order.id)} className="group inline-flex w-fit items-center gap-1 text-sm font-semibold text-primary">
+        <Link to={PATHS.order(order.id)} className="group inline-flex min-h-6 w-fit items-center gap-1 py-1 text-sm font-semibold text-primary">
           {t("View order details")}
           <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
         </Link>

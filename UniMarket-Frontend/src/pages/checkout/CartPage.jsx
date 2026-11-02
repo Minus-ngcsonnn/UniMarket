@@ -307,7 +307,7 @@ export default function CartPage() {
             {t("Your shopping cart")}
             {cart.count > 0 && (
               <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold tracking-normal text-primary">
-                {cart.count} {cart.count === 1 ? 'listing' : 'listings'}
+                {t(cart.count === 1 ? '{count} listing' : '{count} listings', { count: cart.count })}
               </span>
             )}
           </h1>

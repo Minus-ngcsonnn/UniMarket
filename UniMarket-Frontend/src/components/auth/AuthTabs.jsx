@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router'
 import { PATHS } from '../../routes/paths'
+import useTranslation from '../../i18n/useTranslation'
 
 const TABS = [
   { label: 'Login', to: PATHS.login },
@@ -8,8 +9,9 @@ const TABS = [
 
 /** Login | Register switch (Figma segmented control). Each tab is a real link to its page. */
 export default function AuthTabs() {
+  const { t } = useTranslation()
   return (
-    <nav aria-label="Account access" className="grid grid-cols-2 gap-1 rounded-control bg-subtle p-1">
+    <nav aria-label={t("Account access")} className="grid grid-cols-2 gap-1 rounded-control bg-subtle p-1">
       {TABS.map(({ label, to }) => (
         <NavLink
           key={to}

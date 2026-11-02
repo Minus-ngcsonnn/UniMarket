@@ -160,7 +160,7 @@ export default function MyListingsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-ink-muted">{categoryName(listing.categorySlug)}</td>
+                  <td className="px-4 py-3 text-ink-muted">{t(categoryName(listing.categorySlug))}</td>
                   <td className="px-4 py-3 font-medium whitespace-nowrap text-ink">{formatPrice(listing.price)}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col items-start gap-1">

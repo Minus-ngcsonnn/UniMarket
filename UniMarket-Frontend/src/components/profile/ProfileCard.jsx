@@ -3,8 +3,8 @@ import { MapPinIcon } from '../icons'
 import RatingStars from '../reviews/RatingStars'
 import Avatar from '../ui/Avatar'
 import VerificationBadge from './VerificationBadge'
+import useTranslation from '../../i18n/useTranslation'
 
-const memberSinceFormatter = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' })
 
 /**
  * Student profile summary: avatar, name, verification, programme, campus, rating and activity.
@@ -12,6 +12,7 @@ const memberSinceFormatter = new Intl.DateTimeFormat('en-GB', { month: 'long', y
  * @param {'h1'|'h2'} [titleAs]
  */
 export default function ProfileCard({ profile, actions, titleAs: Title = 'h1', className = '' }) {
+  const { t, lang } = useTranslation()
   const { rating, stats } = profile
   const facts = [
     ['Active listings', stats.activeListings],
@@ -20,7 +21,7 @@ export default function ProfileCard({ profile, actions, titleAs: Title = 'h1', c
   ]
 
   return (
-    <section aria-label="Profile" className={`flex flex-col gap-5 rounded-card border border-line bg-surface p-5 sm:p-6 ${className}`}>
+    <section aria-label={t("Profile")} className={`flex flex-col gap-5 rounded-card border border-line bg-surface p-5 sm:p-6 ${className}`}>
       <div className="flex items-start gap-4">
         <Avatar name={profile.name} size="xl" />
         <div className="flex min-w-0 flex-col gap-1.5">
@@ -33,20 +34,20 @@ export default function ProfileCard({ profile, actions, titleAs: Title = 'h1', c
       <div className="flex flex-col gap-2 text-sm text-ink-muted">
         <p className="flex items-center gap-1.5">
           <MapPinIcon className="size-4 shrink-0 text-primary" />
-          {UNIVERSITY_NAME} · {CAMPUSES[profile.campus]?.label}
+          {t(UNIVERSITY_NAME)} · {t(CAMPUSES[profile.campus]?.label)}
         </p>
-        <p>Member since {memberSinceFormatter.format(new Date(profile.memberSince))}</p>
+        <p>{t('Member since {date}', { date: new Intl.DateTimeFormat(lang === 'vi' ? 'vi-VN' : 'en-GB', { month: 'long', year: 'numeric' }).format(new Date(profile.memberSince)) })}</p>
         <p className="flex flex-wrap items-center gap-2">
           {rating.count > 0 ? (
             <>
               <RatingStars value={rating.average} size="sm" />
               <span className="font-medium text-ink">{rating.average.toFixed(1)}</span>
               <span>
-                ({rating.count} {rating.count === 1 ? 'review' : 'reviews'})
+                ({t(rating.count === 1 ? '{count} review' : '{count} reviews', { count: rating.count })})
               </span>
             </>
           ) : (
-            'No reviews yet'
+            t('No reviews yet')
           )}
         </p>
       </div>
@@ -56,7 +57,7 @@ export default function ProfileCard({ profile, actions, titleAs: Title = 'h1', c
       <dl className="grid grid-cols-3 divide-x divide-line rounded-control bg-subtle py-3 text-center">
         {facts.map(([label, value]) => (
           <div key={label} className="flex flex-col-reverse gap-0.5 px-2">
-            <dt className="text-xs text-ink-muted">{label}</dt>
+            <dt className="text-xs text-ink-muted">{t(label)}</dt>
             <dd className="text-lg font-semibold text-ink tabular-nums">{value}</dd>
           </div>
         ))}

@@ -18,7 +18,7 @@ export default function SectionHeader({ id, title, description, badge, action, i
         {description && <p className="mt-1 text-sm text-ink-muted">{description}</p>}
       </div>
       {action && (
-        <Link to={action.to} className="group inline-flex items-center gap-1 text-sm font-semibold text-primary">
+        <Link to={action.to} className="group inline-flex min-h-6 items-center gap-1 py-1 text-sm font-semibold text-primary">
           {action.label}
           <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
         </Link>

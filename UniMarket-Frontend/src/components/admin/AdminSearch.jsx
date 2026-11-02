@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { SearchIcon, XIcon } from '../icons'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * Search box for an admin list. Searches on Enter (and when cleared), so typing doesn't reload the table
  * on every key press.
  */
 export default function AdminSearch({ value, onSearch, label, placeholder }) {
+  const { t } = useTranslation()
   const [text, setText] = useState(value)
   const [lastValue, setLastValue] = useState(value)
   // Follow outside changes (e.g. a search from the top bar) without an effect.
@@ -39,7 +41,7 @@ export default function AdminSearch({ value, onSearch, label, placeholder }) {
       {text && (
         <button
           type="button"
-          aria-label="Clear search"
+          aria-label={t("Clear search")}
           onClick={() => {
             setText('')
             onSearch('')

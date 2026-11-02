@@ -17,6 +17,7 @@ import useAdminList from '../../hooks/useAdminList'
 import { PATHS } from '../../routes/paths'
 import { adminService } from '../../services/admin/adminService'
 import { formatDateTime, formatRelativeTime } from '../../utils/format'
+import useTranslation from '../../i18n/useTranslation'
 
 const TYPE_OPTIONS = [
   { value: '', label: 'Listings and students' },
@@ -61,10 +62,11 @@ function reportActions(report, { onDetails, open }) {
 }
 
 function ReportDetailDialog({ report, open, onClose }) {
+  const { t } = useTranslation()
   return (
     <DetailDialog
-      title={`${reportCode(report.id)} · ${reportReasonLabel(report.reason)}`}
-      subtitle={`Reported ${formatRelativeTime(report.createdAt).toLowerCase()} by ${report.reporter?.name ?? 'a former student'}`}
+      title={`${reportCode(report.id)} · ${t(reportReasonLabel(report.reason))}`}
+      subtitle={t('Reported {time} by {name}', { time: formatRelativeTime(report.createdAt).toLowerCase(), name: report.reporter?.name ?? t('a former student') })}
       status={<ReportStatus status={report.status} />}
       onClose={onClose}
       actions={
@@ -75,9 +77,9 @@ function ReportDetailDialog({ report, open, onClose }) {
           {report.status === 'OPEN' && (
             <>
               <Button variant="secondary" onClick={() => open('dismissReport', report)}>
-                Dismiss
+                {t("Dismiss")}
               </Button>
-              <Button onClick={() => open('resolveReport', report)}>Resolve</Button>
+              <Button onClick={() => open('resolveReport', report)}>{t("Resolve")}</Button>
             </>
           )}
         </>
@@ -87,12 +89,12 @@ function ReportDetailDialog({ report, open, onClose }) {
         <Target target={report.target} />
       </div>
       <div>
-        <p className="text-xs text-ink-muted">What the reporter said</p>
+        <p className="text-xs text-ink-muted">{t("What the reporter said")}</p>
         <p className="mt-1 text-sm whitespace-pre-line text-ink">{report.details || 'No details given.'}</p>
       </div>
       <DetailList
         items={[
-          ['Reason', reportReasonLabel(report.reason)],
+          ['Reason', t(reportReasonLabel(report.reason))],
           ['Reported', formatDateTime(report.createdAt)],
           ['Reporter', report.reporter?.name],
           ['Outcome', report.resolution],
@@ -104,6 +106,7 @@ function ReportDetailDialog({ report, open, onClose }) {
 
 /** Admin › Violation reports (Business Plan: admins handle reports about listings and students). */
 export default function AdminReportsPage() {
+  const { t } = useTranslation()
   const list = useAdminList('admin-reports', adminService.listReports, ['status', 'targetType'])
   const { open, dialog } = useAdminActions()
   const [detail, setDetail] = useState(null)
@@ -116,7 +119,7 @@ export default function AdminReportsPage() {
       header: 'Report',
       render: (row) => (
         <div>
-          <p className="font-medium text-ink">{reportReasonLabel(row.reason)}</p>
+          <p className="font-medium text-ink">{t(reportReasonLabel(row.reason))}</p>
           <p className="text-xs text-ink-muted">{reportCode(row.id)}</p>
         </div>
       ),
@@ -136,19 +139,19 @@ export default function AdminReportsPage() {
 
   return (
     <>
-      <title>Violation reports · UniMarket Admin</title>
-      <AdminPageHeader title="Violation reports" description="Reports from students about listings and accounts. Handle open reports first, oldest first." />
+      <title>{t("Violation reports · UniMarket Admin")}</title>
+      <AdminPageHeader title={t("Violation reports")} description={t("Reports from students about listings and accounts. Handle open reports first, oldest first.")} />
 
       <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <FilterTabs
-          label="Filter by report status"
+          label={t("Filter by report status")}
           value={params.status}
           onChange={(value) => list.setFilter('status', value)}
           options={[{ value: '', label: 'All', count: counts.all }, ...Object.entries(REPORT_STATUSES).map(([key, config]) => ({ value: key, label: config.label, count: counts[key] }))]}
         />
         <div className="flex flex-col gap-2 sm:flex-row">
-          <AdminSearch label="Search reports" placeholder="Listing, student or RP code" value={params.q} onSearch={list.setSearch} />
-          <Select label="Reported" hideLabel name="targetType" options={TYPE_OPTIONS} value={params.targetType} onChange={(value) => list.setFilter('targetType', value)} className="sm:w-52" />
+          <AdminSearch label={t("Search reports")} placeholder={t("Listing, student or RP code")} value={params.q} onSearch={list.setSearch} />
+          <Select label={t("Reported")} hideLabel name="targetType" options={TYPE_OPTIONS} value={params.targetType} onChange={(value) => list.setFilter('targetType', value)} className="sm:w-52" />
         </div>
       </div>
 
@@ -160,8 +163,8 @@ export default function AdminReportsPage() {
         isRefreshing={list.isRefreshing}
         error={list.error}
         onRetry={list.reload}
-        emptyTitle="No reports here"
-        emptyDescription="Nothing matches this status or search."
+        emptyTitle={t("No reports here")}
+        emptyDescription={t("Nothing matches this status or search.")}
         pagination={data && { page: data.page, pageSize: data.pageSize, total: data.total, onPageChange: list.setPage, onPageSizeChange: list.setPageSize, itemLabel: 'reports' }}
       />
 

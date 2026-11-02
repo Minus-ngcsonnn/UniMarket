@@ -34,7 +34,7 @@ export default function SafetyNote({ variant = 'sidebar' }) {
       <p className="mt-1.5 text-sm text-ink-muted">
         {t("Buy from verified students and pay through UniMarket’s secure checkout, never by direct transfer.")}
       </p>
-      <Link to={PATHS.safety} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+      <Link to={PATHS.safety} className="mt-2 inline-flex min-h-6 items-center gap-1 py-1 text-sm font-semibold text-primary hover:underline">
         {t("More safety tips →")}
       </Link>
     </aside>

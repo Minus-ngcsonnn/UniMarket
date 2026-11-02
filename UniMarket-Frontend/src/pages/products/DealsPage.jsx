@@ -46,7 +46,7 @@ export default function DealsPage() {
             {t("Student deals")}
           </p>
           <h1 className="mt-1 text-[1.75rem] leading-tight font-extrabold tracking-tight text-ink sm:text-[2rem]">{t("The biggest savings on campus")}</h1>
-          <p className="mt-1.5 text-ink-muted">Listings at least {DEAL_MIN_SAVINGS}% below their original price, biggest savings first.</p>
+          <p className="mt-1.5 text-ink-muted">{t('Listings at least {percent}% below their original price, biggest savings first.', { percent: DEAL_MIN_SAVINGS })}</p>
         </div>
       </header>
       <SampleDataNotice className="mb-5" />

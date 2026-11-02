@@ -167,7 +167,7 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <p className="text-3xl tracking-tight text-ink sm:text-[2.25rem]">{formatPrice(product.price)}</p>
+            <p className="text-3xl font-bold tracking-tight text-ink sm:text-[2.25rem]">{formatPrice(product.price)}</p>
             {savings > 0 && (
               <>
                 <s className="text-sm text-ink-muted">{formatPrice(product.originalPrice)}</s>
@@ -236,7 +236,7 @@ export default function ProductDetailPage() {
             <button
               type="button"
               onClick={() => setIsReporting(true)}
-              className="inline-flex w-fit items-center gap-1.5 text-sm text-ink-muted transition-colors hover:text-danger"
+              className="inline-flex min-h-6 w-fit items-center gap-1.5 py-1 text-sm text-ink-muted transition-colors hover:text-danger"
             >
               <FlagIcon className="size-4" />
               {t("Report this listing")}

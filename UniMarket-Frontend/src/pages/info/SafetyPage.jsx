@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import ContentPage from '../../components/content/ContentPage'
 import { AlertTriangleIcon, BadgeCheckIcon, LockIcon, MapPinIcon, PackageIcon, ShieldCheckIcon } from '../../components/icons'
 import { buttonClasses } from '../../components/ui/buttonClasses'
+import useTranslation from '../../i18n/useTranslation'
 import { PATHS } from '../../routes/paths'
 
 const TIPS = [
@@ -39,6 +40,7 @@ const TIPS = [
 
 /** Safety & trust guidelines, based on the Business Plan rules (verified students, online payment only). */
 export default function SafetyPage() {
+  const { t } = useTranslation()
   return (
     <ContentPage
       eyebrow="Safety & trust"
@@ -51,12 +53,12 @@ export default function SafetyPage() {
             <span className="flex size-10 items-center justify-center rounded-control bg-primary-soft text-primary">
               <Icon className="size-5" />
             </span>
-            <h2 className="font-semibold text-ink">{title}</h2>
+            <h2 className="font-semibold text-ink">{t(title)}</h2>
             <ul className="flex flex-col gap-1.5 text-sm text-ink-muted">
               {points.map((point) => (
                 <li key={point} className="flex gap-2">
                   <span className="mt-2 size-1 shrink-0 rounded-full bg-primary" aria-hidden="true" />
-                  {point}
+                  {t(point)}
                 </li>
               ))}
             </ul>
@@ -66,11 +68,11 @@ export default function SafetyPage() {
 
       <div className="mt-8 flex flex-col items-start justify-between gap-4 rounded-2xl bg-primary-soft p-6 sm:flex-row sm:items-center">
         <div>
-          <p className="font-semibold text-ink">Something doesn’t feel right?</p>
-          <p className="mt-1 text-sm text-ink-muted">Tell us about a listing, user or payment request and we’ll look into it.</p>
+          <p className="font-semibold text-ink">{t('Something doesn’t feel right?')}</p>
+          <p className="mt-1 text-sm text-ink-muted">{t('Tell us about a listing, user or payment request and we’ll look into it.')}</p>
         </div>
         <Link to={PATHS.contact} className={buttonClasses()}>
-          Report a problem
+          {t('Report a problem')}
         </Link>
       </div>
     </ContentPage>

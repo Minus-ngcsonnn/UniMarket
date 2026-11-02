@@ -11,22 +11,24 @@ import LoadingState from '../ui/LoadingState'
 import Modal from '../ui/Modal'
 import AdminSidebar from './AdminSidebar'
 import AdminTopbar from './AdminTopbar'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * Without sample data there is no admin sign-in yet, so the workspace is not shown.
  * This is only a convenience: ADMIN ACCESS MUST BE ENFORCED BY THE BACKEND on every admin request.
  */
 function AdminUnavailable() {
+  const { t } = useTranslation()
   return (
     <main id="main" className="flex min-h-screen items-center justify-center bg-canvas px-4">
       <EmptyState
         titleAs="h1"
         icon={<LockIcon className="size-6" />}
-        title="Admin sign-in isn’t available yet"
-        description="The admin workspace needs an admin account, which the UniMarket backend will check. It isn’t connected yet."
+        title={t("Admin sign-in isn’t available yet")}
+        description={t("The admin workspace needs an admin account, which the UniMarket backend will check. It isn’t connected yet.")}
         action={
           <Link to={PATHS.home} className={buttonClasses({ variant: 'secondary', size: 'sm' })}>
-            Back to UniMarket
+            {t("Back to UniMarket")}
           </Link>
         }
         className="w-full max-w-lg"
@@ -40,6 +42,7 @@ function AdminUnavailable() {
  * and the page. The campus filter is shared with the pages through the outlet context.
  */
 export default function AdminLayout() {
+  const { t } = useTranslation()
   const [campus, setCampus] = useState('')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { data } = useAsyncData(() => adminService.getBadgeCounts(), 'admin-badges')
@@ -52,7 +55,7 @@ export default function AdminLayout() {
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-control focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary"
       >
-        Skip to content
+        {t("Skip to content")}
       </a>
 
       <aside className="hidden border-r border-line bg-surface lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
@@ -62,7 +65,7 @@ export default function AdminLayout() {
       {isMenuOpen && (
         <Modal variant="drawer" labelledBy="admin-menu-title" onClose={() => setIsMenuOpen(false)}>
           <h2 id="admin-menu-title" className="sr-only">
-            Admin menu
+            {t("Admin menu")}
           </h2>
           <AdminSidebar counts={data} onNavigate={() => setIsMenuOpen(false)} />
         </Modal>
@@ -76,8 +79,8 @@ export default function AdminLayout() {
           <p role="note" className="mb-6 flex items-start gap-2 rounded-control border border-warning/40 bg-warning-soft px-3 py-2 text-xs text-ink">
             <InfoIcon className="mt-px size-4 shrink-0 text-warning" />
             <span>
-              <span className="font-semibold">Admin demo with sample data.</span> Actions are previews: they are checked but nothing is changed, blocked or
-              suspended. Admin access will be enforced by the backend.
+              <span className="font-semibold">{t("Admin demo with sample data.")}</span>{' '}
+              {t('Actions are previews: they are checked but nothing is changed, blocked or suspended. Admin access will be enforced by the backend.')}
             </span>
           </p>
           <Suspense fallback={<LoadingState className="min-h-[40vh]" />}>

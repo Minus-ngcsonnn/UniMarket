@@ -125,7 +125,7 @@ export default function OrdersPage() {
 
       <SampleDataNotice className="mt-5">
         {t('Sample orders are saved in this browser only. Payments are simulated and the “Simulate” buttons play the other person’s step.')}{' '}
-        <button type="button" onClick={() => setIsResetOpen(true)} className="font-semibold text-primary hover:underline">
+        <button type="button" onClick={() => setIsResetOpen(true)} className="inline-block py-0.5 font-semibold text-primary hover:underline">
           {t("Reset sample data")}
         </button>
       </SampleDataNotice>

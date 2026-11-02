@@ -4,6 +4,7 @@ import Alert from '../ui/Alert'
 import Button from '../ui/Button'
 import OtpInput from '../ui/OtpInput'
 import PendingNotice from './PendingNotice'
+import useTranslation from '../../i18n/useTranslation'
 
 const CODE_LENGTH = 6
 
@@ -16,6 +17,7 @@ const CODE_LENGTH = 6
  * Mount this component to open it; it closes via the X button, "Back to registration" or Esc.
  */
 export default function VerifyEmailDialog({ email, onClose }) {
+  const { t } = useTranslation()
   const dialogRef = useRef(null)
   const [code, setCode] = useState('')
   const [error, setError] = useState()
@@ -59,23 +61,23 @@ export default function VerifyEmailDialog({ email, onClose }) {
     >
       <div className="flex flex-col gap-6 p-6 sm:p-8">
         <div className="flex items-start justify-between gap-4">
-          <ol aria-label="Registration steps" className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
+          <ol aria-label={t("Registration steps")} className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
             <li className="flex items-center gap-2 text-ink-muted">
               <span className="flex size-5 items-center justify-center rounded-full bg-success-soft text-success">
                 <CheckIcon className="size-3" />
               </span>
-              Account details
+              {t("Account details")}
             </li>
             <li aria-hidden="true" className="hidden h-px w-6 bg-line min-[420px]:block" />
             <li aria-current="step" className="flex items-center gap-2 font-medium text-primary">
               <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] text-white">2</span>
-              Email verification
+              {t("Email verification")}
             </li>
           </ol>
           <button
             type="button"
             onClick={close}
-            aria-label="Close"
+            aria-label={t("Close")}
             className="-mt-1 -mr-1 flex size-8 shrink-0 items-center justify-center rounded-control text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
           >
             <XIcon className="size-5" />
@@ -87,38 +89,38 @@ export default function VerifyEmailDialog({ email, onClose }) {
             <ShieldCheckIcon className="size-6" />
           </span>
           <h2 id="verify-email-title" className="text-2xl tracking-tight sm:text-3xl">
-            Verify your email
+            {t("Verify your email")}
           </h2>
           <p className="text-ink-muted">
-            A little proof. A more trusted campus. Enter the {CODE_LENGTH}-digit code we sent to{' '}
+            {t('A little proof. A more trusted campus. Enter the {count}-digit code we sent to', { count: CODE_LENGTH })}{' '}
             <span className="font-medium [overflow-wrap:anywhere] text-ink">{email}</span>.
           </p>
         </div>
 
-        <Alert variant="warning" title="Preview only">
-          Account creation isn’t connected yet, so no code was sent.
+        <Alert variant="warning" title={t("Preview only")}>
+          {t("Account creation isn’t connected yet, so no code was sent.")}
         </Alert>
 
         <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <OtpInput label="Verification code" value={code} onChange={handleCodeChange} error={error} length={CODE_LENGTH} />
+          <OtpInput label={t("Verification code")} value={code} onChange={handleCodeChange} error={error} length={CODE_LENGTH} />
 
           <p className="text-sm text-ink-muted">
-            Didn’t get the code? Check your spam folder or{' '}
+            {t('Didn’t get the code? Check your spam folder or')}{' '}
             <button type="button" onClick={() => setNotice('resendCode')} className="font-medium text-primary hover:underline">
-              resend code
+              {t("resend code")}
             </button>
             .
           </p>
 
           <Button type="submit" size="lg" fullWidth>
             <ArrowRightIcon className="size-4.5" />
-            Verify email
+            {t("Verify email")}
           </Button>
 
           <PendingNotice type={notice} />
 
           <button type="button" onClick={close} className="text-sm text-ink-muted transition-colors hover:text-ink">
-            Back to registration
+            {t("Back to registration")}
           </button>
         </form>
       </div>

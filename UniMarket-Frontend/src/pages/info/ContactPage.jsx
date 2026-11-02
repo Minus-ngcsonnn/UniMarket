@@ -8,6 +8,7 @@ import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import Textarea from '../../components/ui/Textarea'
 import useForm from '../../hooks/useForm'
+import useTranslation from '../../i18n/useTranslation'
 import { PATHS } from '../../routes/paths'
 import { isBlank, isValidEmail } from '../../utils/validators'
 
@@ -33,6 +34,7 @@ function validateContact({ name, email, topic, message }) {
 
 /** Contact support. The support inbox needs the backend, so a valid message is not sent yet (and says so). */
 export default function ContactPage() {
+  const { t } = useTranslation()
   const [result, setResult] = useState(null)
   const form = useForm({
     initialValues: { name: '', email: '', topic: '', reference: '', message: '' },
@@ -51,16 +53,16 @@ export default function ContactPage() {
           <Select
             label="Topic"
             name="topic"
-            placeholder="Choose a topic"
+            placeholder={t('Choose a topic')}
             options={TOPICS}
             value={form.values.topic}
             onChange={(topic) => form.setFieldValue('topic', topic)}
             error={form.touched.topic ? form.errors.topic : undefined}
           />
-          <Input label="Order number or listing ID (optional)" placeholder="e.g. UO-3001 or UM-2048" {...form.getFieldProps('reference')} />
-          <Textarea label="Message" rows={6} maxLength={MESSAGE_MAX} placeholder="Tell us what happened and how we can help." {...form.getFieldProps('message')} />
+          <Input label="Order number or listing ID (optional)" placeholder={t('e.g. UO-3001 or UM-2048')} {...form.getFieldProps('reference')} />
+          <Textarea label="Message" rows={6} maxLength={MESSAGE_MAX} placeholder={t('Tell us what happened and how we can help.')} {...form.getFieldProps('message')} />
           <Button type="submit" size="lg" className="sm:w-fit" loading={form.isSubmitting}>
-            Send message
+            {t('Send message')}
           </Button>
           {result && (
             <Alert variant="info" title="Messages can’t be sent yet">
@@ -71,17 +73,17 @@ export default function ContactPage() {
 
         <aside className="flex flex-col gap-4">
           <div className="rounded-card bg-subtle p-5">
-            <p className="font-semibold text-ink">Quick answers</p>
-            <p className="mt-1 text-sm text-ink-muted">Many questions about orders, payments and selling are answered in the Help center.</p>
+            <p className="font-semibold text-ink">{t('Quick answers')}</p>
+            <p className="mt-1 text-sm text-ink-muted">{t('Many questions about orders, payments and selling are answered in the Help center.')}</p>
             <Link to={PATHS.help} className="mt-2 inline-block text-sm font-semibold text-primary hover:underline">
-              Visit the Help center →
+              {t('Visit the Help center')} →
             </Link>
           </div>
           <div className="rounded-card bg-subtle p-5">
-            <p className="font-semibold text-ink">Feeling unsafe?</p>
-            <p className="mt-1 text-sm text-ink-muted">If you’re in danger on campus, contact campus security first. Then tell us what happened.</p>
+            <p className="font-semibold text-ink">{t('Feeling unsafe?')}</p>
+            <p className="mt-1 text-sm text-ink-muted">{t('If you’re in danger on campus, contact campus security first. Then tell us what happened.')}</p>
             <Link to={PATHS.safety} className="mt-2 inline-block text-sm font-semibold text-primary hover:underline">
-              Safety tips →
+              {t('Safety tips')} →
             </Link>
           </div>
         </aside>

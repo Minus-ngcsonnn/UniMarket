@@ -8,6 +8,7 @@ import Button from '../ui/Button'
 import Input from '../ui/Input'
 import Select from '../ui/Select'
 import Textarea from '../ui/Textarea'
+import useTranslation from '../../i18n/useTranslation'
 
 const CAMPUS_OPTIONS = CAMPUS_KEYS.map((key) => ({ value: key, label: `${UNIVERSITY_NAME} · ${CAMPUSES[key].label}` }))
 
@@ -17,6 +18,7 @@ const CAMPUS_OPTIONS = CAMPUS_KEYS.map((key) => ({ value: key, label: `${UNIVERS
  * @param {() => void} onCancel
  */
 export default function ProfileForm({ profile, onCancel }) {
+  const { t } = useTranslation()
   const [result, setResult] = useState(null) // { saved } | { error }
 
   const form = useForm({
@@ -34,17 +36,17 @@ export default function ProfileForm({ profile, onCancel }) {
 
   return (
     <form noValidate onSubmit={form.handleSubmit} className="flex flex-col gap-4">
-      <Input label="Display name" required maxLength={PROFILE_LIMITS.name} hint="Your real name helps buyers and sellers trust you." {...form.getFieldProps('name')} />
-      <Input label="Programme and year" maxLength={PROFILE_LIMITS.programme} placeholder="e.g. Software Engineering · Year 2" {...form.getFieldProps('programme')} />
+      <Input label={t("Display name")} required maxLength={PROFILE_LIMITS.name} hint={t("Your real name helps buyers and sellers trust you.")} {...form.getFieldProps('name')} />
+      <Input label={t("Programme and year")} maxLength={PROFILE_LIMITS.programme} placeholder={t("e.g. Software Engineering · Year 2")} {...form.getFieldProps('programme')} />
       <Select
-        label="Campus"
+        label={t("Campus")}
         name="campus"
         options={CAMPUS_OPTIONS}
         value={form.values.campus}
         onChange={(campus) => form.setFieldValue('campus', campus)}
         error={form.touched.campus ? form.errors.campus : undefined}
       />
-      <Textarea label="About you" rows={4} maxLength={PROFILE_LIMITS.bio} placeholder="What do you usually sell? When do you reply?" hint="Don’t share phone numbers or bank details. Keep all payments on UniMarket." {...form.getFieldProps('bio')} />
+      <Textarea label={t("About you")} rows={4} maxLength={PROFILE_LIMITS.bio} placeholder={t("What do you usually sell? When do you reply?")} hint={t("Don’t share phone numbers or bank details. Keep all payments on UniMarket.")} {...form.getFieldProps('bio')} />
 
       <div aria-live="polite" className="empty:hidden">
         {result?.error && <Alert variant="danger">{result.error}</Alert>}
@@ -60,7 +62,7 @@ export default function ProfileForm({ profile, onCancel }) {
           {result ? 'Close' : 'Cancel'}
         </Button>
         <Button type="submit" loading={form.isSubmitting}>
-          Save changes
+          {t("Save changes")}
         </Button>
       </div>
     </form>

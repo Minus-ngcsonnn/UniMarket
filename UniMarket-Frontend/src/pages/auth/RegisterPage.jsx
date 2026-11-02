@@ -13,6 +13,7 @@ import { STUDENT_EMAIL_DOMAINS, STUDENT_EMAIL_PLACEHOLDER } from '../../constant
 import useForm from '../../hooks/useForm'
 import { PATHS } from '../../routes/paths'
 import { PASSWORD_RULE_TEXT, validateRegister } from '../../utils/authValidation'
+import useTranslation from '../../i18n/useTranslation'
 
 const EMAIL_FIELD_ID = 'register-email'
 const PASSWORD_RULES_ID = 'register-password-rules'
@@ -40,6 +41,7 @@ function validatorFor(mode) {
  * ?method=university opens the page in university-email mode (used by the Login page button).
  */
 export default function RegisterPage() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const [emailMode, setEmailMode] = useState(searchParams.get('method') === 'university' ? 'university' : 'personal')
   const [verification, setVerification] = useState(null) // { email, attempt } while the OTP dialog is open
@@ -62,27 +64,27 @@ export default function RegisterPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <title>Register · UniMarket</title>
+      <title>{t("Register · UniMarket")}</title>
 
       <header>
-        <h1 className="text-3xl tracking-tight text-ink sm:text-[2.125rem]">Your campus. Your community.</h1>
-        <p className="mt-2 text-ink-muted">Join UniMarket. Great finds start here.</p>
+        <h1 className="text-3xl tracking-tight text-ink sm:text-[2.125rem]">{t("Your campus. Your community.")}</h1>
+        <p className="mt-2 text-ink-muted">{t("Join UniMarket. Great finds start here.")}</p>
       </header>
 
       <AuthTabs />
 
       <div className="flex flex-col gap-3">
         <UniversityEmailButton pressed={emailMode === 'university'} onClick={() => chooseEmailMode('university')} />
-        <p className="text-center text-xs text-ink-muted">Use your university email for easy student verification.</p>
+        <p className="text-center text-xs text-ink-muted">{t("Use your university email for easy student verification.")}</p>
       </div>
 
-      <TextDivider>or register with your email</TextDivider>
+      <TextDivider>{t("or register with your email")}</TextDivider>
 
       <form noValidate onSubmit={form.handleSubmit} className="flex flex-col gap-5">
         <Input
-          label="Full name"
+          label={t("Full name")}
           autoComplete="name"
-          placeholder="Your full name"
+          placeholder={t("Your full name")}
           fieldSize="lg"
           startIcon={<UserIcon className="size-4.5" />}
           {...form.getFieldProps('fullName')}
@@ -106,7 +108,7 @@ export default function RegisterPage() {
               onClick={() => chooseEmailMode('personal')}
               className="w-fit text-xs font-medium text-primary hover:underline"
             >
-              Use a personal email instead
+              {t("Use a personal email instead")}
             </button>
           )}
         </div>
@@ -114,38 +116,38 @@ export default function RegisterPage() {
         <div className="flex flex-col gap-2">
           <div className="grid gap-5 sm:grid-cols-2 sm:gap-4">
             <PasswordInput
-              label="Password"
+              label={t("Password")}
               autoComplete="new-password"
-              placeholder="Create password"
+              placeholder={t("Create password")}
               fieldSize="lg"
               startIcon={passwordIcon}
               aria-describedby={PASSWORD_RULES_ID}
               {...form.getFieldProps('password')}
             />
             <PasswordInput
-              label="Confirm password"
+              label={t("Confirm password")}
               autoComplete="new-password"
-              placeholder="Repeat password"
+              placeholder={t("Repeat password")}
               fieldSize="lg"
               startIcon={passwordIcon}
               {...form.getFieldProps('confirmPassword')}
             />
           </div>
           <p id={PASSWORD_RULES_ID} className="text-xs text-ink-muted">
-            {PASSWORD_RULE_TEXT}
+            {t(PASSWORD_RULE_TEXT)}
           </p>
         </div>
 
         <Checkbox
           label={
             <>
-              I agree to the{' '}
+              {t('I agree to the')}{' '}
               <Link to={PATHS.terms} className="text-primary hover:underline">
-                Terms of service
+                {t("Terms of service")}
               </Link>{' '}
-              and{' '}
+              {t('and')}{' '}
               <Link to={PATHS.privacy} className="text-primary hover:underline">
-                Privacy policy
+                {t("Privacy policy")}
               </Link>
               .
             </>
@@ -155,12 +157,12 @@ export default function RegisterPage() {
 
         <Button type="submit" size="lg" fullWidth loading={form.isSubmitting}>
           <ArrowRightIcon className="size-4.5" />
-          Create account
+          {t("Create account")}
         </Button>
 
         <p className="flex items-start justify-center gap-2 text-center text-xs text-ink-muted">
           <CheckCircleIcon className="size-4 shrink-0 text-primary" />
-          Next: enter the 6-digit code we email you to verify your account.
+          {t("Next: enter the 6-digit code we email you to verify your account.")}
         </p>
       </form>
 

@@ -1,4 +1,6 @@
 import { viPhrases } from './vi-phrases'
+import { viPhrasesAccount } from './vi-phrases-account'
+import { viPhrasesInfo } from './vi-phrases-info'
 
 /** Giao diện tiếng Việt. Cùng cấu trúc với en.js; khoá thiếu sẽ dùng bản tiếng Anh. */
 export const vi = {
@@ -52,11 +54,20 @@ export const vi = {
     favorites: 'Yêu thích',
     messages: 'Tin nhắn',
     admin: 'Trang quản trị (demo)',
+    shop: 'Quản lý cửa hàng',
+    settings: 'Cài đặt',
     toDo: { one: '{count} cần xử lý', other: '{count} cần xử lý' },
     signOut: 'Đăng xuất',
     signOutDemo: 'Đăng xuất (demo)',
     signOutHint: 'Hiển thị header khách. Đăng nhập chưa được kết nối.',
     previewSignedIn: 'Xem header khi đã đăng nhập (demo)',
+  },
+  auth: {
+    backToMarketplace: 'Về chợ',
+    needHelp: 'Cần trợ giúp?',
+    pointVerified: 'Sinh viên Đại học FPT đã xác thực',
+    pointPayment: 'Chỉ thanh toán online qua UniMarket',
+    pointDelivery: 'Người bán giao hàng trong trường',
   },
   hero: {
     eyebrow: 'Cộng đồng Đại học FPT',
@@ -146,5 +157,5 @@ export const vi = {
     terms: 'Điều khoản dịch vụ',
     legal: 'Pháp lý',
   },
-  phrases: viPhrases,
+  phrases: { ...viPhrasesInfo, ...viPhrases, ...viPhrasesAccount },
 }

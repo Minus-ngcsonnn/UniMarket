@@ -49,7 +49,7 @@ export default function ActiveFilterChips({ filters, onChange, onClearAll }) {
           </li>
         ))}
       </ul>
-      <button type="button" onClick={onClearAll} className="px-1 text-xs font-semibold text-primary hover:underline">
+      <button type="button" onClick={onClearAll} className="min-h-6 px-1 py-1 text-xs font-semibold text-primary hover:underline">
         {t("Clear all")}
       </button>
     </div>

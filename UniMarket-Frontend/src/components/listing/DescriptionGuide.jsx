@@ -47,7 +47,7 @@ export default function DescriptionGuide({ categorySlug, description, onChange }
           <button
             type="button"
             onClick={() => onChange(prompts.map((label) => `${label}: `).join('\n'))}
-            className="text-xs font-semibold text-primary hover:underline"
+            className="min-h-6 py-1 text-xs font-semibold text-primary hover:underline"
           >
             {t("Use a template")}
           </button>

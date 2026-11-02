@@ -83,7 +83,7 @@ export default function OrderDetailPage() {
       <>
         <header className="mt-4 mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight text-ink sm:text-[2rem]">Order {orderCode(order.id)}</h1>
+            <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight text-ink sm:text-[2rem]">{t('Order {code}', { code: orderCode(order.id) })}</h1>
             <p className="mt-1 text-sm text-ink-muted">
               {role === 'buyer' ? t('You’re buying') : t('You’re selling')} · {t('Placed {date}', { date: formatDateTime(order.createdAt) })}
             </p>

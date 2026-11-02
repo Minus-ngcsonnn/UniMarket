@@ -152,7 +152,7 @@ export default function CheckoutPage() {
 
           <Section title={t("Payment")} icon={ShieldCheckIcon}>
             <p className="-mt-2 text-sm text-ink-muted">
-              UniMarket only accepts <span className="font-medium text-ink">{t("online payment through the website")}</span>. You’ll pay each order after the seller confirms it. Never transfer money to a seller directly.
+              {t('UniMarket only accepts online payment through the website. You’ll pay each order after the seller confirms it. Never transfer money to a seller directly.')}
             </p>
             <ul className="flex flex-wrap gap-2" aria-label={t("Accepted payment methods")}>
               {PAYMENT_METHODS.map((method) => (
@@ -182,8 +182,8 @@ export default function CheckoutPage() {
             </p>
             <ul className="mt-4 flex flex-col gap-4 border-t border-line pt-4">
               {sellerGroups.map(({ seller, products: groupProducts }) => (
-                <li key={seller?.id} aria-label={`Order from ${seller?.name}`} className="flex flex-col gap-3">
-                  <p className="text-xs font-semibold tracking-wide text-ink-muted uppercase">Order from {seller?.name}</p>
+                <li key={seller?.id} aria-label={t('Order from {name}', { name: seller?.name })} className="flex flex-col gap-3">
+                  <p className="text-xs font-semibold tracking-wide text-ink-muted uppercase">{t('Order from {name}', { name: seller?.name })}</p>
                   {groupProducts.map((product) => (
                     <div key={product.id} className="flex gap-3">
                       <span className="block size-14 shrink-0 overflow-hidden rounded-lg border border-line bg-subtle">
@@ -236,7 +236,7 @@ export default function CheckoutPage() {
               </span>
             </p>
           </section>
-          <Link to={PATHS.cart} className="text-center text-sm font-medium text-primary hover:underline">
+          <Link to={PATHS.cart} className="py-1 text-center text-sm font-medium text-primary hover:underline">
             {t("← Back to cart")}
           </Link>
         </aside>
