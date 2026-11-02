@@ -3,6 +3,7 @@ package com.unimarket.controller;
 import com.unimarket.service.HealthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
@@ -17,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * database check reports DISABLED.
  */
 @WebMvcTest(HealthController.class)
+@AutoConfigureMockMvc(addFilters = false)   // MVC only; security rules are tested in NoDatabaseStartupTest / AuthIntegrationTest
 @Import(HealthService.class)
 class HealthControllerTest {
 
