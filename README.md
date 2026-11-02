@@ -143,9 +143,13 @@ The backend reads these variables. They are never hard-coded:
 | `MAIL_HOST` / `MAIL_PORT` / `MAIL_USERNAME` / `MAIL_PASSWORD` / `MAIL_FROM` | SMTP settings | *(none)* |
 | `CORS_ALLOWED_ORIGINS` | Browser origins allowed to call the API          | `http://localhost:5173` |
 | `UPLOAD_DIR`         | Folder for uploaded listing photos (`<UPLOAD_DIR>/products`) | `uploads` (git-ignored) |
+| `CHECKOUT_SHIPPING_FEE` | Delivery fee per order in VND (source still a pending decision) | `0` |
+| `ORDER_EXPIRY_ENABLED` / `ORDER_EXPIRY_INTERVAL` | Order expiry job (24 h deadlines) | `false` in `dev` (protects demo orders), `true` otherwise / `PT1M` |
+| `PAYMENT_SIMULATOR_ENABLED` / `PAYMENT_SIMULATOR_SECRET` | Sandbox payment simulator (no real money) and its signing key | off (`true` in `dev`) / random per run in `dev` |
 
 Authentication API (register, e-mail verification, login, JWT, roles): `UniMarket-Backend/docs/AUTH_API.md`.
 Products, categories, listing photos and favorites API: `UniMarket-Backend/docs/PRODUCTS_API.md`.
+Cart, checkout, orders, simulated payments and expiry API: `UniMarket-Backend/docs/ORDERS_API.md`.
 
 **Option A: `.env` file (recommended).** Copy the example and edit it. `UniMarket-Backend/.env` is git-ignored.
 

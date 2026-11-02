@@ -20,6 +20,18 @@ public class ValidationException extends ApiException {
         this.fieldErrors = List.copyOf(fieldErrors);
     }
 
+    /**
+     * A business error that points at specific fields or items (e.g. 409 LISTING_UNAVAILABLE naming each listing).
+     *
+     * @param errorCode   error code and HTTP status
+     * @param message     client-safe message
+     * @param fieldErrors the fields / items concerned
+     */
+    public ValidationException(ErrorCode errorCode, String message, List<ApiErrorResponse.FieldError> fieldErrors) {
+        super(errorCode, message);
+        this.fieldErrors = List.copyOf(fieldErrors);
+    }
+
     /** @return the rejected fields */
     public List<ApiErrorResponse.FieldError> getFieldErrors() {
         return fieldErrors;

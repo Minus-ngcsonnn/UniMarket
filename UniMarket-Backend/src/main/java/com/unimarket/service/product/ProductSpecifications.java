@@ -34,6 +34,13 @@ public final class ProductSpecifications {
                 cb.isTrue(root.get("category").get("active")));
     }
 
+    /** Listings anyone may see on a product page: approved and Available, Reserved or Sold (Stage 3 rule). */
+    public static Specification<Product> publiclyVisible() {
+        return (root, query, cb) -> cb.and(
+                cb.equal(root.get("moderationStatus"), ModerationStatus.APPROVED),
+                root.get("status").in(ProductStatus.PUBLICLY_VISIBLE));
+    }
+
     /** Keyword in the title (case-insensitive collation; %, _ and [ are escaped). */
     public static Specification<Product> titleContains(String likePattern) {
         return likePattern == null ? null : (root, query, cb) -> cb.like(root.get("title"), likePattern, LIKE_ESCAPE);

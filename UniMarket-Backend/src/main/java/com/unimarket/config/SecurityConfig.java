@@ -58,7 +58,10 @@ public class SecurityConfig {
 
     /** Endpoints that never need a token. */
     private static final String[] PUBLIC_POST = {
-            "/api/auth/register", "/api/auth/login", "/api/auth/verify-email", "/api/auth/resend-verification"};
+            "/api/auth/register", "/api/auth/login", "/api/auth/verify-email", "/api/auth/resend-verification",
+            // Stage 4: simulated provider -> server notification. No user token (like a real provider), but every
+            // request must carry a valid HMAC signature; the endpoint only exists while the sandbox simulator is enabled.
+            "/api/dev/payment-simulator/callback"};
     private static final String[] PUBLIC_GET = {
             "/api/health", "/actuator/health", "/api/products/**", "/api/categories/**",
             // Stage 3: read-only reference data and uploaded listing photos (public, like listing pages)

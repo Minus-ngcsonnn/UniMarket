@@ -18,10 +18,10 @@ The real implementations must keep the same function names and return shapes as 
 | Frontend file (real API) | Functions waiting for the backend | Main tables / procedures |
 |---|---|---|
 | `services/products/productApi.js` | `listProducts`, `getProduct`, `getProductsByIds`, `listUserListings`, `getCurrentUserId`, `listMyListings`, `getMyListing`, `createListing`, `updateListing`, `deleteListing` | **Stage 3 API ready** (`docs/PRODUCTS_API.md`, mapping in 3.3). `getProductsByIds` waits for Stage 4 | `Products`, `ProductImages`, `vw_ProductCatalog`, `Categories`, `Campuses` |
-| `services/orders/orderApi.js` | `listOrders`, `getOrder`, `getOrders`, `getActionCounts`, `placeOrders`, `cancelOrder`, `payOrder`, `confirmReceived`, `confirmOrder`, `declineOrder`, `markDelivering` (+ demo-only `simulateOtherParty`, `resetSampleData`) | `Orders`, `OrderStatusHistory`, `Payments`, `Deliveries`, `usp_PlaceOrder`, `usp_ConfirmOrder`, `usp_StartPayment`, `usp_RecordPaymentResult`, `usp_ShipOrder`, `usp_CompleteOrder`, `usp_CancelOrder`, `usp_ExpirePendingOrders` |
+| `services/orders/orderApi.js` | `listOrders`, `getOrder`, `getOrders`, `getActionCounts`, `placeOrders`, `cancelOrder`, `payOrder`, `confirmReceived`, `confirmOrder`, `declineOrder`, `markDelivering` (+ demo-only `simulateOtherParty`, `resetSampleData`) | **Stage 4 API ready** (`docs/ORDERS_API.md`, mapping in 3.4). | `Orders`, `OrderStatusHistory`, `Payments`, `Deliveries`, `usp_PlaceOrder`, `usp_ConfirmOrder`, `usp_StartPayment`, `usp_RecordPaymentResult`, `usp_ShipOrder`, `usp_CompleteOrder`, `usp_CancelOrder`, `usp_ExpirePendingOrders` |
 | `services/account/accountApi.js` | `getMyProfile`, `getUserProfile`, `updateProfile`, `listUserReviews`, `getRatingSummary`, `getOrderReviews`, `submitReview`, `createReport` | `Users`, `vw_PublicProfiles`, `vw_UserRatings`, `Reviews`, `Reports` |
 | `services/admin/adminApi.js` | `getOverview`, `listListings`, `listUsers`, `listReports`, `listOrders`, `listCategories`, `getBadgeCounts`, `approveListing`, `blockListing`, `removeListing`, `suspendUser`, `reactivateUser`, `resolveReport`, `dismissReport`, `exportReport` | `vw_AdminDashboard`, `Products`, `Users`, `Reports`, `AdminActions` |
-| `services/cart/cartStore.js` (localStorage today) | cart contents | `CartItems` (+ `trg_Cart_Validate`) |
+| `services/cart/cartStore.js` (localStorage today) | cart contents: **Stage 4 API ready** (`/api/cart`) | `CartItems` (+ `trg_Cart_Validate`) |
 | `services/saved/savedStore.js` (localStorage today) | saved items: **Stage 3 API ready** (`/api/me/favorites`) | `Favorites` |
 | Login / Register / OTP pages (no API file yet) | **Stage 2 API ready** (`docs/AUTH_API.md`): register, verify, resend, login, me. Password reset not built yet | `Users`, `EmailVerificationTokens`, `PasswordResetTokens`, `UniversityEmailDomains`, `usp_VerifyEmail` |
 | `services/healthService.js` | `GET /api/health` | **Done in Stage 1** |
@@ -197,7 +197,7 @@ the localStorage saved store. No frontend code was changed in Stage 3. Mapping f
 | `originalPrice` / deals | mock values | Omitted when not set. No demo listing has one, so `deals=true` returns nothing until sellers enter original prices. |
 | `getProduct(id)` | null when hidden | `GET /api/products/{id}`; 404 → null. Send the token so sellers see their pending listings. |
 | `listUserListings(userId)` | | `GET /api/products?sellerId={userId}&size=50` |
-| `getProductsByIds(ids)` (cart, checkout) | | Not in Stage 3 (cart and checkout are Stage 4). Interim: one `GET /api/products/{id}` per id. |
+| `getProductsByIds(ids)` (cart, checkout) | | Stage 4: `GET /api/products/by-ids?ids=…` (see 3.4). |
 | `getCurrentUserId()` | constant | `GET /api/auth/me` → `id` (Stage 2). |
 | `listMyListings()` | | `GET /api/me/products` |
 | `getMyListing(id)` | | `GET /api/products/{id}` with the token; use it only when `editable` is true. |
@@ -222,6 +222,43 @@ Open points for the team (not decided in Stage 3):
    Handled without changing data: placeholder on load error (frontend) + root-relative URLs (API). Adding real files
    under `UniMarket-Frontend/public/images/demo/products/` would make them appear.
 4. **Personal-email students** (Stage 2 pending decision): unchanged; listings require a verified account.
+
+## 3.4 Cart, checkout and orders integration (Backend Stage 4)
+
+The API is implemented and tested (`docs/ORDERS_API.md`); the frontend still uses `mockOrderApi.js` and the
+localStorage cart. No frontend code was changed in Stage 4. Mapping for the real `orderApi.js` and cart:
+
+| Frontend function / field | Mock today | Real API / mapping |
+|---|---|---|
+| `cartStore` (localStorage ids + `selected`) | browser only | `GET /api/cart`, `PUT`/`DELETE /api/cart/items/{id}`, `DELETE /api/cart`. `selected` stays a frontend-only flag; send the selected ids to checkout. Guests: keep the local cart and add it with `PUT` after sign-in. |
+| Cart page grouping | by seller in the page | `groups[]` (one per seller = one order) with `subtotal`, `shippingFee`, `total`; `unavailable[]` with `reason`. Checkout page: `POST /api/cart/validate` = preview with fees before confirming. `shippingFeePolicy.approved = false`: label the fee provisional, never "free shipping". |
+| `getProductsByIds(ids)` | mock | `GET /api/products/by-ids?ids=…` (public, request order, hidden ids left out) |
+| Price shown before paying | product price | Send `expectedPrices` to `POST /api/cart/validate` or `/api/checkout`; 409 `PRICE_CHANGED` → reload the cart |
+| `placeOrders({ productIds, delivery })` | `{ orders, isSample }` | `POST /api/checkout` → `{ orders }` (201). `delivery.fullName → recipientName`, `phone → recipientPhone`, `address → deliveryAddress`. **`campus` and `note` are not stored** (no columns); put needed details into the address text, or keep the note client-side until a decision. |
+| order `amount` | sum of prices | `amounts.total` (what the buyer pays) = `subtotal` + `shippingFee`. Show `subtotal`, `shippingFee`, `total` on cart, checkout and order pages. |
+| order `productIds` / `items[].price` | product ids, current prices | `items[]` with `productId`, `title`, `unitPrice` (**snapshot at checkout**), `quantity` (1), `imageUrl` |
+| `seller` / `buyer` (`MOCK_SELLERS`) | phone etc. | `{ id, fullName }`. Delivery details in `delivery`: buyer and admin always; **seller only while PAID or DELIVERING** (after the verified payment). The seller UI must not expect the address/phone before payment (show "Delivery details appear after payment"). |
+| `role` (`'buyer'`/`'seller'`) | lowercase | `role`: `BUYER`, `SELLER`, `ADMIN` |
+| `status` | same values | same values (`PENDING` … `CANCELLED`) |
+| `confirmBy` | mock | `deadlines.confirmBy`; payment countdown from `deadlines.paymentDueAt` (24 h after confirmation, D2) |
+| `timeline[]` | `{status, at}` | `history[]` `{ status, changedBy, note, changedAt }` (detail only); `timestamps` on every order |
+| `paymentMethod` (`MOMO`, `ZALOPAY`, `CARD`) | radio in `PaymentDialog` | `paymentProvider`: **`MOMO` or `ZALOPAY` only** (database CHECK). Remove `CARD` from `PAYMENT_METHODS`. |
+| `listOrders({ role })` | all | `GET /api/orders?role=buyer|seller&size=50` (paged; `status` filter = `ORDER_FILTERS` statuses) |
+| `getOrder(id)` / `getOrders(ids)` | | `GET /api/orders/{id}` (404 → null) / `GET /api/orders/by-ids?ids=` |
+| `getActionCounts()` | | `GET /api/orders/action-counts` → `{ buyer, seller }` (same statuses as `NEEDS_ACTION`) |
+| `confirmOrder` / `declineOrder` / `cancelOrder` | | `POST /api/orders/{id}/confirm` / `…/cancel` (seller: decline) / `…/cancel` (buyer) |
+| `payOrder(id, method)` | marks PAID | **Two steps**: `POST /api/orders/{id}/payments {provider}` → attempt; then (sandbox) `POST {simulatorUrl} {outcome: "SUCCESS"}` → order. The order is PAID only after the verified result. Keep the dialog's "Demo payment: simulated" notice whenever `sandbox` is true; show the simulator only when `simulatorUrl` is present (see ORDERS_API "Simulated vs real payments"). Handle `CONTINUE_PAYMENT` (an attempt in progress) and 409 `ORDER_DEADLINE_PASSED`. |
+| `markDelivering(id)` | | `POST /api/orders/{id}/ship` (optional `carrier`, `trackingNumber`) |
+| `confirmReceived(id)` | | `POST /api/orders/{id}/confirm-receipt`; 409 `ORDER_DISPUTED` while a dispute is open |
+| (new) report a problem | – | `POST /api/orders/{id}/disputes {reason}` when `actions` has `OPEN_DISPUTE` |
+| `simulateOtherParty`, `resetSampleData` | sample mode | Not available with the real API (the other person acts in their own account). |
+| Buttons | computed in `orderFlow.js` | `actions[]` (`CONFIRM`, `CANCEL`, `PAY`, `CONTINUE_PAYMENT`, `SHIP`, `CONFIRM_RECEIPT`, `OPEN_DISPUTE`) |
+| 30-second polling (Q4) | | unchanged: poll `GET /api/orders/{id}` and `/action-counts` |
+
+Error handling for the checkout page: 409 `LISTING_UNAVAILABLE` (`fieldErrors[].field = "productIds[<id>]"`,
+message = reason) → mark those items and reload the cart; 409 `OWN_LISTING`; 409 `PRICE_CHANGED`; on a network timeout
+do **not** resubmit blindly: reload `GET /api/orders?role=buyer` first (a resubmission of the same listings is refused
+with 409, it never creates a second order; its `fieldErrors` contain `ALREADY_IN_YOUR_ORDER` and `existingOrderIds`). Money: integers in VND, format with the existing `formatPrice` (`utils/format.js`).
 
 ## 4. Conventions already in place (Stage 1)
 

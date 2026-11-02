@@ -86,6 +86,15 @@ public class CatalogController {
                 featured, deals, sortOrder, page, size));
     }
 
+    /** Several public listings by id, in the requested order (cart, checkout); unknown or hidden ids are left out. */
+    @GetMapping("/api/products/by-ids")
+    public List<ProductSummaryResponse> byIds(@RequestParam List<Integer> ids) {
+        if (ids.isEmpty() || ids.size() > MAX_PAGE_SIZE) {
+            throw new ValidationException(List.of(new ApiErrorResponse.FieldError("ids", "must contain 1 to " + MAX_PAGE_SIZE + " ids")));
+        }
+        return catalog.byIds(ids);
+    }
+
     /** Product page. Public; a token (optional) lets the seller or an admin see a non-public listing. */
     @GetMapping("/api/products/{id}")
     public ProductDetailResponse detail(@PathVariable int id) {

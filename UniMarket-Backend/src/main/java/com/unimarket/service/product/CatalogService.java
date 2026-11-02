@@ -98,6 +98,20 @@ public class CatalogService {
         return mapper.toDetail(product, ownerView);
     }
 
+    /**
+     * Several public listings by id, in the requested order (cart, checkout, saved items). Ids that do not exist or are
+     * not public are left out. Includes reserved and sold listings so the frontend can show why they cannot be bought.
+     */
+    @Transactional(readOnly = true)
+    public List<ProductSummaryResponse> byIds(List<Integer> ids) {
+        List<Integer> distinct = ids.stream().distinct().toList();
+        List<Product> found = products.findAll(Specification.allOf(ProductSpecifications.idIn(distinct), ProductSpecifications.publiclyVisible()),
+                PageRequest.of(0, Math.max(1, distinct.size()))).getContent();
+        Map<Integer, ProductSummaryResponse> byId = new LinkedHashMap<>();
+        mapper.toSummaries(found, false).forEach(summary -> byId.put(summary.id(), summary));
+        return distinct.stream().map(byId::get).filter(java.util.Objects::nonNull).toList();
+    }
+
     private Set<Integer> featuredIds() {
         return new HashSet<>(jdbc.queryForList(ProductInsightsRepository.featuredProductIdsSql(), Integer.class));
     }
