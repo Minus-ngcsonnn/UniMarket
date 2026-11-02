@@ -102,3 +102,8 @@ logs/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Uploaded listing photos (local development storage). UPLOAD_DIR defaults to "uploads" relative to
+# the working directory, so ignore it wherever the backend is started from.
+UniMarket-Backend/uploads/
+uploads/

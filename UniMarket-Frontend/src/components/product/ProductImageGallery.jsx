@@ -36,7 +36,7 @@ export default function ProductImageGallery({ images = [], title }) {
       }}
     >
       <div className={frame}>
-        <img src={images[index]} alt={t('{title}, photo {number} of {count}', { title, number: index + 1, count })} className="h-full w-full object-cover" />
+        <ImageSlot src={images[index]} alt={t('{title}, photo {number} of {count}', { title, number: index + 1, count })} />
 
         {hasMany && (
           <>
@@ -76,7 +76,7 @@ export default function ProductImageGallery({ images = [], title }) {
                   thumbIndex === index ? 'border-primary' : 'border-transparent opacity-70 hover:opacity-100'
                 }`}
               >
-                <img src={src} alt="" className="h-full w-full object-cover" />
+                <ImageSlot src={src} alt="" />
               </button>
             </li>
           ))}

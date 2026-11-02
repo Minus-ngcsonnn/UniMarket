@@ -26,6 +26,14 @@ public enum ErrorCode {
     INVALID_CAMPUS(HttpStatus.BAD_REQUEST, "Choose a campus of your university."),
     INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "The verification code is incorrect or has expired."),
     TOO_MANY_ATTEMPTS(HttpStatus.TOO_MANY_REQUESTS, "Too many attempts. Please wait and try again later."),
+
+    // Listings, photos and favorites (Backend Stage 3)
+    INVALID_CATEGORY(HttpStatus.BAD_REQUEST, "Choose one of the available categories."),
+    LISTING_NOT_EDITABLE(HttpStatus.CONFLICT, "This listing can no longer be changed because it is reserved, sold or removed."),
+    INVALID_IMAGE(HttpStatus.BAD_REQUEST, "Photos must be JPG, PNG or WebP images."),
+    TOO_MANY_IMAGES(HttpStatus.BAD_REQUEST, "A listing can have at most 8 photos."),
+    IMAGE_REQUIRED(HttpStatus.BAD_REQUEST, "A listing needs at least one photo."),
+    IMAGE_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "Each photo must be 5 MB or smaller."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "This HTTP method is not supported here."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "This content type is not supported."),
     CONFLICT(HttpStatus.CONFLICT, "The request conflicts with the current state of the data."),

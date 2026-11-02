@@ -78,6 +78,21 @@ public class GlobalExceptionHandler {
         return build(ErrorCode.MALFORMED_REQUEST, null, request, List.of());
     }
 
+    /** Uploaded file or request larger than the multipart limits (5 MB per photo). */
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleTooLarge(org.springframework.web.multipart.MaxUploadSizeExceededException ex,
+                                                           HttpServletRequest request) {
+        return build(ErrorCode.IMAGE_TOO_LARGE, null, request, List.of());
+    }
+
+    /** Multipart request without a required part (e.g. no "listing" JSON or no "photos"). */
+    @ExceptionHandler(org.springframework.web.multipart.support.MissingServletRequestPartException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingPart(org.springframework.web.multipart.support.MissingServletRequestPartException ex,
+                                                              HttpServletRequest request) {
+        return build(ErrorCode.INVALID_PARAMETER, null, request,
+                List.of(new ApiErrorResponse.FieldError(ex.getRequestPartName(), "is required")));
+    }
+
     /** Missing required query parameter. */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ApiErrorResponse> handleMissingParameter(MissingServletRequestParameterException ex, HttpServletRequest request) {

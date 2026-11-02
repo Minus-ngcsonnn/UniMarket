@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ImageIcon } from '../icons'
 
 const PLACEHOLDER_TONES = {
@@ -11,17 +12,28 @@ const FITS = {
 }
 
 /**
- * Shows an image, or a neutral placeholder while the real asset is not available.
+ * Shows an image, or a neutral placeholder while the real asset is not available
+ * (no URL, or a URL that fails to load, e.g. demo photos whose files are not shipped yet).
  *
- * @param {string} [src] image URL; when missing a placeholder is rendered
+ * @param {string} [src] image URL; when missing or broken a placeholder is rendered
  * @param {string} alt description; use '' for purely decorative images
  * @param {'cover'|'contain'} [fit] how the image fills its box
  * @param {string} [position] Tailwind object-position class, e.g. 'object-right'
  * @param {'light'|'onPrimary'} [tone] placeholder colors for light or blue backgrounds
  */
 export default function ImageSlot({ src, alt, fit = 'cover', position = 'object-center', tone = 'light', className = '' }) {
-  if (src) {
-    return <img src={src} alt={alt} className={`h-full w-full ${FITS[fit]} ${position} ${className}`} />
+  // Remembers which URL failed, so a new src is tried again.
+  const [failedSrc, setFailedSrc] = useState(null)
+
+  if (src && src !== failedSrc) {
+    return (
+      <img
+        src={src}
+        alt={alt}
+        onError={() => setFailedSrc(src)}
+        className={`h-full w-full ${FITS[fit]} ${position} ${className}`}
+      />
+    )
   }
 
   return (

@@ -142,4 +142,17 @@ public class User {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getZaloUrl() {
+        return zaloUrl;
+    }
+
+    /** @return true when the user chose to show their phone / Zalo on their listings ({@code ShowContact}) */
+    public boolean isShowContact() {
+        return showContact;
+    }
 }
