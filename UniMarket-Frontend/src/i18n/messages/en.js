@@ -38,7 +38,7 @@ export const en = {
     menu: 'Account menu',
     menuWithTodo: { one: 'Account menu, {count} order needs your action', other: 'Account menu, {count} orders need your action' },
     demoAccount: 'Demo account · sample data',
-    verified: 'Verified student',
+    verified: 'Email verified',
     emailVerified: 'Email verified',
     seller: 'Seller',
     rating: 'Rating',
@@ -65,7 +65,7 @@ export const en = {
   auth: {
     backToMarketplace: 'Marketplace',
     needHelp: 'Need help?',
-    pointVerified: 'Verified FPT University students',
+    pointVerified: 'Students from universities across Vietnam',
     pointPayment: 'Online payment through UniMarket only',
     pointDelivery: 'Sellers arrange delivery on campus',
   },
@@ -75,7 +75,7 @@ export const en = {
     text: 'A student marketplace for second-hand items from FPT students, for FPT students.',
     explore: 'Explore Marketplace',
     sell: 'Sell an Item',
-    trust: 'Verified students · Online payment through UniMarket',
+    trust: 'Email-verified accounts · Online payment through UniMarket',
     imageAlt: 'Student essentials: textbooks, a laptop, headphones and a backpack',
   },
   categories: {
@@ -112,7 +112,7 @@ export const en = {
     description: 'Simple for buyers and sellers. Every payment goes through UniMarket.',
     learnMore: 'Learn more',
     steps: [
-      { title: 'Find it on campus', text: 'Browse listings from verified FPT students and add what you need to your cart.' },
+      { title: 'Find it on campus', text: 'Browse listings from students across Vietnam and add what you need to your cart.' },
       { title: 'Order, seller confirms', text: 'Send an order with your delivery details. The seller confirms within 24 hours.' },
       { title: 'Pay online, get it delivered', text: 'Pay securely on UniMarket. No cash or direct transfers. The seller delivers to you.' },
       { title: 'Confirm and review', text: 'Confirm you received it, then rate each other to keep the campus market trusted.' },

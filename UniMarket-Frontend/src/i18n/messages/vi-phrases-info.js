@@ -280,4 +280,10 @@ export const viPhrasesInfo = {
   'This page isn’t available yet': 'Trang này chưa khả dụng',
   'We’re still building this part of UniMarket. Please check back soon.': 'Chúng tôi vẫn đang xây dựng phần này của UniMarket. Vui lòng quay lại sau.',
   'Back to homepage': 'Về trang chủ',
+  // ---- Nationwide registration policy (Nov 2026): any email + OTP, no verified-student status ----
+  "Verified emails": "Email đã xác minh",
+  "Deal with email-verified accounts": "Giao dịch với tài khoản đã xác minh email",
+  "Look for the “Email verified” badge on the seller card.": "Tìm huy hiệu “Email đã xác thực” trên thẻ người bán.",
+  "UniMarket is built around email-verified student accounts and protected online payments. These simple habits keep every trade safe.": "UniMarket được xây dựng quanh các tài khoản sinh viên đã xác minh email và thanh toán online được bảo vệ. Những thói quen đơn giản này giúp mọi giao dịch an toàn.",
+  "Register with any valid email address (personal or university). We send a 6-digit code to verify the address before you can buy or sell.": "Đăng ký bằng bất kỳ địa chỉ email hợp lệ nào (cá nhân hoặc email trường). Chúng tôi gửi mã 6 chữ số để xác minh địa chỉ trước khi bạn có thể mua hoặc bán.",
 }

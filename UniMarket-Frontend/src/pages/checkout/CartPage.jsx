@@ -162,10 +162,10 @@ export default function CartPage() {
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
                       {seller?.name}
-                      {seller?.verified && (
+                      {seller?.emailVerified && (
                         <>
                           <BadgeCheckIcon className="size-4 text-primary" />
-                          <span className="sr-only">{t("Verified student")}</span>
+                          <span className="sr-only">{t("Email verified")}</span>
                         </>
                       )}
                     </p>
@@ -285,7 +285,7 @@ export default function CartPage() {
             <BadgeCheckIcon className="size-6 shrink-0 text-primary" />
             <div className="text-sm">
               <p className="font-semibold text-ink">{t("Your campus. Your community.")}</p>
-              <p className="mt-1 text-ink-muted">{t("Sellers are verified students. Each one confirms your order within 24 hours, then you pay securely on UniMarket.")}</p>
+              <p className="mt-1 text-ink-muted">{t("Every seller has verified their email. Each one confirms your order within 24 hours, then you pay securely on UniMarket.")}</p>
               <Link to={PATHS.howItWorks} className="mt-1 inline-block text-sm font-medium text-primary hover:underline">
                 {t("How buying works →")}
               </Link>

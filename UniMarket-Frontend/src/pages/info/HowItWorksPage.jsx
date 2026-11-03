@@ -25,7 +25,7 @@ const SELLING = [
 ]
 
 const PRINCIPLES = [
-  { Icon: BadgeCheckIcon, title: 'Verified students', text: 'Every account verifies its email with a one-time code.' },
+  { Icon: BadgeCheckIcon, title: 'Verified emails', text: 'Every account verifies its email with a one-time code.' },
   { Icon: LockIcon, title: 'Online payment only', text: 'No cash, no direct transfers: payments go through UniMarket.' },
   { Icon: ShieldCheckIcon, title: 'Clear steps', text: 'Both sides see the same order status, from order to delivery.' },
 ]

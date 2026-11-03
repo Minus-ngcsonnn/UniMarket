@@ -86,7 +86,7 @@ async function getOverview({ campus } = {}) {
     isSample: true,
     stats: {
       totalUsers: users.length,
-      verifiedUsers: users.filter((u) => u.verified).length,
+      verifiedUsers: users.filter((u) => u.emailVerified).length, // email ownership only, not student status
       activeListings: products.filter((p) => p.moderation === 'APPROVED' && p.status === 'AVAILABLE').length,
       pendingListings: products.filter((p) => p.moderation === 'PENDING').length,
       completedOrders: completed.length,
@@ -138,7 +138,7 @@ async function listListings(params = {}) {
 async function listUsers(params = {}) {
   await ready()
   const { q, status, verification, campus } = params
-  const verificationOf = (u) => (u.verified ? 'VERIFIED' : u.emailVerified ? 'EMAIL' : 'UNVERIFIED')
+  const verificationOf = (u) => (u.emailVerified ? 'EMAIL' : 'UNVERIFIED')
   const matching = students().filter(
     (u) => includesText([u.name, u.email, u.programme], q) && inCampus(u.campus, campus) && (!verification || verificationOf(u) === verification),
   )

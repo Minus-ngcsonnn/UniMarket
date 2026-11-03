@@ -21,14 +21,13 @@ import useTranslation from '../../i18n/useTranslation'
 
 const VERIFICATION_OPTIONS = [
   { value: '', label: 'Any verification' },
-  { value: 'VERIFIED', label: 'Verified student' },
-  { value: 'EMAIL', label: 'Personal email verified' },
+  { value: 'EMAIL', label: 'Email verified' },
   { value: 'UNVERIFIED', label: 'Email not verified' },
 ]
 
 function Verification({ user }) {
   const { t } = useTranslation()
-  if (user.verified || user.emailVerified) return <VerificationBadge user={user} />
+  if (user.emailVerified) return <VerificationBadge user={user} />
   return <StatusPill tone="warning">{t("Not verified")}</StatusPill>
 }
 
@@ -94,7 +93,7 @@ function UserDetailDialog({ user, open, onClose }) {
         <Avatar name={user.name} size="lg" />
         <div className="min-w-0 text-sm">
           <p className="truncate font-medium text-ink">{user.email}</p>
-          <p className="text-ink-muted">{user.emailType === 'UNIVERSITY' ? 'University email (@fpt.edu.vn)' : 'Personal email'}</p>
+          <p className="text-ink-muted">{user.emailVerified ? t("Email verified") : t("Email not verified")}</p>
         </div>
       </div>
       {user.openReports > 0 && (

@@ -1,6 +1,6 @@
 /**
  * Help center questions, grouped by topic. Answers follow the Business Plan rules
- * (online payment only, seller confirms within 24 h, university email or personal email + OTP).
+ * (online payment only, seller confirms within 24 h, any email address + OTP).
  */
 export const FAQ_GROUPS = [
   {
@@ -8,7 +8,7 @@ export const FAQ_GROUPS = [
     title: 'Getting started',
     items: [
       { q: 'Who can use UniMarket?', a: 'UniMarket is for university students. The pilot runs at FPT University, starting with the Hanoi (Hoa Lac) campus.' },
-      { q: 'How do I create an account?', a: 'Register with your university email (@fpt.edu.vn) or a personal email. We send a 6-digit code to verify the address before you can buy or sell.' },
+      { q: 'How do I create an account?', a: 'Register with any valid email address (personal or university). We send a 6-digit code to verify the address before you can buy or sell.' },
       { q: 'Does it cost anything?', a: 'Creating an account, browsing and listing items are free.' },
     ],
   },

@@ -76,7 +76,7 @@ export default function AdminOverviewPage() {
 
   const stats = overview.data?.stats
   const cards = stats && [
-    { key: 'totalUsers', label: 'Total users', value: numberFormat.format(stats.totalUsers), note: `${stats.verifiedUsers} verified student accounts`, Icon: UsersIcon },
+    { key: 'totalUsers', label: 'Total users', value: numberFormat.format(stats.totalUsers), note: `${stats.verifiedUsers} email-verified accounts`, Icon: UsersIcon },
     { key: 'activeListings', label: 'Active listings', value: numberFormat.format(stats.activeListings), note: `Available and approved · ${stats.pendingListings} awaiting review`, Icon: PackageIcon },
     { key: 'completedOrders', label: 'Completed orders', value: numberFormat.format(stats.completedOrders), note: 'Successful student exchanges', Icon: ShoppingBagIcon },
     { key: 'completedValue', label: 'Completed order value', value: formatPrice(stats.completedValue), note: 'Paid online by buyers · not platform revenue', Icon: WalletIcon },

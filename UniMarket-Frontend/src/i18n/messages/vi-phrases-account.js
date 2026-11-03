@@ -443,4 +443,9 @@ export const viPhrasesAccount = {
   'All listings': 'Tất cả tin',
   'Awaiting review': 'Chờ duyệt',
   'No categories': 'Chưa có danh mục',
+  // ---- Nationwide registration policy (Nov 2026): any email + OTP, no verified-student status ----
+  "Any email address works, for example Gmail, Outlook or your university email.": "Dùng được mọi địa chỉ email, ví dụ Gmail, Outlook hoặc email trường.",
+  "Create a UniMarket account with any email address.": "Tạo tài khoản UniMarket bằng bất kỳ địa chỉ email nào.",
+  "Your email address is verified with a one-time code. Other students see the Email verified badge on your profile and listings.": "Email của bạn đã được xác thực bằng mã dùng một lần. Sinh viên khác thấy huy hiệu Email đã xác thực trên hồ sơ và tin đăng của bạn.",
+  "{count} email-verified accounts": "{count} tài khoản đã xác thực email",
 }
