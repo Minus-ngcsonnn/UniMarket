@@ -19,8 +19,8 @@ The real implementations must keep the same function names and return shapes as 
 |---|---|---|
 | `services/products/productApi.js` | `listProducts`, `getProduct`, `getProductsByIds`, `listUserListings`, `getCurrentUserId`, `listMyListings`, `getMyListing`, `createListing`, `updateListing`, `deleteListing` | **Stage 3 API ready** (`docs/PRODUCTS_API.md`, mapping in 3.3). `getProductsByIds` waits for Stage 4 | `Products`, `ProductImages`, `vw_ProductCatalog`, `Categories`, `Campuses` |
 | `services/orders/orderApi.js` | `listOrders`, `getOrder`, `getOrders`, `getActionCounts`, `placeOrders`, `cancelOrder`, `payOrder`, `confirmReceived`, `confirmOrder`, `declineOrder`, `markDelivering` (+ demo-only `simulateOtherParty`, `resetSampleData`) | **Stage 4 API ready** (`docs/ORDERS_API.md`, mapping in 3.4). | `Orders`, `OrderStatusHistory`, `Payments`, `Deliveries`, `usp_PlaceOrder`, `usp_ConfirmOrder`, `usp_StartPayment`, `usp_RecordPaymentResult`, `usp_ShipOrder`, `usp_CompleteOrder`, `usp_CancelOrder`, `usp_ExpirePendingOrders` |
-| `services/account/accountApi.js` | `getMyProfile`, `getUserProfile`, `updateProfile`, `listUserReviews`, `getRatingSummary`, `getOrderReviews`, `submitReview`, `createReport` | `Users`, `vw_PublicProfiles`, `vw_UserRatings`, `Reviews`, `Reports` |
-| `services/admin/adminApi.js` | `getOverview`, `listListings`, `listUsers`, `listReports`, `listOrders`, `listCategories`, `getBadgeCounts`, `approveListing`, `blockListing`, `removeListing`, `suspendUser`, `reactivateUser`, `resolveReport`, `dismissReport`, `exportReport` | `vw_AdminDashboard`, `Products`, `Users`, `Reports`, `AdminActions` |
+| `services/account/accountApi.js` | `getMyProfile`, `getUserProfile`, `updateProfile`, `listUserReviews`, `getRatingSummary`, `getOrderReviews`, `submitReview`, `createReport` | `Users`, `vw_PublicProfiles`, `vw_UserRatings`, `Reviews`, `Reports` — **Stage 5 API ready** (`docs/ADMIN_API.md`, mapping in 3.5) |
+| `services/admin/adminApi.js` | `getOverview`, `listListings`, `listUsers`, `listReports`, `listOrders`, `listCategories`, `getBadgeCounts`, `approveListing`, `blockListing`, `removeListing`, `suspendUser`, `reactivateUser`, `resolveReport`, `dismissReport`, `exportReport` | `vw_AdminDashboard`, `Products`, `Users`, `Reports`, `AdminActions` — **Stage 5 API ready** (`docs/ADMIN_API.md`, mapping in 3.5) |
 | `services/cart/cartStore.js` (localStorage today) | cart contents: **Stage 4 API ready** (`/api/cart`) | `CartItems` (+ `trg_Cart_Validate`) |
 | `services/saved/savedStore.js` (localStorage today) | saved items: **Stage 3 API ready** (`/api/me/favorites`) | `Favorites` |
 | Login / Register / OTP pages (no API file yet) | **Stage 2 API ready** (`docs/AUTH_API.md`): register, verify, resend, login, me. Password reset not built yet | `Users`, `EmailVerificationTokens`, `PasswordResetTokens`, `UniversityEmailDomains`, `usp_VerifyEmail` |
@@ -142,7 +142,7 @@ Business Plan references: 6.6 (payment flow), 4.1.1 (3 % commission), delivery s
 | 3e | Seller payout | **Database change** (V002, D6) + **Deferred** (admin/API) | Settlement calculated at completion (Pending); admin confirms the payout with a transfer reference (Released). |
 | 4 | Courier / tracking number | **Database change** (V002) | Optional; "Mark as delivering" works without them. |
 | 5a | `programme`, `bio` on profiles | **Business decision** | Not in `Users`. Add columns in a later migration only if the team keeps these fields; otherwise remove them from the frontend profile form. Not added now. |
-| 5b | `memberSince`, `emailType`, `verified` | **Backend DTO** | `memberSince = Users.CreatedAt`; `emailType` / verified badge from the email domain (`UniversityEmailDomains`) + `EmailVerifiedAt`. |
+| 5b | `memberSince`, `emailType`, `verified` | **Backend DTO** | `memberSince = Users.CreatedAt`; `emailVerified = EmailVerifiedAt IS NOT NULL`. **Nov 2026:** no `verified` / verified-student badge and no `emailType` (the email domain decides nothing). |
 | 5c | Phone / Zalo contact | **Frontend adjustment** | The Business Plan lists phone/Zalo contact as a feature (`Users.Phone`, `ZaloUrl`, `ShowContact`); the frontend text "don't share phone numbers" must be revised. |
 | 6 | Campuses | **Backend DTO** + **Frontend adjustment** | Database has campus ids (one: FPT Hoa Lac). The API returns campus id + name; the frontend's hard-coded HANOI/HCMC/DA_NANG list should come from the API. |
 | 7 | Categories | **Backend DTO** + **Frontend adjustment** | Names differ (`Dormitory items`, `Study equipment`) and SQL has 7. API returns id + name (slug derived in the DTO); the frontend should load categories from the API instead of 5 constants. |
@@ -164,7 +164,7 @@ The API is implemented and tested; the frontend still uses its mock sign-in. Cha
 
 | Frontend place | Today | Needed |
 |---|---|---|
-| `RegisterPage` | full name, email, password, confirm, terms; "Use a personal email instead" | Call `POST /api/auth/register` (no campus field needed for FPT). **Remove or hide the personal-email path**: the backend only accepts approved university domains (`UNSUPPORTED_EMAIL_DOMAIN`). Show `EMAIL_ALREADY_REGISTERED` and `fieldErrors`. Same password rule (8+, a letter and a digit). |
+| `RegisterPage` | full name, email, password, confirm, terms (university-email mode removed, Nov 2026) | Call `POST /api/auth/register`. **Any valid email** is accepted (no domain rule, no `UNSUPPORTED_EMAIL_DOMAIN`). **`campusId` is required**: add a campus select filled from `GET /api/campuses` (only existing campuses; never guessed from the email). Today the list has one campus (FPT Hoa Lac): students of other universities are blocked until V003 / reference data is approved. Show `EMAIL_ALREADY_REGISTERED`, `INVALID_CAMPUS` and `fieldErrors`. Same password rule (8+, a letter and a digit). |
 | `VerifyEmailDialog` (6 digits) | mock | `POST /api/auth/verify-email`; "resend code" → `POST /api/auth/resend-verification` (always 202; show the cooldown text); handle 429 by offering a new code. |
 | `LoginPage` | mock | `POST /api/auth/login`; 401 → "email or password is incorrect"; 403 `EMAIL_NOT_VERIFIED` → open the code dialog; 403 `ACCOUNT_DISABLED`; 429 → wait. "Remember me" has no server meaning (token lifetime is fixed). |
 | Token storage | none | Keep the access token **in memory** (or `sessionStorage` if a reload must keep the session); never in `localStorage` (earlier rule). Send `Authorization: Bearer` via an axios interceptor in `services/apiClient.js`. |
@@ -233,6 +233,7 @@ localStorage cart. No frontend code was changed in Stage 4. Mapping for the real
 | `cartStore` (localStorage ids + `selected`) | browser only | `GET /api/cart`, `PUT`/`DELETE /api/cart/items/{id}`, `DELETE /api/cart`. `selected` stays a frontend-only flag; send the selected ids to checkout. Guests: keep the local cart and add it with `PUT` after sign-in. |
 | Cart page grouping | by seller in the page | `groups[]` (one per seller = one order) with `subtotal`, `shippingFee`, `total`; `unavailable[]` with `reason`. Checkout page: `POST /api/cart/validate` = preview with fees before confirming. `shippingFeePolicy.approved = false`: label the fee provisional, never "free shipping". |
 | `getProductsByIds(ids)` | mock | `GET /api/products/by-ids?ids=…` (public, request order, hidden ids left out) |
+| Shipping | none in the mock | Show `shippingFee` per seller group and `shippingFeePolicy` before confirming. `approved: false` + `plannedMethod: "CARRIER_QUOTE"`: label the fee "provisional"; carrier quotes are the selected direction but not integrated. Never show "free shipping" for 0. |
 | Price shown before paying | product price | Send `expectedPrices` to `POST /api/cart/validate` or `/api/checkout`; 409 `PRICE_CHANGED` → reload the cart |
 | `placeOrders({ productIds, delivery })` | `{ orders, isSample }` | `POST /api/checkout` → `{ orders }` (201). `delivery.fullName → recipientName`, `phone → recipientPhone`, `address → deliveryAddress`. **`campus` and `note` are not stored** (no columns); put needed details into the address text, or keep the note client-side until a decision. |
 | order `amount` | sum of prices | `amounts.total` (what the buyer pays) = `subtotal` + `shippingFee`. Show `subtotal`, `shippingFee`, `total` on cart, checkout and order pages. |
@@ -259,6 +260,65 @@ Error handling for the checkout page: 409 `LISTING_UNAVAILABLE` (`fieldErrors[].
 message = reason) → mark those items and reload the cart; 409 `OWN_LISTING`; 409 `PRICE_CHANGED`; on a network timeout
 do **not** resubmit blindly: reload `GET /api/orders?role=buyer` first (a resubmission of the same listings is refused
 with 409, it never creates a second order; its `fieldErrors` contain `ALREADY_IN_YOUR_ORDER` and `existingOrderIds`). Money: integers in VND, format with the existing `formatPrice` (`utils/format.js`).
+
+## 3.5 Admin, reviews, reports, promotions and contact integration (Backend Stage 5)
+
+The API is implemented and tested (`docs/ADMIN_API.md`); the frontend still uses `mockAdminApi.js` and
+`mockAccountApi.js`. No frontend code was changed in Stage 5. All `/api/admin/**` calls need an ADMIN token
+(students get 403).
+
+| Frontend function | Mock today | Real API / mapping |
+|---|---|---|
+| `adminApi.getOverview({ campus })` | sample stats + illustrative trends | `GET /api/admin/dashboard?from=&to=`. Cards: `users.students`, `listings.publicAvailable`, `listings.pendingModeration`, `finance.completedOrders`, `reports.open`. "Total revenue" must use `finance.commissionRevenue` (platform revenue) — `finance.grossMerchandiseValue` is completed order value, `buyerPaidTotal` includes the seller's delivery fees. `verifiedUsers` → `users.studentAccountsWithEmailVerified` and label it "email-verified accounts" (not "verified students"). **No trend series** exist: hide the sparklines or drop `trends`. `campus` filter: pilot has one campus, not supported. Label figures as simulated while `finance.sandboxOrders` equals `completedOrders`. |
+| `getBadgeCounts()` | | `GET /api/admin/badges` → `pendingListings`, `openReports` (+ `openDisputes`, `pendingSettlements`); admin name from `GET /api/auth/me` |
+| `listListings({ q, moderation, page, pageSize })` | | `GET /api/admin/listings?moderation=&q=&page=&size=`; `counts` → `GET /api/admin/listings/counts`. Item: `seller{id,name}`, `openReports`, `mainImageUrl`, `version`. `category` / `campus` filters not supported. |
+| `approveListing(id)` | preview | `POST /api/admin/listings/{id}/approve { version }` — send the `version` shown; on 409 `LISTING_CHANGED` reload and review again |
+| `blockListing(id, reason)` | preview | PENDING listing: `POST …/reject { version, reason }`; APPROVED listing: `POST …/block { reason }` |
+| `removeListing(id, reason)` | preview | `POST /api/admin/listings/{id}/remove { reason }` (409 for reserved/sold, as in the mock) |
+| `listUsers({ q, status, verification, page })` | | `GET /api/admin/users?q=&status=&role=STUDENT`. `verification` (VERIFIED / EMAIL / UNVERIFIED) has no backend meaning while student verification is pending: show `emailVerified` only. `listingCount`, `rating{average→ratingAverage,count→ratingCount}`, `openReports` provided. |
+| `suspendUser(id, reason)` / `reactivateUser(id)` | preview | `POST /api/admin/users/{id}/suspend { reason }` / `…/reactivate` |
+| `listReports({ status, targetType })` | | `GET /api/admin/reports?status=&targetType=`. Mock `OPEN` ≈ API `ACTIVE` (Open + Reviewing). Target type `LISTING`/`USER`; `target{type,id,label,status,owner}`, `reporter`, `reasonCode` (= `REPORT_REASONS` value), `details`, code `RP-<id>`. |
+| `resolveReport(id, resolution)` / `dismissReport` | preview | `POST /api/admin/reports/{id}/resolve` / `…/dismiss { resolution }` (optional `…/review` first) |
+| `listOrders({ status })` | | `GET /api/admin/orders?status=` (read only, Stage 4 order view) |
+| `listCategories` | | `GET /api/categories` (counts); no admin category management yet |
+| `exportReport` | preview | not implemented |
+| (new screens) disputes, settlements | – | `/api/admin/disputes…`, `/api/admin/settlements…` (see ADMIN_API 6–7). Always show "No money is moved by UniMarket — enter the reference of the transfer you made". |
+| `accountApi.getUserProfile(id)` | | `GET /api/users/{id}` (public: name, campus, `emailVerified`, memberSince, rating, activeListings, `contact` when shared). `programme`, `bio` do not exist in the database. |
+| `getMyProfile()` / `updateProfile()` | | name/email: `GET /api/auth/me`; contact: `GET`/`PUT /api/me/contact { phone, zaloUrl, showContact }`. Other profile fields not supported. |
+| `getRatingSummary(id)` | `{ average, count, distribution }` | `GET /api/users/{id}/ratings` (same fields; `average` has two decimals) |
+| `listUserReviews(id, { role })` | | `GET /api/users/{id}/reviews?role=SELLER|BUYER` (mock `BUYER` = written by buyers = API `SELLER`) |
+| `getOrderReviews(orderId)` | `{ canReview, mine, theirs }` | `GET /api/orders/{id}/reviews` (same shape) |
+| `submitReview({ orderId, rating, comment })` | | `POST /api/orders/{id}/reviews { rating, comment }` (≤ 500 chars, same as `REVIEW_COMMENT_MAX`) |
+| `createReport({ targetType, targetId, reason, details })` | | `POST /api/reports` (same fields; `targetType` `LISTING`/`USER`) |
+| Seller: why was my listing blocked? | `moderation` only | `GET /api/me/products/{id}/moderation` → reasons |
+| Seller: promote a listing | – | `GET /api/promotion-packages`, `POST /api/products/{id}/promotions { packageId, provider }`, then (sandbox) `POST {simulatorUrl} { outcome }`; label "Simulated payment" while `sandbox` is true. Product cards keep using `featured`. |
+
+Verification badges (team decision, Nov 2026): registration uses any email + OTP; the code proves email ownership,
+not enrolment. The backend has no verified-student flag and the frontend no longer shows "Verified student"
+anywhere: only "Email verified" (from `emailVerified`). Dashboard: `users.studentAccountsWithEmailVerified`;
+admin private contact: `POST /api/admin/users/{id}/contact-access { purpose }` (audited); sandbox settlement release
+needs `acknowledgeSimulated: true` and shows `payoutRecordType`; settlement totals are split real vs sandbox.
+
+## 3.6 Stage 6 readiness notes (Nov 2026 review)
+
+| Area | Ready to integrate? | Notes |
+|---|---|---|
+| Registration / login / OTP | Yes, with a campus select | Any email; `campusId` required. Non-FPT students blocked by data (V003 proposal). |
+| Catalog, product page, images | Yes | Demo photos need placeholders (handled by `ImageSlot`). |
+| Listing moderation | Yes | Admin approves with `version`. |
+| Cart, checkout, orders | Yes | Shipping fee provisional (configured flat fee). |
+| Payments | Yes, sandbox only | Label as simulated; no real provider. |
+| Reviews, reports, disputes, settlements, promotions, dashboard | Yes | Settlement / promotion payments are sandbox records. |
+| Shipping quotes | No | Carrier integration not implemented; details pending. |
+
+## 3.7 V003 contract changes (backend done and tested on an isolated copy; DB migration not applied to `UniMarketJava`)
+
+The full screen-by-screen mapping (registration with campus or typed university, pickup / delivery areas, carrier
+choice, "Free (≤ 3 km)", per-seller fees, quote expiry and refresh, unavailable groups, legacy orders, simulated Bank
+QR screen) is in `database/docs/V003_DESIGN_nationwide_and_simulated_shipping.md`, section 12. API details:
+`AUTH_API.md` (registration), `PRODUCTS_API.md` (zones, `pickupZoneId`), `ORDERS_API.md` (quotes, checkout, BankQR).
+Rows 3.2 / 3.4 / 3.6 above that say "`campusId` required" or describe `CHECKOUT_SHIPPING_FEE` describe the pre-V003
+contract.
 
 ## 4. Conventions already in place (Stage 1)
 

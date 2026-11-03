@@ -481,9 +481,13 @@ class ProductIntegrationTest {
             int id = createListing(seller, "Lamp bought through checkout", 60_000);
             jdbc.update("UPDATE dbo.Products SET ModerationStatus = 'Approved' WHERE ProductId = ?", id);
             Integer buyer = newUser("Student", "Checkout Buyer");
-            jdbc.execute("DECLARE @ids dbo.ProductIdList; INSERT @ids VALUES (" + id + "); "
-                    + "EXEC dbo.usp_Checkout @BuyerId = " + buyer + ", @ProductIds = @ids, @RecipientName = N'Buyer', "
-                    + "@RecipientPhone = '0900000000', @DeliveryAddress = N'Dorm'");
+            // V003: checkout through usp_CheckoutWithShipping (free delivery inside the listing's own area).
+            jdbc.execute("DECLARE @ids dbo.ProductIdList, @ship dbo.SellerShippingList, @zone int; INSERT @ids VALUES (" + id + "); "
+                    + "SELECT @zone = COALESCE(p.PickupZoneId, ca.ZoneId) FROM dbo.Products p LEFT JOIN dbo.Campuses ca ON ca.CampusId = p.CampusId "
+                    + "WHERE p.ProductId = " + id + "; "
+                    + "INSERT @ship SELECT SellerId, 'STANDARD_SIM', @zone, 0.0, 0, 'SIM-2026-11' FROM dbo.Products WHERE ProductId = " + id + "; "
+                    + "EXEC dbo.usp_CheckoutWithShipping @BuyerId = " + buyer + ", @ProductIds = @ids, @Shipping = @ship, @DeliveryZoneId = @zone, "
+                    + "@RecipientName = N'Buyer', @RecipientPhone = '0900000000', @DeliveryAddress = N'Dorm'");
             mvc.perform(delete("/api/products/" + id).header("Authorization", "Bearer " + seller)).andExpect(status().isConflict());
             mvc.perform(get("/api/products/" + id)).andExpect(jsonPath("$.status").value("RESERVED")).andExpect(jsonPath("$.purchasable").value(false));
         }

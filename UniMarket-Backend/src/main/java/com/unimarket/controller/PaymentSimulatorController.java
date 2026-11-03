@@ -53,6 +53,18 @@ public class PaymentSimulatorController {
         return simulator.complete(paymentId, success, user);
     }
 
+    /** The seller finishes a pending sandbox promotion payment on the simulator (Stage 5). */
+    @PostMapping("/api/dev/payment-simulator/promotions/{promotionId}/complete")
+    public com.unimarket.dto.promotion.PromotionDtos.Promotion completePromotion(@PathVariable long promotionId, @Valid @RequestBody Outcome request,
+                                                                                 @AuthenticationPrincipal AuthenticatedUser user) {
+        boolean success = switch (request.outcome().trim().toUpperCase(java.util.Locale.ROOT)) {
+            case "SUCCESS" -> true;
+            case "FAILURE" -> false;
+            default -> throw new ValidationException(List.of(new ApiErrorResponse.FieldError("outcome", "must be SUCCESS or FAILURE")));
+        };
+        return simulator.completePromotion(promotionId, success, user);
+    }
+
     /**
      * Provider → server notification of the simulator. Public (a provider has no user token) but only accepted with a
      * valid {@value #SIGNATURE_HEADER} (HMAC-SHA256 with {@code PAYMENT_SIMULATOR_SECRET}).

@@ -177,10 +177,10 @@ export default function OrderDetailPage() {
                     ) : (
                       t('Former student')
                     )}
-                    {counterpart?.verified && (
+                    {counterpart?.emailVerified && (
                       <>
                         <BadgeCheckIcon className="size-4 text-primary" />
-                        <span className="sr-only">{t("Verified student")}</span>
+                        <span className="sr-only">{t("Email verified")}</span>
                       </>
                     )}
                   </p>

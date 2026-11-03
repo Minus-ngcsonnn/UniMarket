@@ -1,4 +1,3 @@
-import { isStudentEmail, STUDENT_EMAIL_DOMAINS } from '../constants/studentEmail'
 import { hasMinLength, isBlank, isValidEmail } from './validators'
 
 /**
@@ -16,15 +15,6 @@ function validateEmail(email) {
   return undefined
 }
 
-function validateStudentEmail(email) {
-  const formatError = validateEmail(email)
-  if (formatError) return formatError
-  if (!isStudentEmail(email)) {
-    return `Use your university email (@${STUDENT_EMAIL_DOMAINS.join(', @')}).`
-  }
-  return undefined
-}
-
 function withoutEmpty(errors) {
   return Object.fromEntries(Object.entries(errors).filter(([, message]) => message))
 }
@@ -37,10 +27,10 @@ export function validateLogin({ email, password }) {
 }
 
 /**
+ * Any valid email address is accepted (nationwide registration, Nov 2026): no university-domain rule.
  * @param {object} values form values
- * @param {{ requireStudentEmail?: boolean }} [options] university-email mode: only university domains are accepted
  */
-export function validateRegister({ fullName, email, password, confirmPassword, acceptTerms }, { requireStudentEmail = false } = {}) {
+export function validateRegister({ fullName, email, password, confirmPassword, acceptTerms }) {
   let passwordError
   if (isBlank(password)) passwordError = 'Password is required.'
   else if (!hasMinLength(password, PASSWORD_MIN_LENGTH) || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
@@ -57,7 +47,7 @@ export function validateRegister({ fullName, email, password, confirmPassword, a
       : !hasMinLength(fullName.trim(), 2)
         ? 'Enter your full name.'
         : undefined,
-    email: requireStudentEmail ? validateStudentEmail(email) : validateEmail(email),
+    email: validateEmail(email),
     password: passwordError,
     confirmPassword: confirmError,
     acceptTerms: acceptTerms ? undefined : 'Please accept the Terms of service and Privacy policy.',

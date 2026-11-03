@@ -17,7 +17,7 @@ Test files (all in `database/tests/`, run on disposable copies by `run_v002_test
 | BP | Requirement | SQL implementation | Tests | Status |
 |---|---|---|---|---|
 | 3.1, 6.2 | Students both buy and sell; one account | `Users` (Role Student/Admin), no buyer/seller split | – | Done (V001) |
-| 3.2 | Verify with institutional email | `UniversityEmailDomains`, `EmailVerificationTokens` (hashed), `Users.EmailVerifiedAt`, `usp_VerifyEmail`; checkout requires a verified active buyer and seller | SC T06 (fixtures use verified users) | Done (V001) + Backend (registration, OTP mail) |
+| 3.2 | ~~Verify with institutional email~~ → **superseded (team decision, Nov 2026)**: register with any valid email + OTP (email ownership only); no student verification | `EmailVerificationTokens` (hashed), `Users.EmailVerifiedAt`, `usp_VerifyEmail`; `UniversityEmailDomains` no longer used by the backend; checkout requires a verified active buyer and seller | Backend `AuthIntegrationTest` (Gmail, Outlook, Yahoo, institutional, other domains) | Done (backend); campus for non-FPT students **BLOCKED** (V003 proposal) |
 | 3.2 | Listing: photos, condition, price, description, campus | `Products`, `ProductImages`, `Campuses`, `Categories` | – | Done (V001) |
 | 3.2, 6.7 | Contact by phone / Zalo, only if the user chooses | `Users.Phone`, `ZaloUrl`, `ShowContact`; `vw_PublicProfiles` hides them unless `ShowContact = 1` | – | Done (V001) + Frontend text to revise |
 | 3.2 | Platform moderates listings, enforces rules | `Products.ModerationStatus`, `Reports`, `AdminActions` | – | Done (V001) + Backend (admin API) |
@@ -41,7 +41,7 @@ Test files (all in `database/tests/`, run on disposable copies by `run_v002_test
 | 4.1.2 | Listing boosts 24 h 5 000, featured 3 days 15 000, 7 days 30 000 | `PromotionPackages`, `ProductPromotions`, `vw_ProductCatalog.IsFeatured` | – | Done (V001) + Backend |
 | 4.1.3 | Advertising | – | – | Future |
 | 4.1.4 | No subscriptions | – | – | Done (nothing to build) |
-| 4.1.4, 6.4 | UniMarket does not provide delivery or charge delivery fees; delivery costs disclosed before payment | D1: the buyer's delivery fee is passed **entirely** to the seller (`SellerPayoutTotal`, settlement `ShippingFee`); UniMarket keeps nothing of it and takes no commission on it | BR F01–F04 | Done (D1) + Frontend (show the fee before payment) |
+| 4.1.4, 6.4 | UniMarket does not provide delivery or charge delivery fees; delivery costs disclosed before payment | D1: the buyer's delivery fee is passed **entirely** to the seller (`SellerPayoutTotal`, settlement `ShippingFee`); UniMarket keeps nothing of it and takes no commission on it. **Selected direction (Nov 2026): carrier-quoted fee** (distance / area, e.g. GrabExpress, Ahamove) — not integrated; today a configured flat fee per order (dev/demo) | BR F01–F04; `OrderIntegrationTest` | D1 done; carrier quote DEFERRED, details PENDING |
 | 4.2 | Free listing, search, contact; paid commission and promotions | No fee columns on listing or search | – | Done (V001) |
 | 4.2, 4.2.1 | *May* temporarily waive commission during the pilot | **D4 officially approved by the team (2026-11-02): no exemption** – 3 % also applies in the MVP/demo phase; `CommissionRate` fixed at 0.03 | BR F04 | Done (team decision D4 replaces the optional waiver) |
 | 4.3.4 | Provider fee ≈ 1 % (cost assumption) | Not stored (platform cost, not a transaction field) | – | Not applicable |
@@ -81,13 +81,24 @@ Test files (all in `database/tests/`, run on disposable copies by `run_v002_test
 ## Belongs to later backend / frontend stages (not V002)
 
 - Authentication, sessions/JWT, password hashing (BCrypt), role-based authorization on every endpoint.
-- Registration with OTP e-mail and institutional-domain check (`usp_VerifyEmail` is ready).
+- Registration with OTP e-mail (done, Stage 2; Nov 2026: any email, no institutional-domain check).
 - Payment gateway integration: create the provider request, **verify callback signatures**, map provider order id to
   `RequestKey`, call `usp_RecordPaymentResult`; alert an admin when it returns 51026 for a charged payment.
 - **Scheduling `usp_ExpirePendingOrders`** (e.g. every minute and before listing pending orders). Until it runs, an
   unconfirmed order past `ConfirmBy` already cannot be confirmed or paid, but its items stay Reserved.
-- Delivery fee source and display before payment; seller payout display.
+- Delivery fee: shown before payment (done, Stage 4, configured flat fee); carrier quotes selected but not integrated.
 - Notifications on new orders / confirmations / deadlines (`Notifications` table exists).
 - Admin screens: moderation, reports, disputes, refunds, payout confirmation.
 - Search API, image upload/storage, promotions purchase, phone/Zalo contact display.
 - Advertising (future).
+
+## Team decisions of November 2026 that supersede Business Plan text
+
+See `BUSINESS_PLAN_CHANGE_PROPOSAL_2026-11.md` for the passages to update in the Business Plan itself.
+
+| Decision | Replaces | Implementation |
+|---|---|---|
+| Target audience: university and college students across Vietnam; FPT Hoa Lac is only the first demo community | FPT Hoa Lac pilot as the only eligible community | No FPT-only rule in code; campus model for other universities needs V003 / reference data |
+| Register with any valid email; OTP proves email ownership only | Institutional (.edu.vn) email verification as student verification | Backend + frontend updated; no "verified student" status or badge |
+| No student-ID / FAP / SSO / manual student approval | "Verifies student credentials" (3.2) | Not implemented by decision |
+| Shipping quoted by a logistics provider (distance, area) | Undecided delivery fee source | Direction documented; integration deferred; configured flat fee is temporary |

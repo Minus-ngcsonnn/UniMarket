@@ -8,6 +8,10 @@ Base path: `/api/auth`. JSON in and out (UTF-8). Errors always use the shared fo
 Authentication is **stateless**: a signed JWT access token (HS256, 1 hour by default) is sent as
 `Authorization: Bearer <token>`. No cookies, no server sessions.
 
+> **V003 (tested on an isolated copy, not yet applied to `UniMarketJava`).** This backend version needs the V003
+> schema; it does not start against a V002-only database (`ddl-auto=validate`). See
+> `database/docs/V003_DESIGN_nationwide_and_simulated_shipping.md`.
+
 ## Endpoints
 
 | Method | URL | Auth | Success |
@@ -29,9 +33,11 @@ Request:
 | Field | Type | Rules |
 |---|---|---|
 | `fullName` | string | required, 2–150 characters |
-| `email` | string | required, valid email, ≤ 254; **domain must be an approved university domain** (`dbo.UniversityEmailDomains`, today `fpt.edu.vn`; subdomains and personal email are refused) |
+| `email` | string | required, **any valid email address** (Gmail, Outlook, Yahoo, a university address, …), ≤ 254, with a dotted domain (`a@localhost` is refused, as by the database CHECK). The domain decides nothing: not eligibility, not university, not campus (team decision, Nov 2026). |
 | `password` | string | required, 8–72 characters (≤ 72 bytes), at least one letter and one digit |
-| `campusId` | number | optional; must be a campus of the email's university; may be omitted when the university has one campus (FPT: "FPT Hoa Lac") |
+| `campusId` | number | an official campus from `GET /api/campuses` (must exist), **or** … |
+| `universityName` | string | … the university / college typed as free text when it is not listed (2–200 characters after trimming; inner spaces collapsed). Stored as **self-declared**, never matched to or inserted into `Universities`, never shown as verified. **Exactly one** of `campusId` / `universityName` is required (field error `affiliationProvided`; a 1-character name → `universityNameLongEnough`). Never derived from the email. |
+| `homeZoneId` | number | optional default area from `GET /api/locations/zones` (`INVALID_ZONE` if unknown / inactive) |
 
 Any other field (e.g. `"role": "Admin"`) is ignored: public registration always creates a **STUDENT**.
 
@@ -39,21 +45,33 @@ Response 201:
 
 ```json
 {
-  "user": { "id": 18, "email": "an.nguyen@fpt.edu.vn", "fullName": "Nguyễn An", "role": "STUDENT",
-            "emailVerified": false, "campusId": 1, "campusName": "FPT Hoa Lac",
-            "university": "FPT University", "memberSince": "2026-11-02T11:00:00Z" },
+  "user": { "id": 18, "email": "an.nguyen@gmail.com", "fullName": "Nguyễn An", "role": "STUDENT",
+            "emailVerified": false, "campusId": 1, "campusName": "FPT Hoa Lac", "university": "FPT University",
+            "affiliation": { "campusId": 1, "campusName": "FPT Hoa Lac", "universityName": "FPT University",
+                             "source": "OFFICIAL_CAMPUS" },
+            "homeZone": null, "memberSince": "2026-11-02T11:00:00Z" },
   "verificationRequired": true,
   "codeExpiresAt": "2026-11-02T11:10:00Z"
 }
 ```
 
+**Registration policy (team decision, Nov 2026).** UniMarket is for university and college students across Vietnam.
+Any valid email address can register; `dbo.UniversityEmailDomains` is no longer used. The emailed code proves
+**ownership of the email address only** — it does not prove enrolment. `emailVerified` is therefore not a student
+status, `role: "STUDENT"` is simply the ordinary marketplace account role, and the API has no `verified` /
+`verifiedStudent` field. No student-ID, FAP, SSO or manual student approval exists.
+
+**Affiliation (V003).** A student whose school has no official campus row types its name. Then `campusId` and
+`campusName` are `null`, `university` is the typed name and `affiliation.source` is `SELF_DECLARED` (otherwise
+`OFFICIAL_CAMPUS`; admins without either: `NONE`). The UI must label a self-declared name as such.
+
 A 6-digit code is e-mailed (never returned by the API). Errors:
 
 | Status | `code` | When |
 |---|---|---|
-| 400 | `VALIDATION_FAILED` | missing / invalid fields (`fieldErrors`), password > 72 bytes, campus required |
-| 400 | `UNSUPPORTED_EMAIL_DOMAIN` | not an approved university domain |
-| 400 | `INVALID_CAMPUS` | campus not of that university |
+| 400 | `VALIDATION_FAILED` | missing / invalid fields (`fieldErrors`), e.g. neither / both of `campusId` and `universityName`, password > 72 bytes |
+| 400 | `INVALID_CAMPUS` | the campus does not exist |
+| 400 | `INVALID_ZONE` | `homeZoneId` is not an active area |
 | 409 | `EMAIL_ALREADY_REGISTERED` | email already used (case-insensitive) |
 
 ### POST /api/auth/verify-email
@@ -108,11 +126,12 @@ issuer/audience, or the account can no longer sign in.
 |---|---|
 | `GET /api/health`, `GET /actuator/health` | public |
 | `POST /api/auth/register`, `verify-email`, `resend-verification`, `login` | public |
-| `GET /api/products/**`, `GET /api/categories/**` | public (reserved for the marketplace stage; not implemented yet) |
+| `GET /api/products/**`, `GET /api/categories/**`, `GET /api/campuses`, `GET /api/universities` | public (Stage 3) |
 | `/api/admin/**` | role ADMIN only → 403 `ACCESS_DENIED` for students |
 | everything else | any signed-in account → 401 `AUTHENTICATION_REQUIRED` otherwise |
 
-Only verified, active accounts can obtain a token, so "signed in" always means a verified student or an admin.
+Only active accounts with a verified email address can obtain a token, so "signed in" means an email-verified
+marketplace account (role STUDENT) or an admin — not a verified student.
 Roles come from `dbo.Users.Role` on every request, never from the token or the frontend.
 
 ## Token contents

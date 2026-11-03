@@ -38,7 +38,7 @@ export const vi = {
     menu: 'Menu tài khoản',
     menuWithTodo: { one: 'Menu tài khoản, {count} đơn cần bạn xử lý', other: 'Menu tài khoản, {count} đơn cần bạn xử lý' },
     demoAccount: 'Tài khoản demo · dữ liệu mẫu',
-    verified: 'Sinh viên đã xác thực',
+    verified: 'Email đã xác thực',
     emailVerified: 'Email đã xác thực',
     seller: 'Người bán',
     rating: 'Đánh giá',
@@ -65,7 +65,7 @@ export const vi = {
   auth: {
     backToMarketplace: 'Về chợ',
     needHelp: 'Cần trợ giúp?',
-    pointVerified: 'Sinh viên Đại học FPT đã xác thực',
+    pointVerified: 'Sinh viên các trường trên khắp Việt Nam',
     pointPayment: 'Chỉ thanh toán online qua UniMarket',
     pointDelivery: 'Người bán giao hàng trong trường',
   },
@@ -75,7 +75,7 @@ export const vi = {
     text: 'Chợ đồ cũ dành cho sinh viên: từ sinh viên FPT, cho sinh viên FPT.',
     explore: 'Khám phá chợ',
     sell: 'Đăng bán',
-    trust: 'Sinh viên đã xác thực · Thanh toán online qua UniMarket',
+    trust: 'Tài khoản đã xác thực email · Thanh toán online qua UniMarket',
     imageAlt: 'Đồ dùng sinh viên: giáo trình, laptop, tai nghe và balo',
   },
   categories: {
@@ -112,7 +112,7 @@ export const vi = {
     description: 'Đơn giản cho cả người mua và người bán. Mọi khoản thanh toán đều qua UniMarket.',
     learnMore: 'Tìm hiểu thêm',
     steps: [
-      { title: 'Tìm món đồ trong trường', text: 'Xem tin đăng của sinh viên FPT đã xác thực và thêm món bạn cần vào giỏ.' },
+      { title: 'Tìm món đồ trong trường', text: 'Xem tin đăng của sinh viên trên khắp Việt Nam và thêm món bạn cần vào giỏ.' },
       { title: 'Đặt hàng, người bán xác nhận', text: 'Gửi đơn kèm thông tin nhận hàng. Người bán xác nhận trong vòng 24 giờ.' },
       { title: 'Thanh toán online, nhận hàng', text: 'Thanh toán an toàn trên UniMarket. Không tiền mặt, không chuyển khoản trực tiếp. Người bán giao cho bạn.' },
       { title: 'Xác nhận và đánh giá', text: 'Xác nhận đã nhận hàng, rồi đánh giá lẫn nhau để chợ trong trường luôn đáng tin.' },

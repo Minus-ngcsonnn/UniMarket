@@ -31,46 +31,59 @@ public class OrderProcedures {
     }
 
     /**
-     * {@code usp_Checkout}: ONE call for the whole checkout. The procedure groups the listings by seller and creates
-     * one order per seller inside a single transaction; if any listing fails, nothing is created or reserved.
+     * V003 {@code usp_CheckoutWithShipping}: ONE call for the whole checkout. It runs the unchanged V002
+     * {@code usp_Checkout} and then stores each seller order's verified simulated shipping fee and quote, all in ONE
+     * transaction (all-or-nothing).
      *
-     * @return the created order ids
+     * <p>Result sets: the nested {@code usp_Checkout} returns its own (OrderId, SellerId) set first, and that set is sent
+     * to the client EVEN WHEN a later check fails and everything is rolled back (proved on the isolated copy). Only the
+     * LAST result set, read after the batch finished without error, is the outcome. An error raised after the first set
+     * surfaces from {@code getMoreResults()} as an exception, so no order id is returned in that case.</p>
+     *
+     * @return the created order ids (from the last result set)
      */
-    public List<Long> checkout(int buyerId, List<Integer> productIds, String recipientName, String recipientPhone,
-                               String deliveryAddress, String providerSql, BigDecimal shippingFee) {
-        // The table-valued parameter dbo.ProductIdList is filled in the same batch from a JSON array of integers
-        // (built here from Integer values only, and passed as a bound parameter), then the procedure is called ONCE.
+    public List<Long> checkoutWithShipping(int buyerId, List<Integer> productIds, int deliveryZoneId,
+                                           List<com.unimarket.service.shipping.ShippingQuoteService.ConfirmedShipping> shipping,
+                                           String recipientName, String recipientPhone, String deliveryAddress, String providerSql) {
         String idsJson = productIds.stream().map(id -> Integer.toString(id)).collect(Collectors.joining(",", "[", "]"));
+        // Built from typed values only (ints, enum carrier names, whole numbers) and passed as ONE bound parameter.
+        String shippingJson = shipping.stream().map(s -> "{\"s\":" + s.sellerId() + ",\"c\":\"" + s.carrier() + "\",\"z\":"
+                        + s.pickupZoneId() + ",\"d\":" + s.distanceKm().toPlainString() + ",\"f\":" + s.fee()
+                        + ",\"v\":\"" + s.formulaVersion() + "\"}")
+                .collect(Collectors.joining(",", "[", "]"));
         return jdbc.execute((ConnectionCallback<List<Long>>) connection -> {
-            // No SET NOCOUNT here: it would stay on for this pooled connection after the batch. The INSERT's
-            // update count is skipped by the result loop below.
             try (PreparedStatement statement = connection.prepareStatement("""
-                    DECLARE @ids dbo.ProductIdList;
+                    DECLARE @ids dbo.ProductIdList, @ship dbo.SellerShippingList;
                     INSERT @ids (ProductId) SELECT CAST([value] AS int) FROM OPENJSON(?);
-                    EXEC dbo.usp_Checkout @BuyerId = ?, @ProductIds = @ids, @RecipientName = ?, @RecipientPhone = ?,
-                         @DeliveryAddress = ?, @PaymentProvider = ?, @ShippingFee = ?;""")) {
+                    INSERT @ship (SellerId, Carrier, PickupZoneId, DistanceKm, Fee, FormulaVersion)
+                    SELECT s, c, z, d, f, v FROM OPENJSON(?) WITH (s int, c varchar(30), z int, d decimal(6,1), f decimal(18,0), v varchar(20));
+                    EXEC dbo.usp_CheckoutWithShipping @BuyerId = ?, @ProductIds = @ids, @Shipping = @ship, @DeliveryZoneId = ?,
+                         @RecipientName = ?, @RecipientPhone = ?, @DeliveryAddress = ?, @PaymentProvider = ?;""")) {
                 statement.setString(1, idsJson);
-                statement.setInt(2, buyerId);
-                statement.setString(3, recipientName);
-                statement.setString(4, recipientPhone);
-                statement.setString(5, deliveryAddress);
-                statement.setString(6, providerSql);
-                statement.setBigDecimal(7, shippingFee);
-                List<Long> created = new ArrayList<>();
+                statement.setString(2, shippingJson);
+                statement.setInt(3, buyerId);
+                statement.setInt(4, deliveryZoneId);
+                statement.setString(5, recipientName);
+                statement.setString(6, recipientPhone);
+                statement.setString(7, deliveryAddress);
+                statement.setString(8, providerSql);
+                List<Long> last = List.of();
                 boolean isResultSet = statement.execute();
                 while (true) {
                     if (isResultSet) {
+                        List<Long> current = new ArrayList<>();
                         try (ResultSet rs = statement.getResultSet()) {
                             while (rs.next()) {
-                                created.add(rs.getLong("OrderId"));
+                                current.add(rs.getLong("OrderId"));
                             }
                         }
+                        last = current;
                     } else if (statement.getUpdateCount() == -1) {
                         break;
                     }
                     isResultSet = statement.getMoreResults();
                 }
-                return created;
+                return last;
             }
         });
     }

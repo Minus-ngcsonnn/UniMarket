@@ -629,4 +629,7 @@ export const viPhrases = {
   'Choose what is wrong.': 'Hãy chọn vấn đề.',
   'Tell us what is wrong in at least 10 characters.': 'Mô tả vấn đề trong ít nhất 10 ký tự.',
   'Keep the details under 500 characters.': 'Chi tiết không quá 500 ký tự.',
+  // ---- Nationwide registration policy (Nov 2026): any email + OTP, no verified-student status ----
+  "Buy from email-verified accounts and pay through UniMarket’s secure checkout, never by direct transfer.": "Mua từ tài khoản đã xác thực email và thanh toán qua cổng an toàn của UniMarket, không bao giờ chuyển khoản trực tiếp.",
+  "Every seller has verified their email. Each one confirms your order within 24 hours, then you pay securely on UniMarket.": "Mọi người bán đều đã xác thực email. Mỗi người xác nhận đơn của bạn trong vòng 24 giờ, sau đó bạn thanh toán an toàn trên UniMarket.",
 }

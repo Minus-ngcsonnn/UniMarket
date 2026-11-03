@@ -42,6 +42,32 @@ public class PaymentSimulator {
     private final OrderQueries queries;
     private final PaymentResultService results;
     private final SecretKeySpec key;
+    private com.unimarket.service.promotion.PromotionService promotions;
+
+    /** Promotion payments (Stage 5) are simulated by the same signed-notification path. */
+    @org.springframework.beans.factory.annotation.Autowired
+    void setPromotions(com.unimarket.service.promotion.PromotionService promotions) {
+        this.promotions = promotions;
+    }
+
+    /**
+     * The seller finishes a pending sandbox PROMOTION payment on the simulator. Same model as orders: the notification
+     * is built from the database (request key, stored amount), signed, verified and recorded.
+     */
+    public com.unimarket.dto.promotion.PromotionDtos.Promotion completePromotion(long promotionId, boolean success, AuthenticatedUser seller) {
+        com.unimarket.dto.promotion.PromotionDtos.Promotion promotion = promotions.forSeller(promotionId, seller);
+        if (!promotion.sandbox()) {
+            throw new ApiException(ErrorCode.NOT_FOUND, "Promotion not found.");
+        }
+        if (!"PENDING".equals(promotion.status())) {
+            throw new ApiException(ErrorCode.CONFLICT, "This promotion payment has already finished.");
+        }
+        PaymentResultService.PaymentNotification notification = new PaymentResultService.PaymentNotification(
+                promotions.requestKeyOf(promotionId), "SIM-" + UUID.randomUUID().toString().replace("-", ""), promotion.amount(), success,
+                promotion.provider());
+        receive(notification, sign(notification));
+        return promotions.forSeller(promotionId, seller);
+    }
 
     public PaymentSimulator(OrderService orders, OrderQueries queries, PaymentResultService results,
                             @Value("${unimarket.payment.simulator.secret:}") String secret,
@@ -89,6 +115,10 @@ public class PaymentSimulator {
         if (!verify(notification, signature)) {
             log.warn("Simulated payment notification with an invalid signature was refused");
             throw new ApiException(ErrorCode.PAYMENT_SIGNATURE_INVALID);
+        }
+        if (queries.paymentByRequestKey(notification.requestKey()).isEmpty() && promotions != null
+                && promotions.idForRequestKey(notification.requestKey()).isPresent()) {
+            return promotions.recordPayment(notification, true);
         }
         return results.record(notification, true);
     }

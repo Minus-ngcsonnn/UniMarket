@@ -20,7 +20,10 @@ import jakarta.validation.constraints.Size;
  * @param originalPrice optional reference price, higher than {@code price}
  * @param condition     NEW, LIKE_NEW or USED
  * @param categoryId    an active category
- * @param campusId      optional; a campus of the seller's university (default: the seller's campus)
+ * @param campusId      optional; a campus of the seller's university (default: the seller's campus). Not allowed for a
+ *                      seller without a campus (V003 self-declared university)
+ * @param pickupZoneId  optional demo pickup area ({@code GET /api/locations/zones}); required for a seller without a campus;
+ *                      when absent the campus area is used
  */
 public record ListingRequest(
         @NotBlank @Size(min = 5, max = 80) String title,
@@ -29,7 +32,8 @@ public record ListingRequest(
         @Min(1_000) @Max(100_000_000) Long originalPrice,
         @NotNull ProductCondition condition,
         @NotNull @Positive Integer categoryId,
-        @Positive Integer campusId) {
+        @Positive Integer campusId,
+        @Positive Integer pickupZoneId) {
 
     /** The original price, when given, must be higher than the price (frontend rule; SQL allows equal). */
     @AssertTrue(message = "must be higher than price")

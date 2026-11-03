@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import AuthTabs from '../../components/auth/AuthTabs'
 import PendingNotice from '../../components/auth/PendingNotice'
-import UniversityEmailButton from '../../components/auth/UniversityEmailButton'
 import { ArrowRightIcon, LockIcon, MailIcon, ShieldCheckIcon } from '../../components/icons'
 import Button from '../../components/ui/Button'
 import Checkbox from '../../components/ui/Checkbox'
@@ -78,11 +77,9 @@ export default function LoginPage() {
 
       <div className="flex flex-col gap-4">
         <TextDivider>{t("New to the campus community?")}</TextDivider>
-        <UniversityEmailButton to={`${PATHS.register}?method=university`} />
         <p className="text-center text-sm text-balance text-ink-muted">
-          {t('No university email?')}{' '}
           <Link to={PATHS.register} className="font-medium text-ink hover:text-primary hover:underline">
-            {t("Register with your personal email.")}
+            {t("Create a UniMarket account with any email address.")}
           </Link>
         </p>
         <p className="flex items-center justify-center gap-2 text-xs text-ink-muted">

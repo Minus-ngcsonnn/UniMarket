@@ -123,8 +123,17 @@ Response:
 - With the owner's (or an admin's) token the response also has `moderation` (`PENDING`, `APPROVED`, `BLOCKED`)
   and `editable` (true while `DRAFT`/`AVAILABLE`), and pending/blocked listings are returned instead of 404.
 - `seller.emailVerified` = the account confirmed its email with a code (`Users.EmailVerifiedAt`). It is **not** a
-  student-status claim: how to verify students (especially with personal emails) is a pending team decision, and
-  the database has no separate "verified student" field. The API never sends `verified` or `verifiedStudent`.
+  student-status claim: registration accepts any email + OTP (team decision, Nov 2026) and there is no student
+  verification. The API never sends `verified` or `verifiedStudent`.
+
+## GET /api/locations/zones (V003, public)
+
+Active demo areas for pickup / delivery: `[{ "id": 2, "code": "HN-CAU-GIAY", "name": "Cầu Giấy", "province": "Hà Nội" }]`.
+No coordinates are returned. Areas are approximations used only for simulated shipping estimates.
+
+V003 response changes: listing summaries and details carry `pickupZone` (`{ id, code, name, province }`: the explicit
+area, else the campus area) and `campus` may be absent; the seller block of a product page carries `university` and
+`affiliationSource` (`OFFICIAL_CAMPUS` / `SELF_DECLARED`). Catalog `facets.campuses` never contains a null key.
 
 ## GET /api/categories, /api/universities, /api/campuses
 
@@ -161,7 +170,8 @@ Rules (the same as the frontend's `LISTING_LIMITS`):
 | `originalPrice` | optional; if set, same range and **higher** than `price` |
 | `condition` | `NEW`, `LIKE_NEW`, `USED` |
 | `categoryId` | an active category, else `INVALID_CATEGORY` |
-| `campusId` | optional; must be a campus of the seller's university (`INVALID_CAMPUS`); default = the seller's campus |
+| `campusId` | optional; must be a campus of the seller's university (`INVALID_CAMPUS`); default = the seller's campus. A seller **without** a campus (self-declared university, V003) cannot send one (`INVALID_CAMPUS`) |
+| `pickupZoneId` | V003, optional demo pickup area from `GET /api/locations/zones` (`INVALID_ZONE` if unknown / inactive). **Required** for a seller without a campus (field error `pickupZoneId`). When absent the campus area is used |
 
 - The seller is **always the signed-in account**; any `sellerId`, `status` or `moderation` in the body is ignored.
 - New listings are `AVAILABLE` + **`PENDING` moderation** (pre-moderation, decision of 2026-11-01): they are not

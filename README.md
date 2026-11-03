@@ -150,6 +150,7 @@ The backend reads these variables. They are never hard-coded:
 Authentication API (register, e-mail verification, login, JWT, roles): `UniMarket-Backend/docs/AUTH_API.md`.
 Products, categories, listing photos and favorites API: `UniMarket-Backend/docs/PRODUCTS_API.md`.
 Cart, checkout, orders, simulated payments and expiry API: `UniMarket-Backend/docs/ORDERS_API.md`.
+Admin, moderation, reviews, reports, disputes, settlements, promotions and contact settings API: `UniMarket-Backend/docs/ADMIN_API.md`.
 
 **Option A: `.env` file (recommended).** Copy the example and edit it. `UniMarket-Backend/.env` is git-ignored.
 

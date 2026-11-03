@@ -1,9 +1,9 @@
 /**
  * SAMPLE USERS FOR FRONTEND DEVELOPMENT ONLY (names, emails and dates are illustrative).
  *
- * Verification (Q1): every account verifies its email with a one-time code. `verified` (the
- * "Verified student" badge) is only true for a verified UNIVERSITY email (@fpt.edu.vn); a verified
- * personal email shows "Email verified" instead.
+ * Verification (team decision, Nov 2026): every account verifies its email with a one-time code. That proves the
+ * person owns the address, not that they are enrolled, so there is no "verified student" flag: verified accounts
+ * show "Email verified", whatever the email domain. `emailType` only describes the sample address.
  */
 
 /** The signed-in student in sample data (there is no real sign-in yet). */
@@ -16,7 +16,6 @@ function user(id, name, { email, emailType = 'UNIVERSITY', emailVerified = true,
     email,
     emailType,
     emailVerified,
-    verified: emailVerified && emailType === 'UNIVERSITY',
     campus,
     programme,
     memberSince,

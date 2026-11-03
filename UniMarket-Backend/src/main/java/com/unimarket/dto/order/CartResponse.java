@@ -18,26 +18,33 @@ import java.util.List;
  * @param subtotal    sum of purchasable prices
  * @param shippingFee sum of the delivery fees of all groups (one fee per order)
  * @param total       what checking out everything purchasable would cost
- * @param shippingFeePolicy how the delivery fee was determined (provisional, see {@link ShippingFeePolicy})
+ * @param shippingFeePolicy how the delivery fee is determined (V003 simulated quotes, see {@link ShippingFeePolicy})
  */
 public record CartResponse(List<SellerGroup> groups, List<CartItem> unavailable, int itemCount, long subtotal, long shippingFee,
                            long total, ShippingFeePolicy shippingFeePolicy) {
 
     /**
-     * How the delivery fee shown was determined. The final calculation method is a PENDING team decision; the MVP
-     * uses a server-configured flat fee per order (possibly 0). A fee of 0 is NOT an approved free-shipping policy.
+     * How the delivery fee is determined (V003): a SIMULATED per-seller estimate from the pickup and delivery areas
+     * ({@code POST /api/shipping/quotes}), free within 3 km, paid online with the order, excluded from the 3 % commission
+     * and passed to the seller (D1). No real carrier is integrated or booked.
      *
-     * @param method   CONFIGURED_FLAT_PER_ORDER (the only method today)
-     * @param feePerOrder fee added to each order (one order per seller)
-     * @param approved false: the calculation method is not approved yet
-     * @param note     text for developers / UI
+     * @param method         {@code SIMULATED_DISTANCE}
+     * @param simulated      always true
+     * @param freeRadiusKm   3
+     * @param formulaVersion e.g. {@code SIM-2026-11}
+     * @param included       false here: cart and preview amounts exclude shipping until a quote is chosen
+     * @param note           text for developers / UI
      */
-    public record ShippingFeePolicy(String method, long feePerOrder, boolean approved, String note) {
+    public record ShippingFeePolicy(String method, boolean simulated, int freeRadiusKm, String formulaVersion, boolean included,
+                                    String note) {
 
-        public static ShippingFeePolicy provisional(long feePerOrder) {
-            return new ShippingFeePolicy("CONFIGURED_FLAT_PER_ORDER", feePerOrder, false,
-                    "Provisional: delivery fee set by server configuration, added to each order (one per seller). "
-                            + "The final shipping fee method is pending team approval; 0 is not a free-shipping policy.");
+        /** @param included true when the amounts include the chosen simulated fees (checkout result) */
+        public static ShippingFeePolicy simulatedDistance(boolean included) {
+            return new ShippingFeePolicy("SIMULATED_DISTANCE", true, 3,
+                    com.unimarket.service.shipping.ShippingCalculator.FORMULA_VERSION, included,
+                    included ? "Each order includes the simulated shipping estimate the buyer chose (0 within 3 km)."
+                            : "Shipping is not included yet: choose a delivery area to get a simulated estimate per seller "
+                            + "(POST /api/shipping/quotes). Free within 3 km.");
         }
     }
 
@@ -45,7 +52,7 @@ public record CartResponse(List<SellerGroup> groups, List<CartItem> unavailable,
      * @param seller      seller of these listings
      * @param items       purchasable listings of this seller
      * @param subtotal    sum of their prices
-     * @param shippingFee delivery fee of the order this group becomes (configured, see the API doc)
+     * @param shippingFee 0 here: shipping is quoted per seller after a delivery area is chosen (V003)
      * @param total       subtotal + delivery fee
      */
     public record SellerGroup(OrderResponse.Party seller, List<CartItem> items, long subtotal, long shippingFee, long total) {

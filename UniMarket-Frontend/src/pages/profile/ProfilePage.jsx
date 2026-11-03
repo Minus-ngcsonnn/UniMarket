@@ -33,14 +33,12 @@ function Section({ title, description, action, children, id }) {
   )
 }
 
-/** Email verification (Q1): university email → "Verified student"; personal email → "Email verified". */
+/** Email verification: the one-time code proves ownership of the email address (any domain), not student enrolment. */
 function VerificationStatus({ profile }) {
   const { t } = useTranslation()
-  const states = profile.verified
-    ? { tone: 'bg-primary-soft text-primary', Icon: BadgeCheckIcon, title: 'Verified student', text: 'Your FPT University email is verified. Other students see the Verified student badge on your profile and listings.' }
-    : profile.emailVerified
-      ? { tone: 'bg-subtle text-ink-muted', Icon: MailIcon, title: 'Email verified', text: 'Your personal email is verified. Add your @fpt.edu.vn email to get the Verified student badge.' }
-      : { tone: 'bg-warning-soft text-warning', Icon: MailIcon, title: 'Email not verified', text: 'Verify your email with the one-time code we sent you before buying or selling.' }
+  const states = profile.emailVerified
+    ? { tone: 'bg-primary-soft text-primary', Icon: BadgeCheckIcon, title: 'Email verified', text: 'Your email address is verified with a one-time code. Other students see the Email verified badge on your profile and listings.' }
+    : { tone: 'bg-warning-soft text-warning', Icon: MailIcon, title: 'Email not verified', text: 'Verify your email with the one-time code we sent you before buying or selling.' }
 
   return (
     <div className="flex gap-3">

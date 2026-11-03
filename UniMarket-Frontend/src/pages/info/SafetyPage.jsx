@@ -13,8 +13,8 @@ const TIPS = [
   },
   {
     Icon: BadgeCheckIcon,
-    title: 'Deal with verified students',
-    points: ['Every account verifies its email with a one-time code.', 'Look for the verified badge on the seller card.', 'Keep conversations and agreements on UniMarket.'],
+    title: 'Deal with email-verified accounts',
+    points: ['Every account verifies its email with a one-time code.', 'Look for the “Email verified” badge on the seller card.', 'Keep conversations and agreements on UniMarket.'],
   },
   {
     Icon: PackageIcon,
@@ -38,14 +38,14 @@ const TIPS = [
   },
 ]
 
-/** Safety & trust guidelines, based on the Business Plan rules (verified students, online payment only). */
+/** Safety & trust guidelines, based on the Business Plan rules (email-verified accounts, online payment only). */
 export default function SafetyPage() {
   const { t } = useTranslation()
   return (
     <ContentPage
       eyebrow="Safety & trust"
       title="A safer marketplace starts with students like you"
-      intro="UniMarket is built around verified students and protected online payments. These simple habits keep every trade safe."
+      intro="UniMarket is built around email-verified student accounts and protected online payments. These simple habits keep every trade safe."
     >
       <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {TIPS.map(({ Icon, title, points }) => (

@@ -36,6 +36,11 @@ public class Campus {
     @Column(name = "Address", length = 500)
     private String address;
 
+    /** V003: the demo area of this campus (every campus has one after V003). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ZoneId")
+    private LocationZone zone;
+
     /** Required by JPA. */
     protected Campus() {
     }
@@ -54,5 +59,9 @@ public class Campus {
 
     public String getAddress() {
         return address;
+    }
+
+    public LocationZone getZone() {
+        return zone;
     }
 }

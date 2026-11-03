@@ -43,9 +43,15 @@ public class Product {
     @JoinColumn(name = "CategoryId", nullable = false)
     private Category category;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "CampusId", nullable = false)
+    /** V003: optional when a pickup zone is given (CK_Products_Location). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CampusId")
     private Campus campus;
+
+    /** V003: explicit pickup area; when null the campus zone is used. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "PickupZoneId")
+    private LocationZone pickupZone;
 
     @Nationalized
     @Column(name = "Title", nullable = false, length = 200)
@@ -93,14 +99,15 @@ public class Product {
      * @param seller the signed-in student
      * @param nowUtc creation time (UTC)
      */
-    public static Product newListing(User seller, Category category, Campus campus, String title, String description,
-                                     ProductCondition condition, BigDecimal price, BigDecimal originalPrice, LocalDateTime nowUtc) {
+    public static Product newListing(User seller, Category category, Campus campus, LocationZone pickupZone, String title,
+                                     String description, ProductCondition condition, BigDecimal price, BigDecimal originalPrice,
+                                     LocalDateTime nowUtc) {
         Product product = new Product();
         product.seller = seller;
         product.status = ProductStatus.AVAILABLE;
         product.moderationStatus = ModerationStatus.PENDING;
         product.createdAt = nowUtc;
-        product.update(category, campus, title, description, condition, price, originalPrice, nowUtc);
+        product.update(category, campus, pickupZone, title, description, condition, price, originalPrice, nowUtc);
         return product;
     }
 
@@ -108,10 +115,14 @@ public class Product {
      * Replaces the editable fields. Any change of an approved or blocked listing sends it back to
      * moderation (approved decision of 2026-11-01).
      */
-    public void update(Category category, Campus campus, String title, String description, ProductCondition condition,
-                       BigDecimal price, BigDecimal originalPrice, LocalDateTime nowUtc) {
+    public void update(Category category, Campus campus, LocationZone pickupZone, String title, String description,
+                       ProductCondition condition, BigDecimal price, BigDecimal originalPrice, LocalDateTime nowUtc) {
+        if (campus == null && pickupZone == null) {
+            throw new IllegalArgumentException("A listing needs a campus or a pickup zone");
+        }
         this.category = category;
         this.campus = campus;
+        this.pickupZone = pickupZone;
         this.title = title;
         this.description = description;
         this.condition = condition;
@@ -141,6 +152,12 @@ public class Product {
     public User getSeller() { return seller; }
     public Category getCategory() { return category; }
     public Campus getCampus() { return campus; }
+    public LocationZone getPickupZone() { return pickupZone; }
+
+    /** @return the effective pickup area: the explicit zone, else the campus zone (may be null only before V003 data) */
+    public LocationZone getEffectivePickupZone() {
+        return pickupZone != null ? pickupZone : campus == null ? null : campus.getZone();
+    }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public ProductCondition getCondition() { return condition; }

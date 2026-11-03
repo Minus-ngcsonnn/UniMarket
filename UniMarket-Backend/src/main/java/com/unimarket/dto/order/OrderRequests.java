@@ -1,5 +1,7 @@
 package com.unimarket.dto.order;
 
+import com.unimarket.dto.shipping.ShippingDtos.ShippingChoice;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -26,8 +28,11 @@ public final class OrderRequests {
      * @param recipientName   who receives the items
      * @param recipientPhone  Vietnamese mobile number
      * @param deliveryAddress where the seller delivers (e.g. dormitory and room)
-     * @param paymentProvider optional now (MOMO or ZALOPAY); can also be chosen when paying
+     * @param paymentProvider optional now (MOMO, ZALOPAY or BANK_QR - all simulated); can also be chosen when paying
      * @param expectedPrices  optional: the prices the buyer saw, by listing id; any difference → 409 PRICE_CHANGED
+     * @param deliveryZoneId  V003: the delivery area used for the shipping quotes
+     * @param shipping        V003: one choice per seller (carrier + quote token from {@code POST /api/shipping/quotes});
+     *                        no amount is accepted from the client
      */
     public record CheckoutRequest(
             @NotEmpty @Size(max = 50) List<@NotNull @Positive Integer> productIds,
@@ -35,7 +40,9 @@ public final class OrderRequests {
             @NotBlank @Pattern(regexp = PHONE_PATTERN, message = "must be a Vietnamese mobile number") String recipientPhone,
             @NotBlank @Size(min = 5, max = 500) String deliveryAddress,
             String paymentProvider,
-            Map<Integer, Long> expectedPrices) {
+            Map<Integer, Long> expectedPrices,
+            @NotNull @Positive Integer deliveryZoneId,
+            @NotEmpty @Size(max = 50) List<@Valid @NotNull ShippingChoice> shipping) {
     }
 
     /**
@@ -55,7 +62,7 @@ public final class OrderRequests {
     public record ShipRequest(@Size(max = 100) String carrier, @Size(max = 100) String trackingNumber) {
     }
 
-    /** @param provider MOMO or ZALOPAY; may be omitted when it was chosen at checkout */
+    /** @param provider MOMO, ZALOPAY or BANK_QR (simulated); may be omitted when it was chosen at checkout */
     public record StartPaymentRequest(String provider) {
     }
 

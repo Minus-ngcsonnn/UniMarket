@@ -48,6 +48,17 @@ public class OrderController {
         this.payments = payments;
     }
 
+    /**
+     * V003: simulated shipping options per seller for the listings to check out, each with a signed 15-minute quote
+     * token. Estimates only (no real carrier); the amounts are recomputed again at checkout.
+     */
+    @PostMapping("/api/shipping/quotes")
+    public com.unimarket.dto.shipping.ShippingDtos.QuoteResponse shippingQuotes(
+            @Valid @RequestBody com.unimarket.dto.shipping.ShippingDtos.QuoteRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return checkout.quote(request, user);
+    }
+
     /** Places the order(s): one per seller, all or nothing. 201 with the created orders. */
     @PostMapping("/api/checkout")
     @ResponseStatus(HttpStatus.CREATED)

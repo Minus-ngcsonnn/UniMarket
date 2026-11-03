@@ -85,7 +85,7 @@ export default function AccountMenu({ profile, isDemo, onSignOut }) {
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-1 truncate font-semibold text-ink">
                 {profile.name}
-                {profile.verified && (
+                {profile.emailVerified && (
                   <>
                     <BadgeCheckIcon className="size-4 shrink-0 text-primary" />
                     <span className="sr-only">{t('account.verified')}</span>

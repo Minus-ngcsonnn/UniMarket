@@ -11,7 +11,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,15 +31,12 @@ public class CartService {
 
     private final OrderQueries queries;
     private final JdbcTemplate jdbc;
-    private final BigDecimal shippingFee;
     private final int maxItems;
 
     public CartService(OrderQueries queries, JdbcTemplate jdbc,
-                       @Value("${unimarket.checkout.shipping-fee}") BigDecimal shippingFee,
                        @Value("${unimarket.cart.max-items}") int maxItems) {
         this.queries = queries;
         this.jdbc = jdbc;
-        this.shippingFee = CheckoutService.validShippingFee(shippingFee);
         this.maxItems = maxItems;
     }
 
@@ -63,12 +59,12 @@ public class CartService {
         long subtotal = groups.stream().mapToLong(CartResponse.SellerGroup::subtotal).sum();
         long fees = groups.stream().mapToLong(CartResponse.SellerGroup::shippingFee).sum();
         return new CartResponse(groups, unavailable, rows.size(), subtotal, fees, subtotal + fees,
-                CartResponse.ShippingFeePolicy.provisional(OrderMapper.vnd(shippingFee)));
+                CartResponse.ShippingFeePolicy.simulatedDistance(false));
     }
 
-    /** One group per seller = one future order, each with the server-configured delivery fee. */
+    /** One group per seller = one future order. Shipping is quoted separately (V003), so the fee here is 0. */
     private List<CartResponse.SellerGroup> groups(Map<Integer, List<CartResponse.CartItem>> bySeller, Map<Integer, String> sellerNames) {
-        long fee = OrderMapper.vnd(shippingFee);
+        long fee = 0;
         List<CartResponse.SellerGroup> groups = new ArrayList<>();
         bySeller.forEach((sellerId, items) -> {
             long subtotal = items.stream().mapToLong(CartResponse.CartItem::price).sum();
@@ -162,7 +158,7 @@ public class CartService {
         long subtotal = groups.stream().mapToLong(CartResponse.SellerGroup::subtotal).sum();
         long fees = groups.stream().mapToLong(CartResponse.SellerGroup::shippingFee).sum();
         return new CartResponse.Validation(ready, items, groups, subtotal, fees, subtotal + fees,
-                CartResponse.ShippingFeePolicy.provisional(OrderMapper.vnd(shippingFee)));
+                CartResponse.ShippingFeePolicy.simulatedDistance(false));
     }
 
     private static CartResponse.CartItem item(OrderQueries.ListingRow row, int buyerId, Long expectedPrice) {

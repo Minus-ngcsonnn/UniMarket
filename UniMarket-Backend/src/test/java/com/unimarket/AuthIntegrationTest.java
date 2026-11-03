@@ -189,11 +189,58 @@ class AuthIntegrationTest {
         }
 
         @Test
-        void personalOrUnknownDomainsAreRejected() throws Exception {
-            register("student." + UUID.randomUUID() + "@gmail.com", "Secret123", "Gmail User")
-                    .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("UNSUPPORTED_EMAIL_DOMAIN"));
-            register("x." + UUID.randomUUID() + "@sub.fpt.edu.vn", "Secret123", "Subdomain User")
-                    .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("UNSUPPORTED_EMAIL_DOMAIN"));
+        void anyValidEmailDomainCanRegisterNationwide() throws Exception {
+            // Team decision (Nov 2026): any valid email; the domain decides nothing (UniversityEmailDomains is not used).
+            for (String domain : List.of("gmail.com", "outlook.com", "yahoo.com.vn", "hust.edu.vn", "student.uni-example.io", "sub.fpt.edu.vn")) {
+                String email = "nationwide." + UUID.randomUUID().toString().substring(0, 8) + "@" + domain;
+                register(email, "Secret123", "Nationwide " + domain)
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.user.email").value(email))
+                        .andExpect(jsonPath("$.user.role").value("STUDENT"))
+                        .andExpect(jsonPath("$.user.emailVerified").value(false))
+                        .andExpect(jsonPath("$.user.campusId").value(campusId()))
+                        .andExpect(jsonPath("$.user.verifiedStudent").doesNotExist())
+                        .andExpect(jsonPath("$.user.verified").doesNotExist());
+                assertThat(mail.lastCodeFor(email)).matches("\\d{6}");
+            }
+        }
+
+        @Test
+        void aGmailAccountVerifiesOwnershipSignsInAndIsStillNotAVerifiedStudent() throws Exception {
+            String email = "personal." + UUID.randomUUID().toString().substring(0, 8) + "@gmail.com";
+            register(email, "Secret123", "Gmail Student").andExpect(status().isCreated());
+            verify(email, mail.lastCodeFor(email)).andExpect(status().isOk());
+            String token = tokenFor(email, "Secret123");
+            mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token)).andExpect(status().isOk())
+                    .andExpect(jsonPath("$.emailVerified").value(true))
+                    .andExpect(jsonPath("$.role").value("STUDENT"))
+                    .andExpect(jsonPath("$.verifiedStudent").doesNotExist())
+                    .andExpect(jsonPath("$.verified").doesNotExist());
+        }
+
+        @Test
+        void theCampusIsChosenExplicitlyAndNeverDerivedOrDefaulted() throws Exception {
+            // Neither a campus nor a typed university → 400 (V003: one affiliation required; never assigned automatically).
+            mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of(
+                            "fullName", "No Campus", "email", newEmail(), "password", "Secret123"))))
+                    .andExpect(status().isBadRequest()).andExpect(jsonPath("$.fieldErrors[0].field").value("affiliationProvided"));
+            // Only campuses that exist can be chosen; nothing is created on the fly.
+            long campusesBefore = jdbc.queryForObject("SELECT COUNT(*) FROM dbo.Campuses", Long.class);
+            long universitiesBefore = jdbc.queryForObject("SELECT COUNT(*) FROM dbo.Universities", Long.class);
+            mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of(
+                            "fullName", "Unknown Campus", "email", "u." + UUID.randomUUID().toString().substring(0, 8) + "@gmail.com",
+                            "password", "Secret123", "campusId", 999999))))
+                    .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_CAMPUS"));
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM dbo.Campuses", Long.class)).isEqualTo(campusesBefore);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM dbo.Universities", Long.class)).isEqualTo(universitiesBefore);
+        }
+
+        @Test
+        void addressesWithoutADottedDomainAreRejectedAsInvalidNotAsDuplicates() throws Exception {
+            // @Email accepts "a@localhost" but the database CHECK needs a dotted domain: refuse it as a 400.
+            register("someone@localhost", "Secret123", "No Dot")
+                    .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                    .andExpect(jsonPath("$.fieldErrors[0].field").value("email"));
         }
 
         @Test
@@ -201,7 +248,7 @@ class AuthIntegrationTest {
             mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content("{}"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
-                    .andExpect(jsonPath("$.fieldErrors.length()").value(3));
+                    .andExpect(jsonPath("$.fieldErrors.length()").value(4));
             register(newEmail(), "lettersonly", "Weak Password")
                     .andExpect(status().isBadRequest()).andExpect(jsonPath("$.fieldErrors[0].field").value("password"));
         }
@@ -217,7 +264,7 @@ class AuthIntegrationTest {
         void publicRegistrationCannotCreateAnAdmin() throws Exception {
             String email = newEmail();
             mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of(
-                            "fullName", "Wannabe Admin", "email", email, "password", "Secret123", "role", "Admin", "Role", "ADMIN"))))
+                            "fullName", "Wannabe Admin", "email", email, "password", "Secret123", "campusId", campusId(), "role", "Admin", "Role", "ADMIN"))))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.user.role").value("STUDENT"));
             assertThat(jdbc.queryForObject("SELECT Role FROM dbo.Users WHERE Email = ?", String.class, email)).isEqualTo("Student");
@@ -457,9 +504,15 @@ class AuthIntegrationTest {
         return "it-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20) + "@fpt.edu.vn";
     }
 
+    /** Registers with an explicitly chosen, existing campus (nationwide policy: the campus is never defaulted). */
     private ResultActions register(String email, String password, String fullName) throws Exception {
         return mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(Map.of("fullName", fullName, "email", email, "password", password))));
+                .content(json.writeValueAsString(Map.of("fullName", fullName, "email", email, "password", password, "campusId", campusId()))));
+    }
+
+    /** An existing campus of the test database. */
+    private int campusId() {
+        return jdbc.queryForObject("SELECT MIN(CampusId) FROM dbo.Campuses", Integer.class);
     }
 
     private String registered() throws Exception {

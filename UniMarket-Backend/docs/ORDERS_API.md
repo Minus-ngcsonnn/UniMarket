@@ -216,6 +216,12 @@ transaction). Refunds and payouts are never automatic: an admin decides and reco
 
 ## Payments (simulated in the MVP)
 
+Providers: `MOMO`, `ZALOPAY` and, with V003, `BANK_QR` — all simulated. A `BANK_QR` attempt response adds
+`"bankQr": { "qrPayload": "UNIMARKET-SIMULATED-PAYMENT|ref=UMDEMO-<order>-<payment>|amount=<VND>|NOT-A-BANK-QR", "reference", "amount", "simulated": true, "notice": "SIMULATED bank QR … do not transfer money …" }`.
+The payload is deliberately not an EMVCo / VietQR code and names no bank or account. Showing it changes nothing: the
+order becomes Paid only after a verified (HMAC-signed) simulator result passes `usp_RecordPaymentResult` (attempt,
+exact amount, provider, duplicates, deadline and 30-minute grace), exactly like MoMo / ZaloPay.
+
 No real payment provider is integrated. **Every payment is a sandbox simulation** (`sandbox: true`,
 `Payments.IsSandbox = 1`, provider reference `SIM-…`). No money is charged, held or transferred.
 
@@ -295,33 +301,96 @@ A scheduler runs `usp_ExpirePendingOrders` every minute (`ORDER_EXPIRY_INTERVAL`
   9, 10 (AwaitingPayment) and 11 (Pending) and releases their listings, exactly as V002 documents. That is why it is
   off by default in `dev`.
 
-## Delivery fee
+## Delivery fee (V003: simulated per-seller quotes)
 
-`Orders.ShippingFee` is applied to **each** order of a checkout by `usp_Checkout`. **The final shipping fee
-calculation method is pending team approval** (V002 open points: seller-set, configured, or otherwise). For MVP
-development it is a server setting, `CHECKOUT_SHIPPING_FEE` (whole VND per order, default `0`):
+> **V003 (tested on an isolated copy, not yet applied to `UniMarketJava`).** This backend version needs the V003
+> schema; it does not start against a V002-only database (`ddl-auto=validate`). See
+> `database/docs/V003_DESIGN_nationwide_and_simulated_shipping.md`.
+
+Fees are calculated **only by the backend** from the listing's pickup area and the buyer's delivery area (formula
+`SIM-2026-11`: centre-to-centre distance × 1.3, rounded up to 0.1 km; **free up to and including 3.0 km**; carriers
+`GRAB_EXPRESS_SIM`, `AHAMOVE_SIM` (max 40 km) and `STANDARD_SIM` (max 100 km), labelled "(simulated)"). No real carrier
+is contacted, booked or claimed. Each seller order has its own fee; it is paid online with the order, excluded from the
+3 % commission and passed to the seller (D1).
+
+### POST /api/shipping/quotes (signed in)
+
+Request `{ "productIds": [12, 30], "deliveryZoneId": 2 }` (same listing checks as checkout: `OWN_LISTING`,
+`LISTING_UNAVAILABLE`; unknown area → 400 `INVALID_ZONE`). Response 200:
+
+```json
+{ "deliveryZone": { "id": 2, "code": "HN-CAU-GIAY", "name": "Cầu Giấy", "province": "Hà Nội" },
+  "groups": [ { "sellerId": 5, "sellerName": "…", "productIds": [12], "pickupZone": { "code": "HN-HOA-LAC", … },
+                "distanceKm": 35.4, "free": false, "available": true,
+                "options": [ { "carrier": "GRAB_EXPRESS_SIM", "label": "GrabExpress (simulated)", "fee": 177000, "available": true, "quoteToken": "v1.…" },
+                             { "carrier": "STANDARD_SIM", "label": "Standard delivery (simulated)", "fee": 91000, "available": true, "quoteToken": "v1.…" } ] } ],
+  "simulated": true, "formulaVersion": "SIM-2026-11", "distanceMethod": "ZONE_CENTRE_APPROXIMATION",
+  "freeRadiusKm": 3, "disclaimer": "Simulated estimate …", "expiresAt": "2026-11-03T10:15:00Z" }
+```
+
+A group that cannot be delivered has `available: false`, `reason: "OUT_OF_RANGE"` or `"NO_PICKUP_AREA"` and options
+without fee or token. A seller group with items in several areas uses the item area farthest from the destination.
+
+**Quote token:** HMAC-SHA256 (`SHIPPING_QUOTE_SECRET`) over buyer, seller, sorted listing ids, pickup and delivery
+areas, carrier, distance, fee, formula version and expiry (15 minutes). Nothing is stored.
+
+### Checkout with shipping
+
+`POST /api/checkout` additionally requires `"deliveryZoneId"` and `"shipping": [{ "sellerId", "carrier", "quoteToken" }]`
+(exactly one per seller of the checkout; **no amount is accepted**). The backend verifies each token, **recomputes**
+the distance and fee from the database and calls `usp_CheckoutWithShipping` once (all sellers, one transaction):
+
+| Status | `code` | When |
+|---|---|---|
+| 400 | `INVALID_ZONE` | delivery area unknown / inactive |
+| 400 | `SHIPPING_QUOTE_INVALID` | bad signature, other buyer / listings / area / carrier, missing or extra seller choice |
+| 409 | `SHIPPING_QUOTE_CHANGED` | token expired, other formula version, or the recomputed fee / distance / pickup differs (e.g. the seller moved the pickup area) — re-quote |
+| 409 | `SHIPPING_UNAVAILABLE` | a seller group cannot be delivered (field message `OUT_OF_RANGE` / `NO_PICKUP_AREA`) |
+
+Cart and preview (`GET /api/cart`, `POST /api/cart/validate`) show `shippingFee: 0` with
+`"shippingFeePolicy": { "method": "SIMULATED_DISTANCE", "simulated": true, "freeRadiusKm": 3, "formulaVersion": "SIM-2026-11", "included": false, "note": "…" }`
+— 0 there means "not quoted yet", not free. The checkout response has `included: true`.
+
+Every order has `shipping`: `{ "source": "SIMULATED_QUOTE", "carrier", "label", "distanceKm", "fee", "pickupZone",
+"deliveryZone", "simulated": true, "formulaVersion" }`, or `{ "source": "LEGACY", "fee" }` for orders created before V003.
+
+### Before V003 (history)
+
+**Selected business direction (Nov 2026):** the delivery fee is quoted by a logistics provider (e.g. GrabExpress,
+Ahamove or another approved carrier) from distance, delivery area and the provider's prices. The buyer sees the
+quote and the total before confirming checkout and pays it online with the order. It is excluded from the 3 %
+commission and passed to the seller (D1). **This is not implemented**: no carrier API is integrated.
+
+Still pending: the provider; contractual API access; origin address and delivery-zone data; quote validity and
+expiry; whether UniMarket or the seller books the delivery; who bears a difference between the checkout quote and
+the real charge; fallback when no quote is available.
+
+**What exists today (development / demo only):** `usp_Checkout` applies one `@ShippingFee` to **each** order of a
+checkout; the backend passes `CHECKOUT_SHIPPING_FEE` (whole VND per order, default `0`):
 
 - never taken from the request (a client-sent shipping amount is ignored; the request has no such field);
 - shown before the buyer confirms: per seller group and in total in `GET /api/cart` and `POST /api/cart/validate`
   (the checkout preview), and in the checkout response and every order (`amounts.shippingFee`, `amounts.total`);
 - every response that shows it carries
-  `"shippingFeePolicy": { "method": "CONFIGURED_FLAT_PER_ORDER", "feePerOrder": 0, "approved": false, "note": "…" }`.
+  `"shippingFeePolicy": { "method": "CONFIGURED_FLAT_PER_ORDER", "plannedMethod": "CARRIER_QUOTE", "feePerOrder": 0, "approved": false, "note": "…" }`.
 
-**A fee of 0 is a development placeholder, not an approved free-shipping policy.** The UI should label the fee as
-provisional while `approved` is `false` and must not advertise "free shipping".
+**A fee of 0 is a development placeholder, not a free-shipping policy, and the configured flat fee is not the
+final shipping policy.** The UI must label the fee as provisional while `approved` is `false`. A carrier quote
+later changes only where the fee comes from: `Orders.ShippingFee`, the money formulas and V002 stay as they are
+(a per-order quote may need `usp_Checkout` to accept one fee per seller — to be designed with the carrier).
 
 ## Configuration
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `CHECKOUT_SHIPPING_FEE` | `0` | Delivery fee per order (VND); provisional |
+| `SHIPPING_QUOTE_SECRET` | random per run in `dev` | Base64, ≥ 32 bytes; signs quote tokens (required outside `dev`). `CHECKOUT_SHIPPING_FEE` is removed (V003) |
 | `ORDER_EXPIRY_ENABLED` / `ORDER_EXPIRY_INTERVAL` | `false` in `dev`, `true` otherwise / `PT1M` | Expiry job |
 | `PAYMENT_SIMULATOR_ENABLED` | `false` (`true` in `dev`; refused in `prod`/`production`) | Sandbox simulator |
 | `PAYMENT_SIMULATOR_SECRET` | random per run in `dev` | Base64, ≥ 32 bytes; signing key of simulated notifications |
 
 ## Open points
 
-1. **Delivery fee source** – pending decision (default 0).
+1. **Delivery fee** – V003 simulated quotes (above). A real carrier integration remains a future decision.
 2. **Checkout idempotency** – deferred (see *Retry after a lost response*); needs an approved V003.
 3. **Late-payment alerts** – a rejected late success is only logged (`PAYMENT ALERT`); V002 has no table for it.
 4. **Delivery note and campus** from the frontend form have no column in `Orders` (not stored).

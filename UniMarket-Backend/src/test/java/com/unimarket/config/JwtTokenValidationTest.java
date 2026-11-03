@@ -90,7 +90,7 @@ class JwtTokenValidationTest {
     @Test
     void jwtServiceIssuesTokensTheDecoderAccepts() {
         JwtService service = new JwtService(encoder, properties, java.time.Clock.systemUTC());
-        com.unimarket.entity.User user = com.unimarket.entity.User.newStudent("a@fpt.edu.vn", "x".repeat(60), "A", null, java.time.LocalDateTime.now());
+        com.unimarket.entity.User user = com.unimarket.entity.User.newStudent("a@fpt.edu.vn", "x".repeat(60), "A", null, "Test University", null, java.time.LocalDateTime.now());
         org.springframework.test.util.ReflectionTestUtils.setField(user, "id", 7);
         JwtService.AccessToken token = service.issueAccessToken(user);
         Jwt jwt = decoder.decode(token.value());

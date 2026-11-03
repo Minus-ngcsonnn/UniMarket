@@ -59,11 +59,14 @@ class OrderRulesTest {
     }
 
     @Test
-    void zeroIsAProvisionalFeeNotAnApprovedPolicy() {
-        com.unimarket.dto.order.CartResponse.ShippingFeePolicy policy = com.unimarket.dto.order.CartResponse.ShippingFeePolicy.provisional(0);
-        assertThat(policy.approved()).isFalse();
-        assertThat(policy.feePerOrder()).isZero();
-        assertThat(policy.note()).contains("pending team approval").contains("not a free-shipping policy");
+    void theShippingPolicyIsSimulatedAndSaysWhetherFeesAreIncluded() {
+        com.unimarket.dto.order.CartResponse.ShippingFeePolicy cart = com.unimarket.dto.order.CartResponse.ShippingFeePolicy.simulatedDistance(false);
+        assertThat(cart.method()).isEqualTo("SIMULATED_DISTANCE");
+        assertThat(cart.simulated()).isTrue();
+        assertThat(cart.freeRadiusKm()).isEqualTo(3);
+        assertThat(cart.included()).isFalse();
+        assertThat(cart.note()).contains("not included yet");
+        assertThat(com.unimarket.dto.order.CartResponse.ShippingFeePolicy.simulatedDistance(true).included()).isTrue();
     }
 
     @Test

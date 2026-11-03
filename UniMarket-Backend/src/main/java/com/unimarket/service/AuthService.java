@@ -9,13 +9,13 @@ import com.unimarket.dto.auth.RegisterRequest;
 import com.unimarket.dto.auth.RegisterResponse;
 import com.unimarket.dto.auth.UserResponse;
 import com.unimarket.entity.Campus;
-import com.unimarket.entity.University;
+import com.unimarket.entity.LocationZone;
 import com.unimarket.entity.User;
 import com.unimarket.entity.UserStatus;
 import com.unimarket.exception.ApiException;
 import com.unimarket.exception.ValidationException;
 import com.unimarket.repository.CampusRepository;
-import com.unimarket.repository.UniversityEmailDomainRepository;
+import com.unimarket.repository.LocationZoneRepository;
 import com.unimarket.repository.UserRepository;
 import com.unimarket.security.AttemptLimiter;
 import com.unimarket.security.AuthenticatedUser;
@@ -39,9 +39,12 @@ import java.util.UUID;
 /**
  * Student registration, login and the current account.
  *
- * <p>Registration accepts only institutional emails whose domain is listed in
- * {@code dbo.UniversityEmailDomains}; the account is created as an active, unverified STUDENT
- * (never ADMIN) and a verification code is e-mailed. Login requires a verified, active account and
+ * <p>Registration (team decision, Nov 2026: students from universities and colleges across Vietnam) accepts ANY
+ * valid email address — Gmail, Outlook, Yahoo, institutional or other domains. The email domain is never used to
+ * decide eligibility or university affiliation. The student chooses their campus explicitly from the campuses that
+ * exist in {@code dbo.Campuses}; nothing is assigned automatically. The account is created as an active, unverified
+ * STUDENT (never ADMIN) and a verification code is e-mailed: the code proves ownership of the email address, NOT
+ * student enrolment (there is no verified-student status). Login requires a verified, active account and
  * returns a signed access token. Unknown emails and wrong passwords get the same answer.</p>
  */
 @Service
@@ -54,8 +57,8 @@ public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository users;
-    private final UniversityEmailDomainRepository domains;
     private final CampusRepository campuses;
+    private final LocationZoneRepository zones;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService verification;
     private final JwtService jwtService;
@@ -64,12 +67,12 @@ public class AuthService {
     /** Compared against when the email is unknown, so both cases take the same time. */
     private final String dummyHash;
 
-    public AuthService(UserRepository users, UniversityEmailDomainRepository domains, CampusRepository campuses,
+    public AuthService(UserRepository users, CampusRepository campuses, LocationZoneRepository zones,
                        PasswordEncoder passwordEncoder, EmailVerificationService verification, JwtService jwtService,
                        SecurityProperties properties, Clock clock) {
         this.users = users;
-        this.domains = domains;
         this.campuses = campuses;
+        this.zones = zones;
         this.passwordEncoder = passwordEncoder;
         this.verification = verification;
         this.jwtService = jwtService;
@@ -83,7 +86,7 @@ public class AuthService {
      *
      * @param request validated registration data
      * @return the new account (unverified) and the code expiry
-     * @throws ApiException UNSUPPORTED_EMAIL_DOMAIN, INVALID_CAMPUS, EMAIL_ALREADY_REGISTERED, VALIDATION_FAILED
+     * @throws ApiException INVALID_CAMPUS, EMAIL_ALREADY_REGISTERED, VALIDATION_FAILED
      */
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -91,14 +94,19 @@ public class AuthService {
         if (request.password().getBytes(StandardCharsets.UTF_8).length > MAX_PASSWORD_BYTES) {
             throw new ValidationException(List.of(new ApiErrorResponse.FieldError("password", "must be at most 72 bytes")));
         }
-        University university = domains.findWithUniversityByDomain(EmailAddresses.domainOf(email))
-                .orElseThrow(() -> new ApiException(ErrorCode.UNSUPPORTED_EMAIL_DOMAIN))
-                .getUniversity();
-        Campus campus = resolveCampus(university, request.campusId());
+        // V003: an official campus (must exist) OR a self-declared university name; never derived from the email or
+        // defaulted, and a typed name is never matched to / inserted into Universities.
+        Campus campus = request.campusId() == null ? null
+                : campuses.findById(request.campusId()).orElseThrow(() -> new ApiException(ErrorCode.INVALID_CAMPUS));
+        String declaredUniversity = campus == null ? request.normalizedUniversityName() : null;
+        LocationZone homeZone = request.homeZoneId() == null ? null
+                : zones.findById(request.homeZoneId()).filter(LocationZone::isActive)
+                        .orElseThrow(() -> new ApiException(ErrorCode.INVALID_ZONE));
         if (users.existsByEmail(email)) {
             throw new ApiException(ErrorCode.EMAIL_ALREADY_REGISTERED);
         }
-        User user = User.newStudent(email, passwordEncoder.encode(request.password()), request.fullName().trim(), campus, nowUtc());
+        User user = User.newStudent(email, passwordEncoder.encode(request.password()), request.fullName().trim(), campus,
+                declaredUniversity, homeZone, nowUtc());
         try {
             user = users.saveAndFlush(user);
         } catch (DataIntegrityViolationException ex) {
@@ -106,7 +114,7 @@ public class AuthService {
             throw new ApiException(ErrorCode.EMAIL_ALREADY_REGISTERED);
         }
         LocalDateTime codeExpiresAt = verification.issueCode(user);
-        log.info("Registered student {} at campus {}", user.getId(), campus.getId());
+        log.info("Registered student {} ({})", user.getId(), campus != null ? "campus " + campus.getId() : "self-declared university");
         return new RegisterResponse(UserResponse.from(user), true, codeExpiresAt.toInstant(ZoneOffset.UTC));
     }
 
@@ -152,21 +160,6 @@ public class AuthService {
         return users.findWithCampusById(principal.id())
                 .map(UserResponse::from)
                 .orElseThrow(() -> new ApiException(ErrorCode.AUTHENTICATION_REQUIRED));
-    }
-
-    /** A given campus must belong to the email's university; without one, a single-campus university is used. */
-    private Campus resolveCampus(University university, Integer campusId) {
-        List<Campus> options = campuses.findByUniversity_Id(university.getId());
-        if (campusId == null) {
-            if (options.size() == 1) {
-                return options.get(0);
-            }
-            throw new ValidationException(List.of(new ApiErrorResponse.FieldError("campusId", "is required for this university")));
-        }
-        return options.stream()
-                .filter(campus -> campus.getId().equals(campusId))
-                .findFirst()
-                .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CAMPUS));
     }
 
     private LocalDateTime nowUtc() {

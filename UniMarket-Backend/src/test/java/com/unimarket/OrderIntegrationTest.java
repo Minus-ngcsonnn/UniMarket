@@ -64,12 +64,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @EnabledIfEnvironmentVariable(named = "UNIMARKET_WRITE_IT", matches = "true")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"unimarket.checkout.shipping-fee=20000", "unimarket.payment.simulator.enabled=true"})
+        properties = {"unimarket.payment.simulator.enabled=true"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OrderIntegrationTest {
 
-    private static final long FEE = 20_000;
+    /** V003: every test listing is at campus 1 (area HN-HOA-LAC); the buyer delivers to HN-CAU-GIAY with STANDARD_SIM. */
+    private static final String DELIVERY_ZONE_CODE = "HN-CAU-GIAY";
+    private static final String CARRIER = "STANDARD_SIM";
+    /** Simulated fee of one order for that route, derived from the zone coordinates in the database (formula SIM-2026-11). */
+    private long FEE;
+    private int deliveryZone;
+    private int pickupZone;
+    private int distanceTenths;
 
     @Autowired private MockMvc mvc;
     @Autowired private TestRestTemplate rest;
@@ -97,6 +104,16 @@ class OrderIntegrationTest {
         // Bring the copy to the state the live expiry job would produce, so demo rows are stable during the tests.
         expiry.expireOverdueOrders();
         demoChecksum = demoChecksum();
+        deliveryZone = jdbc.queryForObject("SELECT ZoneId FROM dbo.LocationZones WHERE Code = ?", Integer.class, DELIVERY_ZONE_CODE);
+        pickupZone = jdbc.queryForObject("SELECT ZoneId FROM dbo.Campuses WHERE CampusId = 1", Integer.class);
+        Map<String, Object> from = jdbc.queryForMap("SELECT Latitude, Longitude FROM dbo.LocationZones WHERE ZoneId = ?", pickupZone);
+        Map<String, Object> to = jdbc.queryForMap("SELECT Latitude, Longitude FROM dbo.LocationZones WHERE ZoneId = ?", deliveryZone);
+        distanceTenths = com.unimarket.service.shipping.ShippingCalculator.distanceTenths(false,
+                ((BigDecimal) from.get("Latitude")).doubleValue(), ((BigDecimal) from.get("Longitude")).doubleValue(),
+                ((BigDecimal) to.get("Latitude")).doubleValue(), ((BigDecimal) to.get("Longitude")).doubleValue());
+        FEE = com.unimarket.service.shipping.ShippingCalculator.fee(
+                com.unimarket.service.shipping.ShippingCalculator.Carrier.valueOf(CARRIER), distanceTenths).orElseThrow();
+        assertThat(FEE).as("the test route must not be free, so fees are visible in every amount").isPositive();
         sellerA = newUser("Student", "Seller A");
         sellerB = newUser("Student", "Seller B");
         buyer = newUser("Student", "Buyer");
@@ -142,23 +159,24 @@ class OrderIntegrationTest {
             JsonNode groupA = cart.get("groups").get(0);
             assertThat(groupA.get("seller").get("id").asInt()).isEqualTo(sellerA);
             assertThat(groupA.get("subtotal").asLong()).isEqualTo(150_000);
-            assertThat(groupA.get("shippingFee").asLong()).isEqualTo(FEE);
-            assertThat(groupA.get("total").asLong()).isEqualTo(170_000);
+            assertThat(groupA.get("shippingFee").asLong()).as("V003: shipping is quoted per seller later").isZero();
+            assertThat(groupA.get("total").asLong()).isEqualTo(150_000);
             assertThat(cart.get("subtotal").asLong()).isEqualTo(220_000);
-            assertThat(cart.get("shippingFee").asLong()).isEqualTo(2 * FEE);
-            assertThat(cart.get("total").asLong()).isEqualTo(220_000 + 2 * FEE);
-            // The fee is server-configured and explicitly provisional (not an approved shipping policy).
+            assertThat(cart.get("shippingFee").asLong()).isZero();
+            assertThat(cart.get("total").asLong()).isEqualTo(220_000);
+            // V003: simulated distance-based quotes, not included until the buyer chooses a delivery area and carrier.
             JsonNode policy = cart.get("shippingFeePolicy");
-            assertThat(policy.get("method").asText()).isEqualTo("CONFIGURED_FLAT_PER_ORDER");
-            assertThat(policy.get("feePerOrder").asLong()).isEqualTo(FEE);
-            assertThat(policy.get("approved").asBoolean()).isFalse();
+            assertThat(policy.get("method").asText()).isEqualTo("SIMULATED_DISTANCE");
+            assertThat(policy.get("simulated").asBoolean()).isTrue();
+            assertThat(policy.get("freeRadiusKm").asInt()).isEqualTo(3);
+            assertThat(policy.get("included").asBoolean()).isFalse();
             // Checkout preview before confirming: one order per seller, each with its fee.
             JsonNode preview = readJson(mvc.perform(post("/api/cart/validate").header("Authorization", bearer(me))).andExpect(status().isOk()));
             assertThat(preview.get("ready").asBoolean()).isTrue();
             assertThat(preview.get("groups")).hasSize(2);
-            assertThat(preview.get("shippingFee").asLong()).isEqualTo(2 * FEE);
-            assertThat(preview.get("total").asLong()).isEqualTo(220_000 + 2 * FEE);
-            assertThat(preview.get("shippingFeePolicy").get("approved").asBoolean()).isFalse();
+            assertThat(preview.get("shippingFee").asLong()).isZero();
+            assertThat(preview.get("total").asLong()).isEqualTo(220_000);
+            assertThat(preview.get("shippingFeePolicy").get("included").asBoolean()).isFalse();
         }
 
         @Test
@@ -247,7 +265,7 @@ class OrderIntegrationTest {
             assertThat(order.get("items").get(0).get("quantity").asInt()).isEqualTo(1);
             assertThat(order.get("amounts").get("subtotal").asLong()).isEqualTo(125_000);
             assertThat(order.get("amounts").get("shippingFee").asLong()).isEqualTo(FEE);
-            assertThat(order.get("amounts").get("total").asLong()).isEqualTo(145_000);
+            assertThat(order.get("amounts").get("total").asLong()).isEqualTo(125_000 + FEE);
             assertThat(order.get("amounts").has("commission")).as("the buyer does not see the seller's commission").isFalse();
             assertThat(order.get("paymentProvider").asText()).isEqualTo("MOMO");
             assertThat(order.get("delivery").get("recipientPhone").asText()).isEqualTo("0912345678");
@@ -280,7 +298,8 @@ class OrderIntegrationTest {
             assertThat(result.get("subtotal").asLong()).isEqualTo(85_000);
             assertThat(result.get("shippingFee").asLong()).isEqualTo(2 * FEE);
             assertThat(result.get("total").asLong()).isEqualTo(85_000 + 2 * FEE);
-            assertThat(result.get("shippingFeePolicy").get("approved").asBoolean()).isFalse();
+            assertThat(result.get("shippingFeePolicy").get("included").asBoolean()).isTrue();
+            assertThat(result.get("shippingFeePolicy").get("method").asText()).isEqualTo("SIMULATED_DISTANCE");
             Map<Integer, JsonNode> bySeller = new HashMap<>();
             orders.forEach(o -> bySeller.put(o.get("seller").get("id").asInt(), o));
             assertThat(bySeller.get(sellerA).get("items")).hasSize(1);
@@ -298,7 +317,7 @@ class OrderIntegrationTest {
             jdbc.update("UPDATE dbo.Products SET Status = 'Reserved' WHERE ProductId = ?", taken);
             long before = ordersOf(buyer);
             mvc.perform(post("/api/checkout").header("Authorization", bearer(buyerToken)).contentType(MediaType.APPLICATION_JSON)
-                            .content(checkoutBody(List.of(ok, taken), null)))
+                            .content(checkoutBody(buyerToken, List.of(ok, taken), null)))
                     .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("LISTING_UNAVAILABLE"))
                     .andExpect(jsonPath("$.fieldErrors[0].field").value("productIds[" + taken + "]"))
                     .andExpect(jsonPath("$.fieldErrors[0].message").value("RESERVED"));
@@ -313,12 +332,17 @@ class OrderIntegrationTest {
             int taken = listing(sellerB, "DB rollback taken", 40_000);
             jdbc.update("UPDATE dbo.Products SET Status = 'Sold' WHERE ProductId = ?", taken);
             long before = ordersOf(buyer);
-            assertThatThrownBy(() -> procedures.checkout(buyer, List.of(ok, taken), "Buyer", "0912345678", "Dorm A", null, BigDecimal.valueOf(FEE)))
+            List<com.unimarket.service.shipping.ShippingQuoteService.ConfirmedShipping> shipping = List.of(
+                    new com.unimarket.service.shipping.ShippingQuoteService.ConfirmedShipping(sellerA, CARRIER, pickupZone, distanceTenths, FEE, "SIM-2026-11"),
+                    new com.unimarket.service.shipping.ShippingQuoteService.ConfirmedShipping(sellerB, CARRIER, pickupZone, distanceTenths, FEE, "SIM-2026-11"));
+            assertThatThrownBy(() -> procedures.checkoutWithShipping(buyer, List.of(ok, taken), deliveryZone, shipping, "Buyer", "0912345678", "Dorm A", null))
                     .isInstanceOf(DataAccessException.class)
                     .satisfies(ex -> assertThat(com.unimarket.service.order.SqlErrors.numberOf(ex)).isEqualTo(51021));
             assertThat(ordersOf(buyer)).isEqualTo(before);
             assertThat(productStatus(ok)).isEqualTo("Available");
             assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM dbo.OrderItems WHERE ProductId = ?", Integer.class, ok)).isZero();
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM dbo.OrderShippingQuotes q JOIN dbo.Orders o ON o.OrderId = q.OrderId "
+                    + "WHERE o.BuyerId = ? AND o.OrderId NOT IN (SELECT OrderId FROM dbo.OrderItems)", Integer.class, buyer)).isZero();
         }
 
         @Test
@@ -332,7 +356,7 @@ class OrderIntegrationTest {
                     HttpStatus.BAD_REQUEST, "VALIDATION_FAILED");
             expectCheckout(buyerToken, "{\"productIds\":[" + item + "],\"recipientName\":\"Buyer\",\"recipientPhone\":\"0912345678\",\"deliveryAddress\":\"Dorm A, room 1\",\"paymentProvider\":\"CARD\"}",
                     HttpStatus.BAD_REQUEST, "VALIDATION_FAILED");
-            mvc.perform(post("/api/checkout").contentType(MediaType.APPLICATION_JSON).content(checkoutBody(List.of(item), null)))
+            mvc.perform(post("/api/checkout").contentType(MediaType.APPLICATION_JSON).content(checkoutBody(buyerToken, List.of(item), null)))
                     .andExpect(status().isUnauthorized());
             assertThat(productStatus(item)).isEqualTo("Available");
         }
@@ -340,13 +364,13 @@ class OrderIntegrationTest {
         @Test
         void buyingYourOwnListingIsRefused() throws Exception {
             int own = listing(buyer, "Own listing checkout", 30_000);
-            expectCheckout(buyerToken, checkoutBody(List.of(own), null), HttpStatus.CONFLICT, "OWN_LISTING");
+            expectCheckout(buyerToken, checkoutBody(buyerToken, List.of(own), null), HttpStatus.CONFLICT, "OWN_LISTING");
         }
 
         @Test
         void aChangedPriceStopsTheCheckout() throws Exception {
             int item = listing(sellerA, "Price changed item", 90_000);
-            expectCheckout(buyerToken, checkoutBody(List.of(item), Map.of(item, 85_000L)), HttpStatus.CONFLICT, "PRICE_CHANGED");
+            expectCheckout(buyerToken, checkoutBody(buyerToken, List.of(item), Map.of(item, 85_000L)), HttpStatus.CONFLICT, "PRICE_CHANGED");
             assertThat(productStatus(item)).isEqualTo("Available");
             assertThat(checkout(buyerToken, List.of(item), Map.of(item, 90_000L)).get("orders")).hasSize(1);
         }
@@ -355,9 +379,9 @@ class OrderIntegrationTest {
         void twoBuyersRacingForOneListing() throws Exception {
             int item = listing(sellerA, "Race item", 50_000);
             String other = token(newUser("Student", "Racing buyer"));
-            List<ResponseEntity<String>> results = race(
-                    () -> restCheckout(buyerToken, checkoutBody(List.of(item), null)),
-                    () -> restCheckout(other, checkoutBody(List.of(item), null)));
+            String mine = checkoutBody(buyerToken, List.of(item), null);
+            String theirs = checkoutBody(other, List.of(item), null);
+            List<ResponseEntity<String>> results = race(() -> restCheckout(buyerToken, mine), () -> restCheckout(other, theirs));
             assertThat(results.stream().filter(r -> r.getStatusCode() == HttpStatus.CREATED)).hasSize(1);
             assertThat(results.stream().filter(r -> r.getStatusCode() == HttpStatus.CONFLICT)).hasSize(1);
             assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM dbo.vw_ActiveOrderItems WHERE ProductId = ?", Integer.class, item)).isEqualTo(1);
@@ -369,8 +393,9 @@ class OrderIntegrationTest {
             int item = listing(sellerA, "Edit race item", 50_000);
             String edit = "{\"title\":\"Edit race item (edited)\",\"description\":\"A clean, well kept item from a student.\",\"price\":1000,"
                     + "\"originalPrice\":null,\"condition\":\"USED\",\"categoryId\":1,\"campusId\":null}";
+            String order = checkoutBody(buyerToken, List.of(item), null);
             List<ResponseEntity<String>> results = race(
-                    () -> restCheckout(buyerToken, checkoutBody(List.of(item), null)),
+                    () -> restCheckout(buyerToken, order),
                     () -> rest.exchange("/api/products/" + item, HttpMethod.PUT, new HttpEntity<>(edit, jsonHeaders(sellerAToken)), String.class));
             boolean ordered = results.get(0).getStatusCode() == HttpStatus.CREATED;
             boolean edited = results.get(1).getStatusCode() == HttpStatus.OK;
@@ -389,7 +414,7 @@ class OrderIntegrationTest {
         @Test
         void repeatedSubmissionsCreateOnlyOneOrder() throws Exception {
             int item = listing(sellerA, "Double submit item", 50_000);
-            String body = checkoutBody(List.of(item), null);
+            String body = checkoutBody(buyerToken, List.of(item), null);
             List<ResponseEntity<String>> concurrent = race(() -> restCheckout(buyerToken, body), () -> restCheckout(buyerToken, body));
             assertThat(concurrent.stream().filter(r -> r.getStatusCode() == HttpStatus.CREATED)).hasSize(1);
             long orderId = jdbc.queryForObject("SELECT OrderId FROM dbo.OrderItems WHERE ProductId = ?", Long.class, item);
@@ -647,9 +672,10 @@ class OrderIntegrationTest {
             assertThat(order.get("status").asText()).isEqualTo("PAID");
             assertThat(order.get("payments").get(0).get("status").asText()).isEqualTo("SUCCEEDED");
             assertThat(order.get("payments").get(0).get("sandbox").asBoolean()).isTrue();
-            assertThat(order.toString()).doesNotContain("SIM-").doesNotContain("UMK-");
-            assertThat(jdbc.queryForObject("SELECT ProviderReference FROM dbo.Payments WHERE OrderId = ? AND Status = 'Succeeded'", String.class, id))
-                    .as("simulated payments are labelled").startsWith("SIM-");
+            String providerReference = jdbc.queryForObject("SELECT ProviderReference FROM dbo.Payments WHERE OrderId = ? AND Status = 'Succeeded'", String.class, id);
+            assertThat(providerReference).as("simulated payments are labelled").startsWith("SIM-");
+            // Payment references are never returned (the V003 shipping block may contain the formula "SIM-2026-11").
+            assertThat(order.toString()).doesNotContain(providerReference).doesNotContain("UMK-");
         }
 
         @Test
@@ -935,9 +961,16 @@ class OrderIntegrationTest {
         return "Bearer " + token;
     }
 
-    private String checkoutBody(List<Integer> ids, Map<Integer, Long> expectedPrices) throws Exception {
+    /**
+     * A V003 checkout body: asks POST /api/shipping/quotes as this buyer and picks {@link #CARRIER} for every seller.
+     * When no quote can be made (own / unavailable listing), placeholder choices are sent: the listing checks run
+     * before the quote check, so such checkouts still fail with their own error code.
+     */
+    private String checkoutBody(String token, List<Integer> ids, Map<Integer, Long> expectedPrices) throws Exception {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("productIds", ids);
+        body.put("deliveryZoneId", deliveryZone);
+        body.put("shipping", shippingChoices(token, ids));
         body.put("recipientName", "Test Buyer");
         body.put("recipientPhone", "0912 345 678");
         body.put("deliveryAddress", "Dormitory A, room 305");
@@ -948,9 +981,32 @@ class OrderIntegrationTest {
         return json.writeValueAsString(body);
     }
 
+    private List<Map<String, Object>> shippingChoices(String token, List<Integer> ids) throws Exception {
+        org.springframework.test.web.servlet.MvcResult quote = mvc.perform(post("/api/shipping/quotes").header("Authorization", bearer(token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("productIds", ids, "deliveryZoneId", deliveryZone)))).andReturn();
+        List<Map<String, Object>> choices = new java.util.ArrayList<>();
+        if (quote.getResponse().getStatus() == 200) {
+            for (JsonNode group : json.readTree(quote.getResponse().getContentAsString()).get("groups")) {
+                for (JsonNode option : group.get("options")) {
+                    if (CARRIER.equals(option.get("carrier").asText())) {
+                        choices.add(Map.of("sellerId", group.get("sellerId").asInt(), "carrier", CARRIER,
+                                "quoteToken", option.get("quoteToken").asText()));
+                    }
+                }
+            }
+            return choices;
+        }
+        for (Integer seller : jdbc.queryForList("SELECT DISTINCT SellerId FROM dbo.Products WHERE ProductId IN ("
+                + ids.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(",")) + ")", Integer.class)) {
+            choices.add(Map.of("sellerId", seller, "carrier", CARRIER, "quoteToken", "not-quoted"));
+        }
+        return choices;
+    }
+
     private JsonNode checkout(String token, List<Integer> ids, Map<Integer, Long> expectedPrices) throws Exception {
         return readJson(mvc.perform(post("/api/checkout").header("Authorization", bearer(token)).contentType(MediaType.APPLICATION_JSON)
-                .content(checkoutBody(ids, expectedPrices))).andExpect(status().isCreated()));
+                .content(checkoutBody(token, ids, expectedPrices))).andExpect(status().isCreated()));
     }
 
     private void expectCheckout(String token, String body, HttpStatus status, String code) throws Exception {

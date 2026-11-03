@@ -19,7 +19,7 @@ import java.util.List;
  * @param seller             seller (id, name)
  * @param items              listings with the title and price recorded at checkout
  * @param amounts            money breakdown
- * @param paymentProvider    MOMO or ZALOPAY once chosen
+ * @param paymentProvider    MOMO, ZALOPAY or BANK_QR once chosen
  * @param delivery           recipient name, phone and address: buyer and admin always; the seller only while the order
  *                           is PAID or DELIVERING (after the verified payment, to deliver)
  * @param deadlines          seller confirmation deadline and buyer payment deadline (UTC)
@@ -37,7 +37,7 @@ public record OrderResponse(
         long id, String code, String status, String role, Party buyer, Party seller, List<Item> items, Amounts amounts,
         String paymentProvider, Delivery delivery, Deadlines deadlines, Timestamps timestamps, String cancellationReason,
         Shipment shipment, List<Payment> payments, List<HistoryEntry> history, List<Dispute> disputes, Settlement settlement,
-        List<String> actions) {
+        List<String> actions, com.unimarket.dto.shipping.ShippingDtos.OrderShipping shipping) {
 
     /** Display code used by the frontend ({@code orderCode}). */
     public static String codeOf(long orderId) {

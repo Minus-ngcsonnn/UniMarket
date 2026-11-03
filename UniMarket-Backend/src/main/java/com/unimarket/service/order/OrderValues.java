@@ -11,7 +11,8 @@ import java.util.Optional;
  * <ul>
  *   <li>{@code Orders.Status}: Pending, AwaitingPayment, Paid, Delivering, Completed, Cancelled</li>
  *   <li>{@code Payments.Status}: Pending, Succeeded, Failed, Expired</li>
- *   <li>{@code Orders.PaymentProvider} / {@code Payments.Provider}: MoMo, ZaloPay (CHECK constraints)</li>
+ *   <li>{@code Orders.PaymentProvider} / {@code Payments.Provider}: MoMo, ZaloPay, BankQR (V003; CHECK constraints) -
+ *       API MOMO, ZALOPAY, BANK_QR. All are SIMULATED (sandbox); no real provider or bank is integrated.</li>
  *   <li>{@code SellerSettlements.Status}: Pending, Released; {@code OrderDisputes.Status}: Open, Resolved</li>
  * </ul>
  */
@@ -28,7 +29,8 @@ public final class OrderValues {
             PENDING, "PENDING", AWAITING_PAYMENT, "AWAITING_PAYMENT", PAID, "PAID",
             DELIVERING, "DELIVERING", COMPLETED, "COMPLETED", CANCELLED, "CANCELLED");
 
-    private static final Map<String, String> PROVIDER_BY_API = Map.of("MOMO", "MoMo", "ZALOPAY", "ZaloPay");
+    private static final Map<String, String> PROVIDER_BY_API = Map.of("MOMO", "MoMo", "ZALOPAY", "ZaloPay", "BANK_QR", "BankQR");
+    private static final Map<String, String> PROVIDER_BY_SQL = Map.of("MoMo", "MOMO", "ZaloPay", "ZALOPAY", "BankQR", "BANK_QR");
 
     private OrderValues() {
     }
@@ -62,13 +64,13 @@ public final class OrderValues {
         return Optional.ofNullable(apiValue == null ? null : PROVIDER_BY_API.get(apiValue.trim().toUpperCase(Locale.ROOT)));
     }
 
-    /** {@code MoMo} → {@code MOMO} */
+    /** {@code MoMo} → {@code MOMO}, {@code BankQR} → {@code BANK_QR} */
     public static String provider(String sqlValue) {
-        return sqlValue == null ? null : sqlValue.toUpperCase(Locale.ROOT);
+        return sqlValue == null ? null : PROVIDER_BY_SQL.getOrDefault(sqlValue, sqlValue.toUpperCase(Locale.ROOT));
     }
 
     /** API values accepted for the payment provider. */
     public static List<String> providers() {
-        return List.of("MOMO", "ZALOPAY");
+        return List.of("MOMO", "ZALOPAY", "BANK_QR");
     }
 }

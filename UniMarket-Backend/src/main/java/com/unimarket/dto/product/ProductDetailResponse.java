@@ -20,7 +20,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ProductDetailResponse(
         Integer id, String title, String description, Long price, Long originalPrice, String condition, String status,
-        boolean purchasable, ReferenceDtos.CategoryRef category, ReferenceDtos.CampusRef campus, List<ImageResponse> images,
+        boolean purchasable, ReferenceDtos.CategoryRef category, ReferenceDtos.CampusRef campus, ReferenceDtos.ZoneRef pickupZone,
+        List<ImageResponse> images,
         SellerProfile seller, boolean featured, Instant createdAt, Instant updatedAt, String moderation, Boolean editable) {
 
     /**
@@ -35,10 +36,12 @@ public record ProductDetailResponse(
      * @param id              {@code Users.UserId}
      * @param fullName        display name
      * @param emailVerified   the account confirmed its email with a code ({@code Users.EmailVerifiedAt}).
-     *                        This is NOT proof of student status: the student verification policy is a pending
-     *                        team decision, and the database has no separate "verified student" field. The API
-     *                        therefore never sends {@code verified} / {@code verifiedStudent}.
-     * @param campus          seller's campus
+     *                        It proves email ownership only, NOT student status (team decision, Nov 2026:
+     *                        registration with any email + OTP, no student verification). The API never sends
+     *                        {@code verified} / {@code verifiedStudent}.
+     * @param campus          seller's official campus, or null (V003)
+     * @param university      official university name or the seller's SELF-DECLARED name (unverified)
+     * @param affiliationSource {@code OFFICIAL_CAMPUS}, {@code SELF_DECLARED} or {@code NONE}
      * @param memberSince     account creation (UTC)
      * @param ratingAverage   average stars from visible reviews, or null
      * @param ratingCount     number of visible reviews
@@ -46,7 +49,7 @@ public record ProductDetailResponse(
      *                        omitted otherwise (Business Plan 3.2, 6.7)
      */
     public record SellerProfile(Integer id, String fullName, boolean emailVerified, ReferenceDtos.CampusRef campus,
-                                Instant memberSince, BigDecimal ratingAverage, int ratingCount,
+                                String university, String affiliationSource, Instant memberSince, BigDecimal ratingAverage, int ratingCount,
                                 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
                                 Contact contact) {
     }

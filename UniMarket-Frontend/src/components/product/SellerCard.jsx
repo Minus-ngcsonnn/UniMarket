@@ -45,10 +45,10 @@ export default function SellerCard({ seller, onMessage }) {
             <Link to={PATHS.user(seller.id)} className="hover:text-primary hover:underline">
               {seller.name}
             </Link>
-            {seller.verified && (
+            {seller.emailVerified && (
               <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
                 <BadgeCheckIcon className="size-4" />
-                <span className="sr-only sm:not-sr-only">{t("Verified student")}</span>
+                <span className="sr-only sm:not-sr-only">{t("Email verified")}</span>
               </span>
             )}
           </p>
