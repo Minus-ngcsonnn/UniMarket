@@ -71,9 +71,9 @@ sent afterwards, outside the transaction, and `emailDelivery` reports the real o
 
 | `emailDelivery` | Meaning |
 |---|---|
-| `SENT` | the provider (Resend / SMTP) accepted the message — not a guarantee that it reached the inbox |
+| `SENT` | the SMTP server (Gmail) accepted the message — not proof that it reached the inbox |
 | `LOGGED` | development `MAIL_MODE=log`: nothing was sent, the e-mail is in the backend log |
-| `FAILED` | refused or no answer (invalid key, unverified sender domain, rate limit, timeout). The account exists and is unverified: request a new code after 60 s (`resend-verification`); registering again answers `EMAIL_ALREADY_REGISTERED` |
+| `FAILED` | refused or no answer (wrong App Password, Gmail sending limit, rejected recipient, service unavailable, timeout). The account exists and is unverified: request a new code after 60 s (`resend-verification`); registering again answers `EMAIL_ALREADY_REGISTERED` |
 
 Errors:
 
@@ -161,11 +161,13 @@ other personal data. Signed with HS256; the key comes from `JWT_SECRET` (Base64,
 | `VERIFICATION_CODE_SECRET` | Base64 HMAC key (≥ 32 bytes) used to hash codes before storing them. |
 | `JWT_ACCESS_TOKEN_TTL` | token lifetime, ISO-8601 (default `PT1H`) |
 | `CORS_ALLOWED_ORIGINS` | exact browser origins (default `http://localhost:5173`; the Vite proxy makes CORS unnecessary in dev) |
-| `MAIL_MODE` | `resend` (real e-mail through the Resend API), `smtp`, or `log` (dev: codes written to the console, nothing sent). The `dev` profile defaults to `log`, other profiles to `smtp`. |
-| `RESEND_API_KEY` | Resend API key ("Sending access" is enough). Secret: only in the environment / git-ignored `.env`, never in `VITE_*`. With `MAIL_MODE=resend` a missing key stops the startup (no fallback to logging codes). |
-| `RESEND_FROM_EMAIL`, `RESEND_FROM_NAME` | sender address on a domain **verified in the Resend dashboard** (Domains), and display name (default `UniMarket`). The testing sender `onboarding@resend.dev` only delivers to the Resend account owner's own address. |
-| `RESEND_TIMEOUT` | request timeout, ISO-8601 (default `PT10S`) |
-| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` | SMTP settings when `MAIL_MODE=smtp` |
+| `MAIL_MODE` | `smtp` (real e-mail; approved provider: Gmail SMTP) or `log` (dev / isolated tests: codes written to the console, nothing sent). The `dev` profile defaults to `log`, other profiles to `smtp`. |
+| `MAIL_USERNAME` | the Gmail sender account (`unimarket.demo@gmail.com`). Required with `MAIL_MODE=smtp`. |
+| `MAIL_PASSWORD` | a **Google App Password** of that account (2-Step Verification on), never the normal password. Secret: only in the environment / git-ignored `.env`, never in `VITE_*`, never logged. Missing → startup stops (no fallback to logging codes). |
+| `MAIL_FROM`, `MAIL_FROM_NAME` | sender address (default `MAIL_USERNAME`; Gmail only sends as the account or its verified aliases) and display name (default `UniMarket`) |
+| `MAIL_HOST`, `MAIL_PORT` | default `smtp.gmail.com`, `587`; SMTP AUTH on, STARTTLS **required** (`MAIL_STARTTLS_REQUIRED`, default `true`) |
+| `MAIL_TIMEOUT_MS` | connect / read / write timeout (default `10000`) |
+| `MAIL_VERIFY_ON_STARTUP` | default `true`: log in once at startup (no e-mail sent) and log only "succeeded" or the failure type |
 
 With the `dev` profile (default) missing secrets are replaced by random keys at startup, with a warning:
 tokens and codes then stop working after a restart. Set both secrets in `.env` for a stable local setup.

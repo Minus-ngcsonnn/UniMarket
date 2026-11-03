@@ -2,8 +2,8 @@ package com.unimarket.service.mail;
 
 /**
  * Sends e-mail. The implementation is chosen by {@code unimarket.mail.mode}:
- * {@code resend} ({@link ResendEmailSender}, real delivery through the Resend API),
- * {@code smtp} ({@link SmtpEmailSender}) or {@code log} ({@link LoggingEmailSender}, development only).
+ * {@code smtp} ({@link SmtpEmailSender}, real delivery; approved provider: Gmail SMTP) or
+ * {@code log} ({@link LoggingEmailSender}, development only).
  *
  * <p>Implementations throw {@link EmailDeliveryException} (or another runtime exception) when the message was not
  * accepted; callers must not report a message as sent in that case.</p>

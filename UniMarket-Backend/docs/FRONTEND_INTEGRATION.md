@@ -385,7 +385,7 @@ all of which need backend work. The frontend never logs the token, password or O
 
 ### OTP in development
 
-With `MAIL_MODE=resend` (and a verified Resend sender) the code arrives in the student's inbox. Without it, the `dev`
+With `MAIL_MODE=smtp` (Gmail SMTP, `unimarket.demo@gmail.com` with a Google App Password) the code arrives in the student's inbox. Without it, the `dev`
 profile uses `MAIL_MODE=log`: the email, including the code, is written to the backend log and never returned
 by the API. For the isolated backend on 8081, read its log (`[DEV E-MAIL, not sent] to=<email>` followed by
 `Your UniMarket verification code is: NNNNNN`). There is intentionally no endpoint that returns codes.
@@ -396,10 +396,11 @@ Frontend `.env.local`: `VITE_BACKEND_URL=http://localhost:8081`, `VITE_AUTH_MODE
 `SERVER_PORT=8081`, `DB_URL=…databaseName=UniMarketJava_V003Test…`, `MAIL_MODE=log`, `ORDER_EXPIRY_ENABLED=false`.
 Open `http://localhost:5173/register`.
 
-### Real OTP e-mails (Resend) and the university directory (Stage 6.1 enhancement)
+### Real OTP e-mails (Gmail SMTP) and the university directory (Stage 6.1 enhancement)
 
-- **E-mail**: backend `MAIL_MODE=resend` sends the Vietnamese verification e-mail through the Resend API
-  (`RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `RESEND_FROM_NAME`; see `AUTH_API.md`). The frontend never sees the key.
+- **E-mail**: backend `MAIL_MODE=smtp` sends the Vietnamese verification e-mail through Gmail SMTP
+  (`smtp.gmail.com:587`, STARTTLS; `MAIL_USERNAME`, `MAIL_PASSWORD` = Google App Password, `MAIL_FROM`; see
+  `AUTH_API.md`). No custom domain is used. The frontend never sees the credentials.
   `POST /api/auth/register` returns `emailDelivery` (`SENT` / `LOGGED` / `FAILED`); the verification page shows
   "check your inbox", the development note, or "account created but the e-mail could not be sent — request a new code
   after the countdown". `resend-verification` may answer 503 `EMAIL_DELIVERY_FAILED`, shown as a retry message.

@@ -1,25 +1,25 @@
 package com.unimarket.service.mail;
 
 /**
- * The e-mail provider did not accept a message. The message never contains secrets, codes or the API key.
+ * The mail server did not accept a message. The message never contains credentials or verification codes.
  */
 public class EmailDeliveryException extends RuntimeException {
 
-    /** Why the provider refused (used for logs and tests; clients only see a generic message). */
+    /** Why the message was not accepted (used for logs and tests; clients only see a generic message). */
     public enum Reason {
-        /** API key missing, invalid or without sending permission (HTTP 401 / 403 key errors). */
+        /** Wrong or missing credentials, e.g. an invalid Google App Password (SMTP 530 / 534 / 535). */
         INVALID_CREDENTIALS,
-        /** Sender domain not verified, or the testing sender used for a recipient other than the account owner (403). */
+        /** The sender address is not allowed for the authenticated account. */
         SENDER_NOT_ALLOWED,
-        /** Request rejected as invalid (400 / 422), e.g. a malformed address. */
+        /** Recipient or message rejected (SMTP 550 / 553 / 501 …). */
         INVALID_REQUEST,
-        /** Provider rate limit or daily quota (429). */
+        /** Provider sending limits (Gmail 4.7.x, daily quota 5.4.5, 452 / 454). */
         RATE_LIMITED,
-        /** Provider error (5xx) or unexpected answer. */
+        /** Service unavailable (e.g. 421) or another provider error. */
         PROVIDER_ERROR,
         /** No answer within the configured timeout. */
         TIMEOUT,
-        /** Connection failure (DNS, TLS, network). */
+        /** Connection failure (DNS, TLS, refused). */
         NETWORK
     }
 
@@ -32,17 +32,17 @@ public class EmailDeliveryException extends RuntimeException {
         this.status = status;
     }
 
-    public EmailDeliveryException(Reason reason, String message, Throwable cause) {
+    public EmailDeliveryException(Reason reason, String message, Throwable cause, int status) {
         super(message, cause);
         this.reason = reason;
-        this.status = 0;
+        this.status = status;
     }
 
     public Reason reason() {
         return reason;
     }
 
-    /** @return provider HTTP status, or 0 when there was no answer */
+    /** @return the provider / SMTP status code, or 0 when there was no answer */
     public int status() {
         return status;
     }

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
  * LOCAL DEVELOPMENT ONLY: does not send anything, it writes the plain-text message (including the
  * verification code) to the application log so a developer can complete registration without a mail provider.
  * Enabled by {@code unimarket.mail.mode=log}, which only the 'dev' profile sets by default. Never used when
- * {@code MAIL_MODE=resend} or {@code smtp}.
+ * {@code MAIL_MODE=smtp}.
  */
 @Component
 @ConditionalOnProperty(name = "unimarket.mail.mode", havingValue = "log")
