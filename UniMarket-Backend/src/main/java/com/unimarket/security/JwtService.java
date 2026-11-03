@@ -17,10 +17,11 @@ import java.util.UUID;
 /**
  * Issues signed access tokens (JWT, HS256).
  *
- * <p>Claims: {@code iss}, {@code aud}, {@code sub} (user id), {@code iat}, {@code exp}, {@code jti}.
+ * <p>Claims: {@code iss}, {@code aud}, {@code sub} (user id), {@code iat}, {@code exp}, {@code jti}, and
+ * {@code pwv} (see {@link PasswordStamp}: the token stops working when the password is reset).
  * No email, name, role or other personal data is put in the token; the role is read from the
- * database on every request. Tokens are stateless: there is no server-side revocation, so a
- * token stays valid until it expires even after the user signs out in the browser.</p>
+ * database on every request. Signing out in the browser does not revoke a token (it stays valid until it
+ * expires), but a password reset does, through the {@code pwv} claim.</p>
  */
 @Service
 public class JwtService {
@@ -28,16 +29,19 @@ public class JwtService {
     private final JwtEncoder encoder;
     private final SecurityProperties.Jwt settings;
     private final Clock clock;
+    private final PasswordStamp passwordStamp;
 
     /**
      * @param encoder    encoder configured with the HS256 key
      * @param properties security settings
      * @param clock      time source (UTC)
+     * @param passwordStamp fingerprint of the current password (claim {@code pwv})
      */
-    public JwtService(JwtEncoder encoder, SecurityProperties properties, Clock clock) {
+    public JwtService(JwtEncoder encoder, SecurityProperties properties, Clock clock, PasswordStamp passwordStamp) {
         this.encoder = encoder;
         this.settings = properties.jwt();
         this.clock = clock;
+        this.passwordStamp = passwordStamp;
     }
 
     /**
@@ -56,6 +60,7 @@ public class JwtService {
                 .issuedAt(now)
                 .expiresAt(expiresAt)
                 .id(UUID.randomUUID().toString())
+                .claim(PasswordStamp.CLAIM, passwordStamp.of(user))
                 .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).type("JWT").build();
         String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();

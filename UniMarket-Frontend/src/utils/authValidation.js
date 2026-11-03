@@ -56,7 +56,7 @@ function validatePassword(password) {
 
 /**
  * Registration (nationwide, V003): any valid email address; exactly one affiliation — an official campus OR a
- * university / college name typed by the student (self-declared, not verified). Home area is optional.
+ * university / college name typed by the student (self-declared, not verified).
  * @param {object} values form values
  * @param {{ requireAffiliation?: boolean }} [options] false in the offline demo (no affiliation fields shown)
  */
@@ -97,8 +97,8 @@ export function validateRegister(
 }
 
 /**
- * Request body for POST /api/auth/register: exactly one of campusId / universityName, never both;
- * homeZoneId only when chosen. The confirmation and terms fields stay in the browser.
+ * Request body for POST /api/auth/register: exactly one of campusId / universityName, never both.
+ * No home area is sent (the backend field homeZoneId stays optional). The confirmation and terms fields stay in the browser.
  */
 export function toRegisterRequest(values) {
   const body = {
@@ -108,7 +108,6 @@ export function toRegisterRequest(values) {
   }
   if (values.affiliationType === AFFILIATION.CAMPUS) body.campusId = Number(values.campusId)
   else body.universityName = normalizeUniversityName(values.universityName)
-  if (values.homeZoneId) body.homeZoneId = Number(values.homeZoneId)
   return body
 }
 
@@ -121,7 +120,24 @@ export const REGISTER_FIELD_MAP = {
   universityName: 'universityName',
   universityNameLongEnough: 'universityName',
   affiliationProvided: 'affiliationType',
-  homeZoneId: 'homeZoneId',
+}
+
+/** Step 1 of "Forgot password": the account email. */
+export function validateForgotPassword({ email }) {
+  return withoutEmpty({ email: validateEmail(email) })
+}
+
+/** Step 2 of "Forgot password": the e-mailed code and the new password (same rules as registration). */
+export function validateResetPassword({ email, code, newPassword, confirmPassword }) {
+  let confirmError
+  if (isBlank(confirmPassword)) confirmError = 'Please repeat your password.'
+  else if (confirmPassword !== newPassword) confirmError = 'Passwords do not match.'
+  return withoutEmpty({
+    email: validateEmail(email),
+    code: validateOtp(code),
+    newPassword: validatePassword(newPassword),
+    confirmPassword: confirmError,
+  })
 }
 
 export function validateOtp(code) {

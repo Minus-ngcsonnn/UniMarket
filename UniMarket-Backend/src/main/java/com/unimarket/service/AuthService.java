@@ -171,6 +171,39 @@ public class AuthService {
     }
 
     /**
+     * Signs in an account right after its email was verified with the e-mailed code (no second password entry).
+     * Only called by the verify-email endpoint AFTER {@code usp_VerifyEmail} consumed a valid code: the code proves
+     * ownership of the address, and the password was set by the same person at registration. The usual checks still
+     * apply (active and verified) and the token is the same short-lived access token as a normal login.
+     *
+     * @param userId the account that was just verified
+     * @return access token and account
+     * @throws ApiException ACCOUNT_DISABLED / EMAIL_NOT_VERIFIED when the account cannot sign in
+     */
+    @Transactional(readOnly = true)
+    public LoginResponse signInVerified(int userId) {
+        User user = users.findWithCampusById(userId).orElseThrow(() -> new ApiException(ErrorCode.INVALID_VERIFICATION_CODE));
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new ApiException(ErrorCode.ACCOUNT_DISABLED);
+        }
+        if (user.getEmailVerifiedAt() == null) {
+            throw new ApiException(ErrorCode.EMAIL_NOT_VERIFIED);
+        }
+        failedLogins.reset("login:" + user.getEmail());
+        JwtService.AccessToken token = jwtService.issueAccessToken(user);
+        return new LoginResponse(token.value(), "Bearer", token.expiresInSeconds(), token.expiresAt(), UserResponse.from(user));
+    }
+
+    /**
+     * Clears the failed-login lockout of an email, e.g. after its password was reset with an e-mailed code.
+     *
+     * @param email account email (any case)
+     */
+    public void clearFailedLogins(String email) {
+        failedLogins.reset("login:" + EmailAddresses.normalize(email));
+    }
+
+    /**
      * @param principal the signed-in account
      * @return its public profile
      */

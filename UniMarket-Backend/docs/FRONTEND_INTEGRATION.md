@@ -341,14 +341,15 @@ checkout, shipping quotes, payments, admin data, reviews and reports still use s
 | `src/services/apiClient.js` | Axios instance: JSON, `Authorization: Bearer` when signed in, every failure rejected as `ApiError`; a 401 on a request that carried a token ends the session |
 | `src/services/apiError.js` | `ApiError { kind: http/network/timeout, status, code, message, fieldErrors, retryAfterSeconds }` from the backend error body; proxy 502/503/504 = "can't reach UniMarket"; non-JSON bodies are never shown |
 | `src/utils/apiErrorMessage.js` | user-facing title / text for network, timeout, 429 and 5xx |
-| `src/services/auth/authApi.js` | `register`, `verifyEmail`, `resendVerification`, `login`, `me`; reference data `GET /api/campuses`, `GET /api/locations/zones`, public profile `GET /api/users/{id}` |
+| `src/services/auth/authApi.js` | `register`, `verifyEmail`, `resendVerification`, `forgotPassword`, `resetPassword`, `login`, `me`; reference data `GET /api/campuses`, `GET /api/locations/zones`, public profile `GET /api/users/{id}` |
 | `src/services/auth/tokenStore.js` | token + expiry only (see below) |
-| `src/services/auth/session.js`, `src/hooks/useSession.js` | `restoring / authenticated / anonymous`; restore on page load with `GET /api/auth/me`; sign-in = login + `/me`; sign-out; follows other tabs |
+| `src/services/auth/session.js`, `src/hooks/useSession.js` | `restoring / authenticated / anonymous`; restore on page load with `GET /api/auth/me`; sign-in = login + `/me`; `signInWithToken` (token from verify-email, also checked with `/me`); sign-out; follows other tabs |
 | `src/services/auth/viewerProfile.js` | `/me` (+ public profile) → profile shape of the header / profile card; unknown numbers stay `null` ("–") |
 | `src/hooks/useViewer.js` | real session in backend mode, demo student only in demo mode |
 | `src/components/auth/RequireAuth.jsx` | guard: sell, my listings, checkout, orders, messages, profile, shop and settings need a session (→ `/login?next=…`); `/admin` needs role `ADMIN` from `/me` |
 | `src/pages/auth/RegisterPage.jsx`, `src/components/auth/AffiliationFields.jsx` | registration with exactly one affiliation |
-| `src/pages/auth/VerifyEmailPage.jsx` | `/verify-email?email=`: 6-digit code, expiry, resend countdown |
+| `src/pages/auth/VerifyEmailPage.jsx` | `/verify-email?email=`: 6-digit code, expiry, resend countdown, "Remember me", automatic sign-in |
+| `src/pages/auth/ForgotPasswordPage.jsx` | `/forgot-password?email=`: email → e-mailed code + new password → login page |
 | `src/pages/auth/LoginPage.jsx` | sign-in, error messages, "Remember me", role-based landing |
 | `ProfilePage.jsx`, `ProfileCard.jsx`, `SettingsPage.jsx`, `AccountMenu.jsx`, `Header.jsx` | real profile and sign-out |
 
@@ -358,13 +359,20 @@ checkout, shipping quotes, payments, admin data, reviews and reports still use s
    (8–72 characters, ≤ 72 UTF-8 bytes, a letter and a digit) and **exactly one** affiliation: an official campus
    (`campusId`, list from `GET /api/campuses`) **or** a typed university / college name (`universityName`, 2–200,
    shown as "self-declared"). Nothing is pre-selected; FPT Hoa Lac is never assigned automatically; the request never
-   contains both. Optional home area (`homeZoneId`). Server errors appear on their fields:
-   `EMAIL_ALREADY_REGISTERED` → email (+ "Sign in instead"), `INVALID_CAMPUS` → campus, `INVALID_ZONE` → area,
+   contains both. The form no longer asks for a home area (`homeZoneId` is never sent; the backend still accepts it).
+   Server errors appear on their fields: `EMAIL_ALREADY_REGISTERED` → email (+ "Sign in instead"), `INVALID_CAMPUS` → campus,
    `affiliationProvided` / `universityNameLongEnough` / `password` field errors.
 2. **Verify** (`/verify-email`): `POST /api/auth/verify-email`; expiry shown from `codeExpiresAt`; resend
    (`POST /api/auth/resend-verification`, always 202) disabled for 60 s after a code was sent (backend: 1 per 60 s,
    5 per hour); `INVALID_VERIFICATION_CODE` (wrong, expired, used or replaced code) and `TOO_MANY_ATTEMPTS`
-   (5 wrong codes) are explained. Then "Continue to sign in".
+   (5 wrong codes) are explained. A valid code returns a token: the page checks it with `/me`, stores it like a login
+   ("Remember me" → `localStorage`) and redirects (`?next=`, else `ADMIN` → `/admin`, students → home). If that sign-in
+   step fails, the page falls back to "Continue to sign in".
+3a. **Forgot password** (`/forgot-password`, link on the login page, pre-filled with the typed email):
+   `POST /api/auth/forgot-password` (always 202, never says whether the email exists; 503 `EMAIL_DELIVERY_FAILED` shown as
+   a retry message), then code + new password + confirmation → `POST /api/auth/reset-password`
+   (`INVALID_RESET_CODE`, `TOO_MANY_ATTEMPTS`, field errors). Success → `/login?email=` with "Your password has been
+   changed". Resend countdown 60 s, 5 codes per hour.
 3. **Sign in** (`POST /api/auth/login`, then `GET /api/auth/me`): `INVALID_CREDENTIALS`, `EMAIL_NOT_VERIFIED` (link to
    the verification page), `ACCOUNT_DISABLED`, `TOO_MANY_ATTEMPTS` (5 failures / 15 min), network and 5xx messages.
    Landing: `?next=` (same-site paths only), else `ADMIN` → `/admin`, students → home.
@@ -409,11 +417,11 @@ Open `http://localhost:5173/register`.
   quality-recognised institutions, updated 30/9/2026; source and limits in `src/data/README.md`), loaded lazily as its
   own chunk. `UniversityPicker` is an accessible combobox (type with or without accents, ↑/↓, Enter, Esc) offering:
   official UniMarket campuses → `campusId`; directory entries → canonical name as `universityName` (self-declared);
-  "My university is not listed" → free text `universityName`. Never both fields. Home area stays optional.
+  "My university is not listed" → free text `universityName`. Never both fields.
 
 ### Known limitations / remaining for Stage 6.2+
 
-- No password reset or change, no profile / contact editing (backend contact settings exist; the UI is not connected).
+- Password reset by e-mailed code exists; changing the password while signed in and profile / contact editing do not (backend contact settings exist; the UI is not connected).
 - Reviews, reports, products, listings, cart, checkout, shipping quotes, payments (MoMo / ZaloPay / BankQR) and the admin
   workspace still use sample data even when signed in for real; admin data must move to `/api/admin/**`.
 - No refresh token: after 1 h the user is signed out on the next API call.

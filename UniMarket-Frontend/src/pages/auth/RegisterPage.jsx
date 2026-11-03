@@ -30,7 +30,6 @@ const PASSWORD_RULES_ID = 'register-password-rules'
 const SERVER_FIELD_ERRORS = {
   EMAIL_ALREADY_REGISTERED: 'email',
   INVALID_CAMPUS: 'campusId',
-  INVALID_ZONE: 'homeZoneId',
 }
 
 const noData = () => Promise.resolve(null)
@@ -52,7 +51,6 @@ export default function RegisterPage() {
   const [formError, setFormError] = useState(null)
 
   const campuses = useAsyncData(USES_BACKEND_AUTH ? referenceApi.campuses : noData, 'register-campuses')
-  const zones = useAsyncData(USES_BACKEND_AUTH ? referenceApi.zones : noData, 'register-zones')
 
   const form = useForm({
     initialValues: {
@@ -64,7 +62,6 @@ export default function RegisterPage() {
       campusId: '',
       directoryId: '',
       universityName: '',
-      homeZoneId: '',
       acceptTerms: false,
     },
     validate: (values) => validateRegister(values, { requireAffiliation: USES_BACKEND_AUTH }),
@@ -167,7 +164,7 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {USES_BACKEND_AUTH && <AffiliationFields form={form} campuses={campuses} zones={zones} />}
+        {USES_BACKEND_AUTH && <AffiliationFields form={form} campuses={campuses} />}
 
         <Checkbox
           label={

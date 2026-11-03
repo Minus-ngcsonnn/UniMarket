@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation, useSearchParams } from 'react-router'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { ArrowRightIcon, CheckIcon, MailIcon, ShieldCheckIcon } from '../../components/icons'
 import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
+import Checkbox from '../../components/ui/Checkbox'
 import Input from '../../components/ui/Input'
 import OtpInput from '../../components/ui/OtpInput'
 import { buttonClasses } from '../../components/ui/buttonClasses'
 import { USES_BACKEND_AUTH } from '../../config/apiConfig'
-import { PATHS } from '../../routes/paths'
+import { PATHS, landingPath } from '../../routes/paths'
 import { authApi } from '../../services/auth/authApi'
+import { session } from '../../services/auth/session'
 import { describeApiError } from '../../utils/apiErrorMessage'
 import { OTP_LENGTH, validateOtp } from '../../utils/authValidation'
 import { isValidEmail } from '../../utils/validators'
@@ -31,13 +33,18 @@ function useCountdown(until) {
  * Step 2 of registration: the 6-digit code e-mailed to the account (POST /api/auth/verify-email).
  * Reached after registering (email in ?email=, expiry in the navigation state) or from the login page when the
  * account is not verified yet. The code proves ownership of the email address only — not student status.
+ * A valid code also signs the account in (the backend returns an access token only for a correct code): the token is
+ * checked with GET /api/auth/me and stored like a normal login ("Remember me" → kept after the browser closes), then
+ * admins go to /admin and everyone else to the requested page or the homepage.
  * The code is never logged or stored; it is not returned by any API (in development it is written to the
  * backend log by the 'log' mail mode).
  */
 export default function VerifyEmailPage() {
   const { t, lang } = useTranslation()
   const location = useLocation()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const [remember, setRemember] = useState(false)
   const [email, setEmail] = useState(searchParams.get('email') ?? '')
   const [emailError, setEmailError] = useState()
   const [code, setCode] = useState('')
@@ -75,8 +82,15 @@ export default function VerifyEmailPage() {
     setIsVerifying(true)
     setAlert(null)
     try {
-      await authApi.verifyEmail(email.trim(), code)
-      setVerified(true)
+      const result = await authApi.verifyEmail(email.trim(), code)
+      try {
+        const user = await session.signInWithToken(result, remember)
+        navigate(landingPath(user, searchParams.get('next')), { replace: true })
+        return
+      } catch {
+        // Verified, but the automatic sign-in did not complete (e.g. the backend became unreachable): sign in by hand.
+        setVerified(true)
+      }
     } catch (error) {
       if (error.code === 'INVALID_VERIFICATION_CODE') {
         setCodeError('The code is incorrect or has expired. Check the latest email or request a new code.')
@@ -136,7 +150,7 @@ export default function VerifyEmailPage() {
         <header>
           <h1 className="text-3xl tracking-tight text-ink">{t('Your email is verified')}</h1>
           <p className="mt-2 text-ink-muted">
-            {t('You can now sign in. This confirms that you own this email address; it is not a student verification.')}
+            {t('We couldn’t sign you in automatically. Sign in with your email and password. This confirms that you own this email address; it is not a student verification.')}
           </p>
         </header>
         <Link to={`${PATHS.login}?email=${encodeURIComponent(email.trim())}`} className={buttonClasses({ size: 'lg', fullWidth: true })}>
@@ -230,9 +244,11 @@ export default function VerifyEmailPage() {
           </Alert>
         )}
 
+        <Checkbox label={t('Remember me')} checked={remember} onChange={(event) => setRemember(event.target.checked)} />
+
         <Button type="submit" size="lg" fullWidth loading={isVerifying}>
           <ArrowRightIcon className="size-4.5" />
-          {t('Verify email')}
+          {t('Verify and sign in')}
         </Button>
 
         <p className="text-sm text-ink-muted">

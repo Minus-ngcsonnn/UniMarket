@@ -8,14 +8,17 @@ export const authApi = {
   /**
    * POST /api/auth/register → 201 { user, verificationRequired, codeExpiresAt }.
    * Exactly one of campusId / universityName must be set (the caller guarantees it).
-   * @param {{ fullName: string, email: string, password: string, campusId?: number, universityName?: string, homeZoneId?: number }} body
+   * @param {{ fullName: string, email: string, password: string, campusId?: number, universityName?: string }} body
    */
   async register(body) {
     const { data } = await apiClient.post('/auth/register', body)
     return data
   },
 
-  /** POST /api/auth/verify-email → 200 { message } */
+  /**
+   * POST /api/auth/verify-email → 200 { message, accessToken, tokenType, expiresIn, expiresAt, user }:
+   * a valid code verifies the email AND signs the account in (no second password entry).
+   */
   async verifyEmail(email, code) {
     const { data } = await apiClient.post('/auth/verify-email', { email, code })
     return data
@@ -24,6 +27,18 @@ export const authApi = {
   /** POST /api/auth/resend-verification → 202 { message } (same answer whether or not a code was sent) */
   async resendVerification(email) {
     const { data } = await apiClient.post('/auth/resend-verification', { email })
+    return data
+  },
+
+  /** POST /api/auth/forgot-password → 202 { message } (same answer whether or not the email is registered) */
+  async forgotPassword(email) {
+    const { data } = await apiClient.post('/auth/forgot-password', { email })
+    return data
+  },
+
+  /** POST /api/auth/reset-password → 200 { message } */
+  async resetPassword(email, code, newPassword) {
+    const { data } = await apiClient.post('/auth/reset-password', { email, code, newPassword })
     return data
   },
 

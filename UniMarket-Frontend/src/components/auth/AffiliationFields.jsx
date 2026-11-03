@@ -1,10 +1,9 @@
 import { AFFILIATION, UNIVERSITY_NAME_MAX_LENGTH } from '../../utils/authValidation'
 import useAsyncData from '../../hooks/useAsyncData'
-import { GraduationCapIcon, MapPinIcon } from '../icons'
+import { GraduationCapIcon } from '../icons'
 import Alert from '../ui/Alert'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
-import Select from '../ui/Select'
 import UniversityPicker from './UniversityPicker'
 import useTranslation from '../../i18n/useTranslation'
 
@@ -17,22 +16,15 @@ const loadDirectory = () => import('../../data/vnHigherEducationDirectory.json')
  * - a university / academy / college from the Ministry-sourced directory → its canonical name as universityName
  *   (stored as self-declared — choosing from the list is not a student verification);
  * - "My university is not listed" → a name typed by hand → universityName.
- * Nothing is pre-selected and no campus is assigned automatically. An optional home area (GET /api/locations/zones)
- * can be chosen as the default pickup / delivery area.
+ * Nothing is pre-selected and no campus is assigned automatically. (Registration no longer asks for a home area.)
  *
- * @param {object} form useForm() result with affiliationType, campusId, universityName, directoryId, homeZoneId values
+ * @param {object} form useForm() result with affiliationType, campusId, universityName, directoryId values
  * @param {{ data?: object[], error?: Error, isLoading: boolean, reload: () => void }} campuses
- * @param {{ data?: object[], error?: Error, isLoading: boolean, reload: () => void }} zones
  */
-export default function AffiliationFields({ form, campuses, zones }) {
+export default function AffiliationFields({ form, campuses }) {
   const { t } = useTranslation()
   const directory = useAsyncData(loadDirectory, 'he-directory')
   const { affiliationType, campusId, universityName } = form.values
-
-  const zoneOptions = [
-    { value: '', label: t('No default area') },
-    ...(zones.data ?? []).map((zone) => ({ value: String(zone.id), label: `${zone.name} — ${zone.province}` })),
-  ]
 
   let selection = null
   if (affiliationType === AFFILIATION.CAMPUS) {
@@ -101,25 +93,6 @@ export default function AffiliationFields({ form, campuses, zones }) {
             </Button>
           </span>
         </Alert>
-      )}
-
-      {zones.error ? (
-        <p className="flex items-center gap-1.5 text-xs text-ink-muted">
-          <MapPinIcon className="size-3.5" />
-          {t('Areas couldn’t be loaded; you can choose one later.')}
-        </p>
-      ) : (
-        <Select
-          label={t('Home area (optional)')}
-          name="homeZoneId"
-          options={zoneOptions}
-          value={form.values.homeZoneId}
-          onChange={(value) => form.setFieldValue('homeZoneId', value)}
-          placeholder={zones.isLoading ? t('Loading areas…') : t('No default area')}
-          hint={t('Your usual pickup and delivery area. Areas are approximate.')}
-          error={form.getError('homeZoneId')}
-          fieldSize="lg"
-        />
       )}
     </div>
   )

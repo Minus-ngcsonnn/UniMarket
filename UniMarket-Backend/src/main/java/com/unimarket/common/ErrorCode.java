@@ -24,6 +24,7 @@ public enum ErrorCode {
     EMAIL_ALREADY_REGISTERED(HttpStatus.CONFLICT, "An account with this email already exists."),
     INVALID_CAMPUS(HttpStatus.BAD_REQUEST, "Choose one of the available campuses."),
     INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "The verification code is incorrect or has expired."),
+    INVALID_RESET_CODE(HttpStatus.BAD_REQUEST, "The password reset code is incorrect or has expired."),
     EMAIL_DELIVERY_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "We couldn't send the verification email right now. Please try again in a minute."),
     TOO_MANY_ATTEMPTS(HttpStatus.TOO_MANY_REQUESTS, "Too many attempts. Please wait and try again later."),
 

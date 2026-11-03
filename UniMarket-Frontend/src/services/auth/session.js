@@ -48,6 +48,15 @@ async function restore() {
   }
 }
 
+/** Validates a freshly issued token with GET /api/auth/me, then stores it (remember → localStorage). */
+async function adopt(login, remember) {
+  const user = await authApi.me(login.accessToken)
+  tokenStore.set(login.accessToken, login.expiresAt, remember)
+  setAccessToken(login.accessToken)
+  setState({ status: 'authenticated', user, reason: null })
+  return user
+}
+
 export const session = {
   subscribe(listener) {
     listeners.add(listener)
@@ -62,11 +71,19 @@ export const session = {
    */
   async signIn(email, password, remember) {
     const login = await authApi.login(email, password)
-    const user = await authApi.me(login.accessToken)
-    tokenStore.set(login.accessToken, login.expiresAt, remember)
-    setAccessToken(login.accessToken)
-    setState({ status: 'authenticated', user, reason: null })
-    return user
+    return adopt(login, remember)
+  },
+
+  /**
+   * Starts the session from a token the backend issued with a successful email verification
+   * (POST /api/auth/verify-email). Same checks and storage as signIn: GET /api/auth/me first, nothing is stored
+   * unless it succeeds.
+   * @param {{ accessToken: string, expiresAt: string }} login the verify-email answer
+   * @returns {Promise<object>} the signed-in user (from /me)
+   */
+  signInWithToken(login, remember) {
+    if (!login?.accessToken) return Promise.reject(new Error('No access token in the verification answer'))
+    return adopt(login, remember)
   },
 
   /** Re-reads the profile from the server (e.g. when the profile page opens). */

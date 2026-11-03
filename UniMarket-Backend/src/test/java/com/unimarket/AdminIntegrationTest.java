@@ -127,8 +127,7 @@ class AdminIntegrationTest {
                     .andExpect(status().isCreated()).andExpect(jsonPath("$.moderation").value("PENDING")));
             int id = created.get("id").asInt();
             mvc.perform(get("/api/products/" + id)).andExpect(status().isNotFound());
-            JsonNode queue = getJson("/api/admin/listings?moderation=PENDING&size=100", admin);
-            assertThat(ids(queue)).contains((long) id);
+            assertThat(allIds("/api/admin/listings?moderation=PENDING", admin, "id")).contains((long) id);
             JsonNode detail = getJson("/api/admin/listings/" + id, admin);
             assertThat(detail.get("images")).hasSize(1);
             assertThat(detail.get("version").asText()).hasSize(16);
@@ -387,7 +386,7 @@ class AdminIntegrationTest {
             assertThat(getJson("/api/me/reports", buyer).findValues("id").stream().map(JsonNode::asLong).toList()).contains(id);
             assertThat(getJson("/api/me/reports", stranger).findValues("id").stream().map(JsonNode::asLong).toList()).doesNotContain(id);
 
-            assertThat(ids(getJson("/api/admin/reports?size=100", admin))).contains(id);
+            assertThat(allIds("/api/admin/reports", admin, "id")).contains(id);
             mvc.perform(get("/api/admin/reports").header("Authorization", bearer(buyer))).andExpect(status().isForbidden());
             mvc.perform(post("/api/admin/reports/" + id + "/review").header("Authorization", bearer(admin))).andExpect(jsonPath("$.status").value("REVIEWING"));
             List<ResponseEntity<String>> decisions = race(
@@ -442,7 +441,7 @@ class AdminIntegrationTest {
             assertThat(s.get("shippingFee").asLong()).isEqualTo(FEE);
             assertThat(s.get("amount").asLong()).isEqualTo(200_000 - 6_000 + FEE);
             assertThat(s.get("sandbox").asBoolean()).isTrue();
-            assertThat(ids(getJson("/api/admin/settlements?size=100", admin), "orderId")).contains(orderId);
+            assertThat(allIds("/api/admin/settlements", admin, "orderId")).contains(orderId);
             mvc.perform(post("/api/admin/settlements/" + orderId + "/release").header("Authorization", bearer(seller)).contentType(MediaType.APPLICATION_JSON)
                     .content("{\"payoutReference\":\"SELF-PAY\"}")).andExpect(status().isForbidden());
             release(orderId, "").andExpect(status().isBadRequest());
@@ -834,6 +833,22 @@ class AdminIntegrationTest {
 
     private JsonNode readJson(ResultActions result) throws Exception {
         return json.readTree(result.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Ids from every page of an admin list. The shared *Test database keeps data from earlier runs, so a queue can be
+     * longer than one page (an item created now may be on page 2).
+     */
+    private List<Long> allIds(String url, String token, String field) throws Exception {
+        List<Long> all = new ArrayList<>();
+        String separator = url.contains("?") ? "&" : "?";
+        for (int page = 1; ; page++) {
+            JsonNode body = getJson(url + separator + "size=100&page=" + page, token);
+            all.addAll(ids(body, field));
+            if (page >= body.path("totalPages").asInt(1)) {
+                return all;
+            }
+        }
     }
 
     private static List<Long> ids(JsonNode page) {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router'
 import AuthTabs from '../../components/auth/AuthTabs'
 import PendingNotice from '../../components/auth/PendingNotice'
 import { ArrowRightIcon, LockIcon, MailIcon, ShieldCheckIcon } from '../../components/icons'
@@ -12,18 +12,11 @@ import TextDivider from '../../components/ui/TextDivider'
 import { USES_BACKEND_AUTH } from '../../config/apiConfig'
 import useForm from '../../hooks/useForm'
 import useSession from '../../hooks/useSession'
-import { PATHS, safeNextPath } from '../../routes/paths'
+import { PATHS, landingPath, safeNextPath } from '../../routes/paths'
 import { session } from '../../services/auth/session'
 import { describeApiError } from '../../utils/apiErrorMessage'
 import { validateLogin } from '../../utils/authValidation'
 import useTranslation from '../../i18n/useTranslation'
-
-/** Where a freshly signed-in account goes: the requested page, else admins to the admin workspace, else home. */
-function landingPath(user, next) {
-  const requested = safeNextPath(next)
-  if (requested) return requested
-  return user?.role === 'ADMIN' ? PATHS.admin : PATHS.home
-}
 
 /**
  * Login screen (Figma).
@@ -34,11 +27,14 @@ function landingPath(user, next) {
 export default function LoginPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
   const auth = useSession()
   const [notice, setNotice] = useState(null)
   const [failure, setFailure] = useState(null) // { variant, title, message, verifyEmail? }
   const next = searchParams.get('next')
+  // Set by the forgot-password page after a successful reset.
+  const passwordReset = location.state?.passwordReset === true
 
   const form = useForm({
     initialValues: { email: searchParams.get('email') ?? '', password: '', rememberMe: false },
@@ -85,6 +81,11 @@ export default function LoginPage() {
 
       <AuthTabs />
 
+      {USES_BACKEND_AUTH && passwordReset && !failure && (
+        <Alert variant="success" title={t('Your password has been changed')}>
+          {t('Sign in with your new password.')}
+        </Alert>
+      )}
       {USES_BACKEND_AUTH && auth.reason === 'expired' && !failure && (
         <Alert variant="info" title={t('Your session has ended')}>
           {t('Please sign in again.')}
@@ -117,13 +118,22 @@ export default function LoginPage() {
 
         <div className="flex items-center justify-between gap-4">
           <Checkbox label={t("Remember me")} {...form.getCheckboxProps('rememberMe')} />
-          <button
-            type="button"
-            onClick={() => setNotice('forgotPassword')}
-            className="text-sm font-medium text-primary hover:underline"
-          >
-            {t("Forgot password?")}
-          </button>
+          {USES_BACKEND_AUTH ? (
+            <Link
+              to={form.values.email.trim() ? `${PATHS.forgotPassword}?email=${encodeURIComponent(form.values.email.trim())}` : PATHS.forgotPassword}
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              {t('Forgot password?')}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setNotice('forgotPassword')}
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              {t('Forgot password?')}
+            </button>
+          )}
         </div>
 
         {failure && (

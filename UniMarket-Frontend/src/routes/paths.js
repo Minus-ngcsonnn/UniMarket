@@ -8,6 +8,8 @@ export const PATHS = {
   register: '/register',
   /** Email verification (OTP) step; the email is passed in the query string. */
   verifyEmail: '/verify-email',
+  /** "Forgot password": e-mailed code + new password; the email may be passed in the query string. */
+  forgotPassword: '/forgot-password',
 
   // Product marketplace
   marketplace: '/marketplace',
@@ -61,6 +63,16 @@ export function marketplaceUrl(params = {}) {
 /** Only same-site paths are followed after sign-in (no open redirects such as //evil.example or /\evil). */
 export function safeNextPath(next) {
   return typeof next === 'string' && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : null
+}
+
+/**
+ * Where a freshly signed-in account goes: the requested same-site page, else admins to the admin workspace,
+ * else the homepage. Used after login and after the automatic sign-in that follows email verification.
+ */
+export function landingPath(user, next) {
+  const requested = safeNextPath(next)
+  if (requested) return requested
+  return user?.role === 'ADMIN' ? PATHS.admin : PATHS.home
 }
 
 /** Login URL that returns to `path` after signing in. */

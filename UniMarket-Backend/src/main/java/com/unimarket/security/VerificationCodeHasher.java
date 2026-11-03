@@ -20,6 +20,9 @@ import java.security.SecureRandom;
  *   <li>the user id makes equal codes of different users produce different digests, so the table's
  *       UNIQUE constraint on {@code TokenHash} is not hit when two users get the same code.</li>
  * </ul>
+ *
+ * <p>Password-reset codes ({@code PasswordResetTokens.TokenHash}) use the prefix {@code "password-reset:"} instead,
+ * so a verification code can never be replayed as a reset code (and vice versa).</p>
  */
 @Component
 public class VerificationCodeHasher {
@@ -49,10 +52,23 @@ public class VerificationCodeHasher {
      * @return 32-byte digest to store or look up
      */
     public byte[] hash(int userId, String code) {
+        return digest("email-verification:", userId, code);
+    }
+
+    /**
+     * @param userId owner of the password-reset code
+     * @param code   the code as typed by the user
+     * @return 32-byte digest to store or look up in {@code PasswordResetTokens}
+     */
+    public byte[] hashResetCode(int userId, String code) {
+        return digest("password-reset:", userId, code);
+    }
+
+    private byte[] digest(String purpose, int userId, String code) {
         try {
             Mac mac = Mac.getInstance(HMAC);
             mac.init(key);
-            return mac.doFinal(("email-verification:" + userId + ":" + code).getBytes(StandardCharsets.UTF_8));
+            return mac.doFinal((purpose + userId + ":" + code).getBytes(StandardCharsets.UTF_8));
         } catch (GeneralSecurityException ex) {
             throw new IllegalStateException("HMAC-SHA-256 is not available", ex);
         }

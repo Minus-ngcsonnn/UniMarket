@@ -62,6 +62,7 @@ class SmtpAuthFlowIntegrationTest {
     static final String APP_PASSWORD = "dummy app password not real";
     private static final MockSmtpServer SMTP = new MockSmtpServer(SENDER, APP_PASSWORD);
     private static final Pattern CODE = Pattern.compile("Mã xác thực email của bạn là: (\\d{6})");
+    private static final Pattern RESET_CODE = Pattern.compile("Mã đặt lại mật khẩu của bạn là: (\\d{6})");
 
     @Autowired private MockMvc mvc;
     @Autowired private ObjectMapper json;
@@ -107,7 +108,10 @@ class SmtpAuthFlowIntegrationTest {
 
         verify(email, code.equals("000000") ? "111111" : "000000").andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_VERIFICATION_CODE"));
-        verify(email, code).andExpect(status().isOk());
+        String verified = verify(email, code).andExpect(status().isOk()).andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + json.readTree(verified).get("accessToken").asText()))
+                .andExpect(status().isOk());   // signed in right after verification
         verify(email, code).andExpect(status().isBadRequest());   // single use
         String token = json.readTree(login(email).andExpect(status().isOk()).andReturn().getResponse()
                 .getContentAsString(StandardCharsets.UTF_8)).get("accessToken").asText();
@@ -175,6 +179,40 @@ class SmtpAuthFlowIntegrationTest {
         assertThat(SMTP.connections()).isEqualTo(before);
     }
 
+    @Test
+    void forgotPasswordMailsAResetCodeThroughSmtpAndFailuresAreReported(CapturedOutput output) throws Exception {
+        String email = newEmail();
+        register(email).andExpect(status().isCreated());
+        verify(email, codeIn(SMTP.last())).andExpect(status().isOk());
+
+        forgot(email).andExpect(status().isAccepted());
+        MockSmtpServer.Received mail = SMTP.last();
+        assertThat(mail.rcptTo()).containsExactly("<" + email + ">");
+        assertThat(mail.mime().getSubject()).isEqualTo("Mã đặt lại mật khẩu UniMarket");
+        Matcher m = RESET_CODE.matcher(part(mail.mime(), "text/plain"));
+        assertThat(m.find()).isTrue();
+        String code = m.group(1);
+        assertThat(part(mail.mime(), "text/html")).contains("#2459e0").contains(code);
+        mvc.perform(post("/api/auth/reset-password").contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(Map.of("email", email, "code", code, "newPassword", "Changed456"))))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("email", email, "password", "Changed456")))).andExpect(status().isOk());
+
+        // The provider refuses the next reset mail: 503, never "sent", and the undelivered code is closed.
+        jdbc.update("UPDATE t SET CreatedAt = DATEADD(minute, -2, t.CreatedAt) FROM dbo.PasswordResetTokens t "
+                + "JOIN dbo.Users u ON u.UserId = t.UserId WHERE u.Email = ?", email);
+        SMTP.sendingLimit();
+        forgot(email).andExpect(status().isServiceUnavailable()).andExpect(jsonPath("$.code").value("EMAIL_DELIVERY_FAILED"));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM dbo.PasswordResetTokens t JOIN dbo.Users u ON u.UserId = t.UserId "
+                + "WHERE u.Email = ? AND t.ConsumedAt IS NULL", Integer.class, email)).isZero();
+
+        int before = SMTP.connections();
+        forgot("nobody-" + UUID.randomUUID() + "@gmail.com").andExpect(status().isAccepted());
+        assertThat(SMTP.connections()).as("unknown email: no SMTP connection").isEqualTo(before);
+        assertThat(output.getAll()).doesNotContain(code).doesNotContain(APP_PASSWORD);
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private static String newEmail() {
@@ -193,6 +231,11 @@ class SmtpAuthFlowIntegrationTest {
 
     private ResultActions resend(String email) throws Exception {
         return mvc.perform(post("/api/auth/resend-verification").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("email", email))));
+    }
+
+    private ResultActions forgot(String email) throws Exception {
+        return mvc.perform(post("/api/auth/forgot-password").contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(Map.of("email", email))));
     }
 

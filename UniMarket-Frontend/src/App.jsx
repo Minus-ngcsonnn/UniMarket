@@ -8,6 +8,7 @@ import LoadingState from './components/ui/LoadingState'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import VerifyEmailPage from './pages/auth/VerifyEmailPage'
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import HomePage from './pages/HomePage'
 import NotAvailablePage from './pages/NotAvailablePage'
 import { PATHS } from './routes/paths'
@@ -132,6 +133,7 @@ export default function App() {
           <Route path={PATHS.login} element={<LoginPage />} />
           <Route path={PATHS.register} element={<RegisterPage />} />
           <Route path={PATHS.verifyEmail} element={<VerifyEmailPage />} />
+          <Route path={PATHS.forgotPassword} element={<ForgotPasswordPage />} />
         </Route>
 
         {UiPreviewPage && <Route path="/dev/ui" element={page(UiPreviewPage)} />}

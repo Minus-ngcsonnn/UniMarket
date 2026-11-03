@@ -121,6 +121,21 @@ public class User {
         return user;
     }
 
+    /**
+     * Sets a new password after a successful password reset. The reset code was e-mailed to this address, so it also
+     * proves ownership of the email: an account that was still unverified becomes verified.
+     *
+     * @param newPasswordHash BCrypt hash of the new password
+     * @param nowUtc          change time (UTC)
+     */
+    public void resetPassword(String newPasswordHash, LocalDateTime nowUtc) {
+        this.passwordHash = newPasswordHash;
+        if (this.emailVerifiedAt == null) {
+            this.emailVerifiedAt = nowUtc;
+        }
+        this.updatedAt = nowUtc;
+    }
+
     /** @return true when the account may sign in: active and email verified */
     public boolean canSignIn() {
         return status == UserStatus.ACTIVE && emailVerifiedAt != null;

@@ -106,10 +106,11 @@ public class EmailVerificationService {
      *
      * @param email account email (any case)
      * @param code  6-digit code
+     * @return the id of the account that is now verified (the caller signs it in, see AuthService#signInVerified)
      * @throws ApiException INVALID_VERIFICATION_CODE (wrong, used, expired code, unknown or already
      *                      verified account) or TOO_MANY_ATTEMPTS (code closed after too many failures)
      */
-    public void verify(String email, String code) {
+    public int verify(String email, String code) {
         Optional<User> account = users.findByEmail(EmailAddresses.normalize(email))
                 .filter(user -> user.getEmailVerifiedAt() == null && user.getStatus() == UserStatus.ACTIVE);
         if (account.isEmpty()) {
@@ -124,6 +125,7 @@ public class EmailVerificationService {
             jdbc.update("EXEC dbo.usp_VerifyEmail ?", (Object) hasher.hash(userId, code));
             wrongCodes.reset(key);
             log.info("Email verified for user {}", userId);
+            return userId;
         } catch (DataAccessException ex) {
             if (sqlErrorCode(ex) != SQL_INVALID_TOKEN) {
                 throw ex;

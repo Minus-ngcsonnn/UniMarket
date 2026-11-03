@@ -32,6 +32,25 @@ class VerificationEmailTemplateTest {
     }
 
     @Test
+    void usesTheUniMarketBlueThemeAndNoLongerTheOrangeOne() {
+        EmailMessage m = VerificationEmailTemplate.build("an@gmail.com", "An", "482913", EXPIRES, Duration.ofMinutes(10));
+        assertThat(m.html()).contains("#2459e0").contains("#edf3ff").doesNotContain("#c2410c").doesNotContain("#fdba74").doesNotContain("#9a3412");
+    }
+
+    @Test
+    void thePasswordResetMailHasItsOwnWordingInBothParts() {
+        EmailMessage m = VerificationEmailTemplate.buildPasswordReset("an@gmail.com", "Nguyễn Văn An", "605118", EXPIRES, Duration.ofMinutes(10));
+        assertThat(m.subject()).isEqualTo("Mã đặt lại mật khẩu UniMarket");
+        assertThat(m.text()).contains("Mã đặt lại mật khẩu của bạn là: 605118").contains("10 phút").contains("10:10 ngày 03/11/2026")
+                .contains("Không chia sẻ mã").contains("không yêu cầu đặt lại mật khẩu").doesNotContain("Mã xác thực email của bạn là");
+        assertThat(m.html()).startsWith("<!DOCTYPE html>").contains("605118").contains("Chào Nguyễn Văn An").contains("Đặt lại mật khẩu")
+                .contains("#2459e0");
+        EmailMessage evil = VerificationEmailTemplate.buildPasswordReset("x@gmail.com", "<b>x</b>", "111111", EXPIRES, Duration.ofMinutes(10));
+        assertThat(evil.html()).doesNotContain("<b>x</b>").contains("&lt;b&gt;x&lt;/b&gt;");
+        assertThat(evil.toString()).doesNotContain("111111");
+    }
+
+    @Test
     void neverPrintsTheCodeInToString() {
         EmailMessage m = VerificationEmailTemplate.build("x@gmail.com", "A", "654321", EXPIRES, Duration.ofMinutes(10));
         assertThat(m.toString()).doesNotContain("654321");
