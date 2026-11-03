@@ -6,6 +6,8 @@ export const PATHS = {
   home: '/',
   login: '/login',
   register: '/register',
+  /** Email verification (OTP) step; the email is passed in the query string. */
+  verifyEmail: '/verify-email',
 
   // Product marketplace
   marketplace: '/marketplace',
@@ -54,4 +56,14 @@ export const PATHS = {
 export function marketplaceUrl(params = {}) {
   const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value)).toString()
   return query ? `${PATHS.marketplace}?${query}` : PATHS.marketplace
+}
+
+/** Only same-site paths are followed after sign-in (no open redirects such as //evil.example or /\evil). */
+export function safeNextPath(next) {
+  return typeof next === 'string' && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : null
+}
+
+/** Login URL that returns to `path` after signing in. */
+export function loginUrl(path) {
+  return `${PATHS.login}?next=${encodeURIComponent(path)}`
 }

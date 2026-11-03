@@ -26,7 +26,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -61,6 +63,8 @@ public class AuthService {
     private final LocationZoneRepository zones;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService verification;
+    private final VerificationMailer mailer;
+    private final TransactionTemplate transaction;
     private final JwtService jwtService;
     private final Clock clock;
     private final AttemptLimiter failedLogins;
@@ -68,13 +72,16 @@ public class AuthService {
     private final String dummyHash;
 
     public AuthService(UserRepository users, CampusRepository campuses, LocationZoneRepository zones,
-                       PasswordEncoder passwordEncoder, EmailVerificationService verification, JwtService jwtService,
+                       PasswordEncoder passwordEncoder, EmailVerificationService verification, VerificationMailer mailer,
+                       PlatformTransactionManager transactionManager, JwtService jwtService,
                        SecurityProperties properties, Clock clock) {
         this.users = users;
         this.campuses = campuses;
         this.zones = zones;
         this.passwordEncoder = passwordEncoder;
         this.verification = verification;
+        this.mailer = mailer;
+        this.transaction = new TransactionTemplate(transactionManager);
         this.jwtService = jwtService;
         this.clock = clock;
         this.failedLogins = new AttemptLimiter(properties.login().maxFailures(), properties.login().lockout(), clock);
@@ -88,8 +95,20 @@ public class AuthService {
      * @return the new account (unverified) and the code expiry
      * @throws ApiException INVALID_CAMPUS, EMAIL_ALREADY_REGISTERED, VALIDATION_FAILED
      */
-    @Transactional
     public RegisterResponse register(RegisterRequest request) {
+        // 1) Account + code in ONE transaction. 2) After the commit, the e-mail is sent outside the transaction and
+        // its real outcome is returned (a provider failure never rolls back the account and never reports "sent";
+        // the student then requests a new code — registering again would answer EMAIL_ALREADY_REGISTERED).
+        Registered registered = transaction.execute(status -> createAccount(request));
+        VerificationMailer.Delivery delivery = mailer.deliver(registered.code());
+        RegisterResponse created = registered.response();
+        return new RegisterResponse(created.user(), created.verificationRequired(), created.codeExpiresAt(), delivery.name());
+    }
+
+    private record Registered(RegisterResponse response, VerificationMailer.IssuedCode code) {
+    }
+
+    private Registered createAccount(RegisterRequest request) {
         String email = EmailAddresses.normalize(request.email());
         if (request.password().getBytes(StandardCharsets.UTF_8).length > MAX_PASSWORD_BYTES) {
             throw new ValidationException(List.of(new ApiErrorResponse.FieldError("password", "must be at most 72 bytes")));
@@ -113,9 +132,9 @@ public class AuthService {
             // Two registrations with the same email at the same time: UNIQUE(Email) decides.
             throw new ApiException(ErrorCode.EMAIL_ALREADY_REGISTERED);
         }
-        LocalDateTime codeExpiresAt = verification.issueCode(user);
+        VerificationMailer.IssuedCode code = verification.issueCode(user);
         log.info("Registered student {} ({})", user.getId(), campus != null ? "campus " + campus.getId() : "self-declared university");
-        return new RegisterResponse(UserResponse.from(user), true, codeExpiresAt.toInstant(ZoneOffset.UTC));
+        return new Registered(new RegisterResponse(UserResponse.from(user), true, code.expiresAt(), null), code);
     }
 
     /**

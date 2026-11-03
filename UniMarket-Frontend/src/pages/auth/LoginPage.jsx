@@ -1,30 +1,78 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
 import AuthTabs from '../../components/auth/AuthTabs'
 import PendingNotice from '../../components/auth/PendingNotice'
 import { ArrowRightIcon, LockIcon, MailIcon, ShieldCheckIcon } from '../../components/icons'
+import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
 import Checkbox from '../../components/ui/Checkbox'
 import Input from '../../components/ui/Input'
 import PasswordInput from '../../components/ui/PasswordInput'
 import TextDivider from '../../components/ui/TextDivider'
+import { USES_BACKEND_AUTH } from '../../config/apiConfig'
 import useForm from '../../hooks/useForm'
-import { PATHS } from '../../routes/paths'
+import useSession from '../../hooks/useSession'
+import { PATHS, safeNextPath } from '../../routes/paths'
+import { session } from '../../services/auth/session'
+import { describeApiError } from '../../utils/apiErrorMessage'
 import { validateLogin } from '../../utils/authValidation'
 import useTranslation from '../../i18n/useTranslation'
 
+/** Where a freshly signed-in account goes: the requested page, else admins to the admin workspace, else home. */
+function landingPath(user, next) {
+  const requested = safeNextPath(next)
+  if (requested) return requested
+  return user?.role === 'ADMIN' ? PATHS.admin : PATHS.home
+}
+
 /**
- * Login screen (Figma). Validates input on the client only.
- * Backend authentication is pending: a valid submit shows a notice and sends nothing.
+ * Login screen (Figma).
+ * - VITE_AUTH_MODE=backend: POST /api/auth/login, then GET /api/auth/me (the role and profile come from the server).
+ *   "Remember me" keeps the session after the browser closes (localStorage), otherwise for this tab only.
+ * - demo mode: validation only; a valid submit shows a notice and sends nothing.
  */
 export default function LoginPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const auth = useSession()
   const [notice, setNotice] = useState(null)
+  const [failure, setFailure] = useState(null) // { variant, title, message, verifyEmail? }
+  const next = searchParams.get('next')
+
   const form = useForm({
-    initialValues: { email: '', password: '', rememberMe: false },
+    initialValues: { email: searchParams.get('email') ?? '', password: '', rememberMe: false },
     validate: validateLogin,
-    onSubmit: () => setNotice('signIn'),
+    onSubmit: USES_BACKEND_AUTH ? signIn : () => setNotice('signIn'),
   })
+
+  async function signIn(values) {
+    setFailure(null)
+    const email = values.email.trim()
+    try {
+      const user = await session.signIn(email, values.password, values.rememberMe)
+      navigate(landingPath(user, next), { replace: true })
+    } catch (error) {
+      if (error.code === 'INVALID_CREDENTIALS') {
+        setFailure({ variant: 'danger', title: 'Sign-in failed', message: 'The email or password is incorrect.' })
+      } else if (error.code === 'EMAIL_NOT_VERIFIED') {
+        setFailure({ variant: 'warning', title: 'Verify your email first', message: 'Enter the code we emailed you, or request a new one.', verifyEmail: email })
+      } else if (error.code === 'ACCOUNT_DISABLED') {
+        setFailure({ variant: 'danger', title: 'This account can’t be used', message: error.message })
+      } else if (error.code === 'TOO_MANY_ATTEMPTS') {
+        setFailure({ variant: 'warning', title: 'Too many attempts', message: 'Too many failed sign-ins for this email. Wait 15 minutes and try again.' })
+      } else if (error.code === 'VALIDATION_FAILED') {
+        form.setServerErrors(error.fieldErrorMap())
+      } else {
+        setFailure({ variant: 'danger', ...describeApiError(error) })
+      }
+    }
+  }
+
+  // Already signed in (e.g. the user opened /login in another tab): go on.
+  if (USES_BACKEND_AUTH && auth.status === 'authenticated' && !form.isSubmitting) {
+    return <Navigate to={landingPath(auth.user, next)} replace />
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -36,6 +84,17 @@ export default function LoginPage() {
       </header>
 
       <AuthTabs />
+
+      {USES_BACKEND_AUTH && auth.reason === 'expired' && !failure && (
+        <Alert variant="info" title={t('Your session has ended')}>
+          {t('Please sign in again.')}
+        </Alert>
+      )}
+      {USES_BACKEND_AUTH && safeNextPath(next) && auth.reason !== 'expired' && !failure && (
+        <Alert variant="info" title={t('Sign in to continue')}>
+          {t('This page needs a UniMarket account.')}
+        </Alert>
+      )}
 
       <form noValidate onSubmit={form.handleSubmit} className="flex flex-col gap-5">
         <Input
@@ -67,6 +126,23 @@ export default function LoginPage() {
           </button>
         </div>
 
+        {failure && (
+          <Alert variant={failure.variant} title={t(failure.title)}>
+            {t(failure.message)}
+            {failure.verifyEmail && (
+              <>
+                {' '}
+                <Link
+                  to={`${PATHS.verifyEmail}?email=${encodeURIComponent(failure.verifyEmail)}`}
+                  className="font-medium text-primary hover:underline"
+                >
+                  {t('Verify my email')}
+                </Link>
+              </>
+            )}
+          </Alert>
+        )}
+
         <Button type="submit" size="lg" fullWidth loading={form.isSubmitting}>
           <ArrowRightIcon className="size-4.5" />
           {t("Login")}
@@ -83,7 +159,8 @@ export default function LoginPage() {
           </Link>
         </p>
         <p className="flex items-center justify-center gap-2 text-xs text-ink-muted">
-          <ShieldCheckIcon className="size-4" />A safer marketplace starts with students like you.
+          <ShieldCheckIcon className="size-4" />
+          {t('A safer marketplace starts with students like you.')}
         </p>
       </div>
     </div>

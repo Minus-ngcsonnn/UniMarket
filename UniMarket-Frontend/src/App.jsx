@@ -1,11 +1,13 @@
 import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router'
 import AuthLayout from './components/auth/AuthLayout'
+import RequireAuth from './components/auth/RequireAuth'
 import MainLayout from './components/layout/MainLayout'
 import ScrollToTop from './components/layout/ScrollToTop'
 import LoadingState from './components/ui/LoadingState'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
+import VerifyEmailPage from './pages/auth/VerifyEmailPage'
 import HomePage from './pages/HomePage'
 import NotAvailablePage from './pages/NotAvailablePage'
 import { PATHS } from './routes/paths'
@@ -66,25 +68,30 @@ export default function App() {
           <Route index element={<HomePage />} />
           <Route path={PATHS.marketplace} element={page(CatalogPage)} />
           <Route path="/products/:id" element={page(ProductDetailPage)} />
-          <Route path={PATHS.sell} element={page(CreateListingPage)} />
-          <Route path={PATHS.myListings} element={page(MyListingsPage)} />
-          <Route path="/my-listings/:id/edit" element={page(EditListingPage)} />
           <Route path={PATHS.deals} element={page(DealsPage)} />
           <Route path={PATHS.saved} element={page(SavedItemsPage)} />
-
-          {/* Buying: cart → checkout → confirmation → my orders (Business Plan order flow) */}
           <Route path={PATHS.cart} element={page(CartPage)} />
-          <Route path="/checkout" element={page(CheckoutPage)} />
-          <Route path="/orders/confirmation" element={page(OrderConfirmationPage)} />
-          <Route path={PATHS.orders} element={page(OrdersPage)} />
-          <Route path="/orders/:id" element={page(OrderDetailPage)} />
-          <Route path={PATHS.messages} element={page(MessagesPage)} />
-
-          {/* Profiles and reviews */}
-          <Route path={PATHS.profile} element={page(ProfilePage)} />
-          <Route path={PATHS.shop} element={page(ShopDashboardPage)} />
-          <Route path={PATHS.settings} element={page(SettingsPage)} />
           <Route path="/users/:id" element={page(UserProfilePage)} />
+
+          {/* Account pages. With the real backend (VITE_AUTH_MODE=backend) they need a signed-in account;
+              in demo mode RequireAuth renders them unchanged. */}
+          <Route element={<RequireAuth />}>
+            <Route path={PATHS.sell} element={page(CreateListingPage)} />
+            <Route path={PATHS.myListings} element={page(MyListingsPage)} />
+            <Route path="/my-listings/:id/edit" element={page(EditListingPage)} />
+
+            {/* Buying: cart → checkout → confirmation → my orders (Business Plan order flow) */}
+            <Route path="/checkout" element={page(CheckoutPage)} />
+            <Route path="/orders/confirmation" element={page(OrderConfirmationPage)} />
+            <Route path={PATHS.orders} element={page(OrdersPage)} />
+            <Route path="/orders/:id" element={page(OrderDetailPage)} />
+            <Route path={PATHS.messages} element={page(MessagesPage)} />
+
+            {/* Profile */}
+            <Route path={PATHS.profile} element={page(ProfilePage)} />
+            <Route path={PATHS.shop} element={page(ShopDashboardPage)} />
+            <Route path={PATHS.settings} element={page(SettingsPage)} />
+          </Route>
 
           {/* Information pages */}
           <Route path={PATHS.howItWorks} element={page(HowItWorksPage)} />
@@ -100,27 +107,31 @@ export default function App() {
           <Route path="*" element={<NotAvailablePage />} />
         </Route>
 
-        {/* Admin workspace (Figma admin dashboard). The backend must enforce admin access; see AdminLayout. */}
-        <Route
-          path={PATHS.admin}
-          element={
-            <Suspense fallback={<LoadingState className="min-h-screen" />}>
-              <AdminLayout />
-            </Suspense>
-          }
-        >
-          <Route index element={<AdminOverviewPage />} />
-          <Route path={PATHS.adminProducts} element={<AdminProductsPage />} />
-          <Route path={PATHS.adminUsers} element={<AdminUsersPage />} />
-          <Route path={PATHS.adminOrders} element={<AdminOrdersPage />} />
-          <Route path={PATHS.adminCategories} element={<AdminCategoriesPage />} />
-          <Route path={PATHS.adminReports} element={<AdminReportsPage />} />
-          <Route path="*" element={<NotAvailablePage />} />
+        {/* Admin workspace (Figma admin dashboard). With the real backend only ADMIN accounts (role from
+            GET /api/auth/me) can open it; the backend enforces admin access on every admin API call. */}
+        <Route element={<RequireAuth role="ADMIN" fullScreen />}>
+          <Route
+            path={PATHS.admin}
+            element={
+              <Suspense fallback={<LoadingState className="min-h-screen" />}>
+                <AdminLayout />
+              </Suspense>
+            }
+          >
+            <Route index element={<AdminOverviewPage />} />
+            <Route path={PATHS.adminProducts} element={<AdminProductsPage />} />
+            <Route path={PATHS.adminUsers} element={<AdminUsersPage />} />
+            <Route path={PATHS.adminOrders} element={<AdminOrdersPage />} />
+            <Route path={PATHS.adminCategories} element={<AdminCategoriesPage />} />
+            <Route path={PATHS.adminReports} element={<AdminReportsPage />} />
+            <Route path="*" element={<NotAvailablePage />} />
+          </Route>
         </Route>
 
         <Route element={<AuthLayout />}>
           <Route path={PATHS.login} element={<LoginPage />} />
           <Route path={PATHS.register} element={<RegisterPage />} />
+          <Route path={PATHS.verifyEmail} element={<VerifyEmailPage />} />
         </Route>
 
         {UiPreviewPage && <Route path="/dev/ui" element={page(UiPreviewPage)} />}

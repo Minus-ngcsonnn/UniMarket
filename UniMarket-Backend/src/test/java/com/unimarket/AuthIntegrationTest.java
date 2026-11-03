@@ -62,7 +62,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthIntegrationTest {
 
-    private static final Pattern CODE = Pattern.compile("verification code is: (\\d{6})");
+    /** The plain-text part of the (Vietnamese) verification e-mail, see VerificationEmailTemplate. */
+    private static final Pattern CODE = Pattern.compile("Mã xác thực email của bạn là: (\\d{6})");
 
     @Autowired private MockMvc mvc;
     @Autowired private ObjectMapper json;

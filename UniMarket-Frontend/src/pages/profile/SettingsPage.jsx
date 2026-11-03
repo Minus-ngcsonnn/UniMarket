@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { GlobeIcon, LockIcon, LogOutIcon, UserIcon } from '../../components/icons'
 import Breadcrumbs from '../../components/layout/Breadcrumbs'
 import PageContainer from '../../components/layout/PageContainer'
@@ -16,6 +16,7 @@ import { PATHS } from '../../routes/paths'
 import { accountService } from '../../services/account/accountService'
 import { orderService } from '../../services/orders/orderService'
 import { isSampleData } from '../../services/products/productService'
+import { USES_BACKEND_AUTH } from '../../config/apiConfig'
 
 function Section({ id, title, description, Icon, children }) {
   return (
@@ -44,7 +45,13 @@ function Section({ id, title, description, Icon, children }) {
 export default function SettingsPage() {
   const { t, lang, setLang } = useTranslation()
   const viewer = useViewer()
-  const { data: profile } = useAsyncData(() => accountService.getMyProfile(), 'settings-profile')
+  const navigate = useNavigate()
+  // Backend mode: the signed-in account from GET /api/auth/me (no demo profile).
+  const { data: demoProfile } = useAsyncData(
+    () => (USES_BACKEND_AUTH ? Promise.resolve(null) : accountService.getMyProfile()),
+    'settings-profile',
+  )
+  const profile = USES_BACKEND_AUTH ? viewer.profile : demoProfile
   const [notice, setNotice] = useState(null)
   const [isResetOpen, setIsResetOpen] = useState(false)
 
@@ -115,12 +122,17 @@ export default function SettingsPage() {
               size="sm"
               className="text-danger"
               onClick={() => {
+                if (USES_BACKEND_AUTH) {
+                  viewer.signOut()
+                  navigate(PATHS.home, { replace: true })
+                  return
+                }
                 if (isSampleData) viewer.setGuestPreview(true)
                 setNotice('signOut')
               }}
             >
               <LogOutIcon className="size-4" />
-              {isSampleData ? t('account.signOutDemo') : t('account.signOut')}
+              {isSampleData && !USES_BACKEND_AUTH ? t('account.signOutDemo') : t('account.signOut')}
             </Button>
           </div>
           <div aria-live="polite" className="empty:hidden">

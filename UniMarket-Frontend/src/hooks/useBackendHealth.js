@@ -7,9 +7,9 @@ const INITIAL_STATE = { loading: true, data: null, error: null }
 const PROXY_ERROR_STATUSES = [502, 503, 504]
 
 function toErrorMessage(err) {
-  const status = err.response?.status
+  const status = err.status ?? err.response?.status
   if (!status || PROXY_ERROR_STATUSES.includes(status)) {
-    return 'Cannot reach the backend. Is it running on http://localhost:8080?'
+    return 'Cannot reach the backend (check VITE_BACKEND_URL and that it is running).'
   }
   return `Backend responded with HTTP ${status}`
 }

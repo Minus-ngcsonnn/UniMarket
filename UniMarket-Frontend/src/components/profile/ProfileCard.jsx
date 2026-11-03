@@ -4,10 +4,13 @@ import RatingStars from '../reviews/RatingStars'
 import Avatar from '../ui/Avatar'
 import VerificationBadge from './VerificationBadge'
 import useTranslation from '../../i18n/useTranslation'
+import { affiliationLabel } from '../../services/auth/viewerProfile'
 
 
 /**
  * Student profile summary: avatar, name, verification, programme, campus, rating and activity.
+ * Real accounts (backend): the official "university · campus" or the self-declared school name, the home area,
+ * and "–" for numbers the backend does not provide yet.
  * @param {React.ReactNode} [actions] buttons under the summary (edit, report…)
  * @param {'h1'|'h2'} [titleAs]
  */
@@ -15,10 +18,13 @@ export default function ProfileCard({ profile, actions, titleAs: Title = 'h1', c
   const { t, lang } = useTranslation()
   const { rating, stats } = profile
   const facts = [
-    ['Active listings', stats.activeListings],
-    ['Sales', stats.completedSales],
-    ['Purchases', stats.completedPurchases],
+    ['Active listings', stats.activeListings ?? '–'],
+    ['Sales', stats.completedSales ?? '–'],
+    ['Purchases', stats.completedPurchases ?? '–'],
   ]
+  const place = profile.isBackendUser
+    ? [affiliationLabel(t, profile), profile.homeZone && `${profile.homeZone.name}, ${profile.homeZone.province}`].filter(Boolean).join(' · ')
+    : `${t(UNIVERSITY_NAME)} · ${t(CAMPUSES[profile.campus]?.label)}`
 
   return (
     <section aria-label={t("Profile")} className={`flex flex-col gap-5 rounded-card border border-line bg-surface p-5 sm:p-6 ${className}`}>
@@ -34,11 +40,11 @@ export default function ProfileCard({ profile, actions, titleAs: Title = 'h1', c
       <div className="flex flex-col gap-2 text-sm text-ink-muted">
         <p className="flex items-center gap-1.5">
           <MapPinIcon className="size-4 shrink-0 text-primary" />
-          {t(UNIVERSITY_NAME)} · {t(CAMPUSES[profile.campus]?.label)}
+          {place || t('University not set')}
         </p>
         <p>{t('Member since {date}', { date: new Intl.DateTimeFormat(lang === 'vi' ? 'vi-VN' : 'en-GB', { month: 'long', year: 'numeric' }).format(new Date(profile.memberSince)) })}</p>
         <p className="flex flex-wrap items-center gap-2">
-          {rating.count > 0 ? (
+          {rating.count > 0 && rating.average != null ? (
             <>
               <RatingStars value={rating.average} size="sm" />
               <span className="font-medium text-ink">{rating.average.toFixed(1)}</span>

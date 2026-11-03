@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router'
 import useCart from '../../hooks/useCart'
 import useViewer from '../../hooks/useViewer'
 import { LANGUAGES } from '../../i18n/languageContext'
@@ -96,6 +96,7 @@ function MobileMenu({ onClose, isGuest, sellTo }) {
 export default function Header() {
   const { t } = useTranslation()
   const location = useLocation()
+  const navigate = useNavigate()
   const { count: cartCount } = useCart()
   const viewer = useViewer()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -165,7 +166,15 @@ export default function Header() {
             </div>
           ) : viewer.profile ? (
             <div className="ml-1">
-              <AccountMenu profile={viewer.profile} isDemo={viewer.isDemo} onSignOut={() => viewer.setGuestPreview(true)} />
+              <AccountMenu
+                profile={viewer.profile}
+                isDemo={viewer.isDemo}
+                isAdmin={viewer.isAdmin}
+                onSignOut={() => {
+                  viewer.signOut()
+                  if (viewer.isBackend) navigate(PATHS.home, { replace: true })
+                }}
+              />
             </div>
           ) : (
             <span className="ml-1 block size-9 animate-pulse rounded-full bg-subtle" aria-hidden="true" />

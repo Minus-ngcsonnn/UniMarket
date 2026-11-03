@@ -51,7 +51,8 @@ Response 201:
                              "source": "OFFICIAL_CAMPUS" },
             "homeZone": null, "memberSince": "2026-11-02T11:00:00Z" },
   "verificationRequired": true,
-  "codeExpiresAt": "2026-11-02T11:10:00Z"
+  "codeExpiresAt": "2026-11-02T11:10:00Z",
+  "emailDelivery": "SENT"
 }
 ```
 
@@ -65,7 +66,16 @@ status, `role: "STUDENT"` is simply the ordinary marketplace account role, and t
 `campusName` are `null`, `university` is the typed name and `affiliation.source` is `SELF_DECLARED` (otherwise
 `OFFICIAL_CAMPUS`; admins without either: `NONE`). The UI must label a self-declared name as such.
 
-A 6-digit code is e-mailed (never returned by the API). Errors:
+A 6-digit code is e-mailed (never returned by the API). The account and the code are committed first; the e-mail is
+sent afterwards, outside the transaction, and `emailDelivery` reports the real outcome:
+
+| `emailDelivery` | Meaning |
+|---|---|
+| `SENT` | the provider (Resend / SMTP) accepted the message — not a guarantee that it reached the inbox |
+| `LOGGED` | development `MAIL_MODE=log`: nothing was sent, the e-mail is in the backend log |
+| `FAILED` | refused or no answer (invalid key, unverified sender domain, rate limit, timeout). The account exists and is unverified: request a new code after 60 s (`resend-verification`); registering again answers `EMAIL_ALREADY_REGISTERED` |
+
+Errors:
 
 | Status | `code` | When |
 |---|---|---|
@@ -95,6 +105,10 @@ Response 202 (always the same, whether or not a code was sent, so emails cannot 
 
 A new code is sent only to an active, unverified account, at most once per **60 s** and **5 codes per hour**.
 A new code closes all older codes of the account.
+
+| Status | `code` | When |
+|---|---|---|
+| 503 | `EMAIL_DELIVERY_FAILED` | a new code was issued but the e-mail provider refused it or did not answer; the undelivered code is closed. Try again after the cooldown. (Only possible for a pending account while the provider fails — an accepted, narrow disclosure.) |
 
 ### POST /api/auth/login
 
@@ -147,11 +161,21 @@ other personal data. Signed with HS256; the key comes from `JWT_SECRET` (Base64,
 | `VERIFICATION_CODE_SECRET` | Base64 HMAC key (≥ 32 bytes) used to hash codes before storing them. |
 | `JWT_ACCESS_TOKEN_TTL` | token lifetime, ISO-8601 (default `PT1H`) |
 | `CORS_ALLOWED_ORIGINS` | exact browser origins (default `http://localhost:5173`; the Vite proxy makes CORS unnecessary in dev) |
-| `MAIL_MODE` | `log` (dev: codes written to the console, nothing sent) or `smtp` |
+| `MAIL_MODE` | `resend` (real e-mail through the Resend API), `smtp`, or `log` (dev: codes written to the console, nothing sent). The `dev` profile defaults to `log`, other profiles to `smtp`. |
+| `RESEND_API_KEY` | Resend API key ("Sending access" is enough). Secret: only in the environment / git-ignored `.env`, never in `VITE_*`. With `MAIL_MODE=resend` a missing key stops the startup (no fallback to logging codes). |
+| `RESEND_FROM_EMAIL`, `RESEND_FROM_NAME` | sender address on a domain **verified in the Resend dashboard** (Domains), and display name (default `UniMarket`). The testing sender `onboarding@resend.dev` only delivers to the Resend account owner's own address. |
+| `RESEND_TIMEOUT` | request timeout, ISO-8601 (default `PT10S`) |
 | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` | SMTP settings when `MAIL_MODE=smtp` |
 
 With the `dev` profile (default) missing secrets are replaced by random keys at startup, with a warning:
 tokens and codes then stop working after a restart. Set both secrets in `.env` for a stable local setup.
+
+## Verification e-mail
+
+`VerificationEmailTemplate`: subject "Mã xác thực UniMarket của bạn"; Vietnamese HTML (inline styles, responsive, UTF-8)
+plus a plain-text version; UniMarket branding, welcome heading, the code in large type, 10-minute validity with the
+expiry time (Vietnam time), "do not share" warning, and "ignore this e-mail if you did not register". The name is
+HTML-escaped. In `resend` / `smtp` modes codes are never logged.
 
 ## How codes are stored
 
