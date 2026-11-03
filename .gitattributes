@@ -18,3 +18,8 @@ mvnw text eol=lf
 *.gif binary
 *.ico binary
 *.webp binary
+
+# Checksummed migration scripts (database/migrations/V003.sha256): check out byte-for-byte, never convert line endings
+database/migrations/V003__nationwide_registration_and_simulated_shipping.sql -text
+database/migrations/V003_rollback.sql -text
+database/migrations/V003.sha256 -text
