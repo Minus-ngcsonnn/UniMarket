@@ -28,13 +28,21 @@ public class ReferenceDataService {
     private final UniversityRepository universities;
     private final CampusRepository campuses;
     private final ProductInsightsRepository insights;
+    private final com.unimarket.repository.LocationZoneRepository zones;
 
     public ReferenceDataService(CategoryRepository categories, UniversityRepository universities, CampusRepository campuses,
-                                ProductInsightsRepository insights) {
+                                ProductInsightsRepository insights, com.unimarket.repository.LocationZoneRepository zones) {
+        this.zones = zones;
         this.categories = categories;
         this.universities = universities;
         this.campuses = campuses;
         this.insights = insights;
+    }
+
+    /** @return active demo areas (V003) by province and name; no coordinates */
+    @Transactional(readOnly = true)
+    public List<ReferenceDtos.ZoneRef> zones() {
+        return zones.findByActiveTrueOrderByProvinceAscNameAsc().stream().map(ReferenceDtos.ZoneRef::from).toList();
     }
 
     /** @return active categories by name, with their number of public available listings */

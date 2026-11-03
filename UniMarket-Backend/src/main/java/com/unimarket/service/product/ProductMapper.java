@@ -1,5 +1,6 @@
 package com.unimarket.service.product;
 
+import com.unimarket.dto.auth.UserResponse;
 import com.unimarket.dto.product.ProductDetailResponse;
 import com.unimarket.dto.product.ProductSummaryResponse;
 import com.unimarket.dto.product.ReferenceDtos;
@@ -55,7 +56,7 @@ public class ProductMapper {
                 product.getId(), product.getTitle(), toLong(product.getPrice()), toLong(product.getOriginalPrice()),
                 product.getCondition().name(), product.getStatus().name(), isPurchasable(product),
                 ReferenceDtos.CategoryRef.from(product.getCategory()), ReferenceDtos.CampusRef.from(product.getCampus()),
-                mainImages.get(product.getId()),
+                ReferenceDtos.ZoneRef.from(product.getEffectivePickupZone()), mainImages.get(product.getId()),
                 new ProductSummaryResponse.SellerRef(product.getSeller().getId(), product.getSeller().getFullName()),
                 featured.contains(product.getId()), toInstant(product.getCreatedAt()),
                 ownerView ? product.getModerationStatus().apiValue() : null,
@@ -73,14 +74,17 @@ public class ProductMapper {
         List<ProductDetailResponse.ImageResponse> photos = product.getImages().stream()
                 .map(image -> new ProductDetailResponse.ImageResponse(image.getId(), publicUrl(image.getImageUrl()), image.getSortOrder()))
                 .toList();
+        UserResponse.Affiliation affiliation = UserResponse.Affiliation.of(seller.getCampus(), seller.getDeclaredUniversityName());
         ProductDetailResponse.SellerProfile sellerProfile = new ProductDetailResponse.SellerProfile(
                 seller.getId(), seller.getFullName(), seller.getEmailVerifiedAt() != null,
-                ReferenceDtos.CampusRef.from(seller.getCampus()), toInstant(seller.getCreatedAt()),
+                ReferenceDtos.CampusRef.from(seller.getCampus()), affiliation.universityName(), affiliation.source(),
+                toInstant(seller.getCreatedAt()),
                 rating == null ? null : rating.average(), rating == null ? 0 : rating.count(),
                 ProductDetailResponse.Contact.of(seller.isShowContact(), seller.getPhone(), seller.getZaloUrl()));
         return new ProductDetailResponse(product.getId(), product.getTitle(), product.getDescription(), toLong(product.getPrice()),
                 toLong(product.getOriginalPrice()), product.getCondition().name(), product.getStatus().name(), isPurchasable(product),
-                ReferenceDtos.CategoryRef.from(product.getCategory()), ReferenceDtos.CampusRef.from(product.getCampus()), photos,
+                ReferenceDtos.CategoryRef.from(product.getCategory()), ReferenceDtos.CampusRef.from(product.getCampus()),
+                ReferenceDtos.ZoneRef.from(product.getEffectivePickupZone()), photos,
                 sellerProfile, featured, toInstant(product.getCreatedAt()), toInstant(product.getUpdatedAt()),
                 ownerView ? product.getModerationStatus().apiValue() : null,
                 ownerView ? ProductStatus.EDITABLE.contains(product.getStatus()) : null);

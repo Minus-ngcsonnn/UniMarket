@@ -69,6 +69,21 @@ public class OrderService {
         return new PageResponse<>(summaries(rows, viewer), page, size, total, (int) ((total + size - 1) / size), null);
     }
 
+    /** Admins (read-only): all orders, newest first, optional status filter. The viewer must be an admin. */
+    public PageResponse<OrderResponse> listAll(AuthenticatedUser admin, List<String> apiStatuses, int page, int size) {
+        if (admin.role() != UserRole.ADMIN) {
+            throw new ApiException(ErrorCode.ACCESS_DENIED);
+        }
+        List<String> sqlStatuses = new ArrayList<>();
+        for (String status : apiStatuses) {
+            sqlStatuses.add(OrderValues.orderStatusSql(status).orElseThrow(() -> new ValidationException(List.of(
+                    new ApiErrorResponse.FieldError("status", "must be PENDING, AWAITING_PAYMENT, PAID, DELIVERING, COMPLETED or CANCELLED")))));
+        }
+        long total = queries.countAllOrders(sqlStatuses);
+        List<OrderQueries.OrderRow> rows = queries.allOrders(sqlStatuses, (page - 1) * size, size);
+        return new PageResponse<>(summaries(rows, admin), page, size, total, (int) ((total + size - 1) / size), null);
+    }
+
     /** Orders by id that the viewer takes part in (others are left out), e.g. after checkout. */
     public List<OrderResponse> summaries(Collection<Long> orderIds, AuthenticatedUser viewer) {
         List<OrderQueries.OrderRow> rows = queries.orders(orderIds).stream().filter(o -> roleOf(o, viewer) != null).toList();

@@ -83,7 +83,7 @@ public class ProductInsightsRepository {
         return new Facets(
                 count("SELECT Condition AS k, COUNT(*) AS n FROM dbo.vw_ProductCatalog" + where + " GROUP BY Condition", params),
                 count("SELECT CAST(CategoryId AS nvarchar(20)) AS k, COUNT(*) AS n FROM dbo.vw_ProductCatalog" + where + " GROUP BY CategoryId", params),
-                count("SELECT CAST(CampusId AS nvarchar(20)) AS k, COUNT(*) AS n FROM dbo.vw_ProductCatalog" + where + " GROUP BY CampusId", params));
+                count("SELECT CAST(CampusId AS nvarchar(20)) AS k, COUNT(*) AS n FROM dbo.vw_ProductCatalog" + (where.isEmpty() ? " WHERE CampusId IS NOT NULL" : where + " AND CampusId IS NOT NULL") + " GROUP BY CampusId", params));
     }
 
     private Map<String, Long> count(String sql, MapSqlParameterSource params) {

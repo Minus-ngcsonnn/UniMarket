@@ -76,7 +76,7 @@ final class OrderMapper {
                 itemDtos, amounts, OrderValues.provider(o.paymentProvider()), delivery,
                 new OrderResponse.Deadlines(o.confirmBy(), o.paymentDueAt()),
                 new OrderResponse.Timestamps(o.createdAt(), o.confirmedAt(), o.paidAt(), o.shippedAt(), o.completedAt(), o.cancelledAt()),
-                o.cancellationReason(), shipment, payments, history, disputes, settlement, actions(o, role, now));
+                o.cancellationReason(), shipment, payments, history, disputes, settlement, actions(o, role, now), o.shipping());
     }
 
     /**

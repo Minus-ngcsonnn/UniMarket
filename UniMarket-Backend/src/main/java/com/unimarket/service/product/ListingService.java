@@ -7,6 +7,7 @@ import com.unimarket.dto.product.ProductDetailResponse;
 import com.unimarket.dto.product.ProductSummaryResponse;
 import com.unimarket.entity.Campus;
 import com.unimarket.entity.Category;
+import com.unimarket.entity.LocationZone;
 import com.unimarket.entity.Product;
 import com.unimarket.entity.ProductImage;
 import com.unimarket.entity.ProductStatus;
@@ -16,6 +17,7 @@ import com.unimarket.exception.ApiException;
 import com.unimarket.exception.ValidationException;
 import com.unimarket.repository.CampusRepository;
 import com.unimarket.repository.CategoryRepository;
+import com.unimarket.repository.LocationZoneRepository;
 import com.unimarket.repository.ProductImageRepository;
 import com.unimarket.repository.ProductInsightsRepository;
 import com.unimarket.repository.ProductRepository;
@@ -73,6 +75,7 @@ public class ListingService {
     private final UserRepository users;
     private final CategoryRepository categories;
     private final CampusRepository campuses;
+    private final LocationZoneRepository zones;
     private final ProductInsightsRepository insights;
     private final ImageStorage storage;
     private final ProductMapper mapper;
@@ -83,7 +86,7 @@ public class ListingService {
     private final long maxPhotoBytes;
 
     public ListingService(ProductRepository products, ProductImageRepository images, UserRepository users, CategoryRepository categories,
-                          CampusRepository campuses, ProductInsightsRepository insights, ImageStorage storage, ProductMapper mapper,
+                          CampusRepository campuses, LocationZoneRepository zones, ProductInsightsRepository insights, ImageStorage storage, ProductMapper mapper,
                           PlatformTransactionManager transactionManager, EntityManager entityManager, Clock clock,
                           @Value("${unimarket.listing.max-photos}") int maxPhotos,
                           @Value("${spring.servlet.multipart.max-file-size}") org.springframework.util.unit.DataSize maxPhotoSize) {
@@ -92,6 +95,7 @@ public class ListingService {
         this.users = users;
         this.categories = categories;
         this.campuses = campuses;
+        this.zones = zones;
         this.insights = insights;
         this.storage = storage;
         this.mapper = mapper;
@@ -113,8 +117,9 @@ public class ListingService {
         }
         return withStoredPhotos(validated, references -> transaction.execute(status -> {
             User owner = users.findById(seller.id()).orElseThrow(() -> new ApiException(ErrorCode.AUTHENTICATION_REQUIRED));
+            Location location = locationFor(owner, request);
             Product product = Product.newListing(owner, activeCategory(request.categoryId()),
-                    campusFor(owner, request.campusId()), request.title().trim(), request.description().trim(), request.condition(),
+                    location.campus(), location.pickupZone(), request.title().trim(), request.description().trim(), request.condition(),
                     BigDecimal.valueOf(request.price()), toPrice(request.originalPrice()), nowUtc());
             products.saveAndFlush(product);
             for (int i = 0; i < references.size(); i++) {
@@ -130,7 +135,8 @@ public class ListingService {
     public ProductDetailResponse update(int productId, ListingRequest request, AuthenticatedUser viewer) {
         return transaction.execute(status -> {
             Product product = lockForChange(productId, viewer);
-            product.update(activeCategory(request.categoryId()), campusFor(product.getSeller(), request.campusId()),
+            Location location = locationFor(product.getSeller(), request);
+            product.update(activeCategory(request.categoryId()), location.campus(), location.pickupZone(),
                     request.title().trim(), request.description().trim(), request.condition(),
                     BigDecimal.valueOf(request.price()), toPrice(request.originalPrice()), nowUtc());
             products.flush();
@@ -248,15 +254,36 @@ public class ListingService {
                 .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CATEGORY));
     }
 
-    /** The listing's campus must belong to the seller's university; default: the seller's own campus. */
-    private Campus campusFor(User seller, Integer campusId) {
+    private record Location(Campus campus, LocationZone pickupZone) {
+    }
+
+    /**
+     * V003 listing location. Seller with an official campus: the listing campus must belong to the seller's university
+     * (default: the seller's campus) and a pickup area is optional. Seller without a campus (self-declared university):
+     * no campus can be chosen and a pickup area is required. A pickup area must be an active zone.
+     */
+    private Location locationFor(User seller, ListingRequest request) {
+        LocationZone zone = request.pickupZoneId() == null ? null
+                : zones.findById(request.pickupZoneId()).filter(LocationZone::isActive)
+                        .orElseThrow(() -> new ApiException(ErrorCode.INVALID_ZONE));
         Campus sellerCampus = seller.getCampus();
-        if (campusId == null) {
-            return sellerCampus;
+        if (sellerCampus == null) {
+            if (request.campusId() != null) {
+                throw new ApiException(ErrorCode.INVALID_CAMPUS);
+            }
+            if (zone == null) {
+                throw new ValidationException(List.of(new ApiErrorResponse.FieldError("pickupZoneId",
+                        "is required when your account has no campus")));
+            }
+            return new Location(null, zone);
         }
-        return campuses.findById(campusId)
+        if (request.campusId() == null) {
+            return new Location(sellerCampus, zone);
+        }
+        Campus campus = campuses.findById(request.campusId())
                 .filter(c -> c.getUniversity().getId().equals(sellerCampus.getUniversity().getId()))
                 .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CAMPUS));
+        return new Location(campus, zone);
     }
 
     private ProductDetailResponse reloadDetail(int productId) {

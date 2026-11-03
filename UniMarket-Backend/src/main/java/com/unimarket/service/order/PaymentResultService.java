@@ -84,7 +84,7 @@ public class PaymentResultService {
      * @param providerReference the provider's transaction id
      * @param amount            amount the provider charged (VND)
      * @param success           true when paid
-     * @param provider          MOMO or ZALOPAY
+     * @param provider          MOMO, ZALOPAY or BANK_QR
      */
     public record PaymentNotification(String requestKey, String providerReference, long amount, boolean success, String provider) {
 

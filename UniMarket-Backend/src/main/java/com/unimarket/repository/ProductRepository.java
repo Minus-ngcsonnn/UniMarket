@@ -25,11 +25,11 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
 
     /** Catalog page with its references joined. */
     @Override
-    @EntityGraph(attributePaths = {"category", "campus", "campus.university", "seller"})
+    @EntityGraph(attributePaths = {"category", "campus", "campus.university", "campus.zone", "pickupZone", "seller"})
     Page<Product> findAll(Specification<Product> spec, Pageable pageable);
 
     /** Product page: references and photos in one go. */
-    @EntityGraph(attributePaths = {"category", "campus", "campus.university", "seller", "images"})
+    @EntityGraph(attributePaths = {"category", "campus", "campus.university", "campus.zone", "pickupZone", "seller", "images"})
     Optional<Product> findWithDetailsById(Integer id);
 
     /** Locks the row (UPDLOCK) before an edit, so it cannot race with a checkout of the same item. */
@@ -38,6 +38,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     Optional<Product> findForUpdateById(@Param("id") Integer id);
 
     /** A seller's own listings except removed ones ("My listings"). */
-    @EntityGraph(attributePaths = {"category", "campus", "campus.university", "seller"})
+    @EntityGraph(attributePaths = {"category", "campus", "campus.university", "campus.zone", "pickupZone", "seller"})
     List<Product> findBySeller_IdAndStatusNot(Integer sellerId, ProductStatus excluded, Sort sort);
 }

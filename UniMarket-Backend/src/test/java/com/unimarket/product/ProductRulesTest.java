@@ -113,14 +113,14 @@ class ProductRulesTest {
         assertThat(fields(listing("Cheap pencil", 999L, null))).containsExactly("price");
         assertThat(fields(listing("Pricey pencil", 100_000_001L, null))).containsExactly("price");
         assertThat(fields(listing("Equal original", 100_000L, 100_000L))).containsExactly("originalPriceHigherThanPrice");
-        assertThat(fields(new ListingRequest("Valid title", "too short", 100_000L, null, ProductCondition.USED, 1, null)))
+        assertThat(fields(new ListingRequest("Valid title", "too short", 100_000L, null, ProductCondition.USED, 1, null, null)))
                 .containsExactly("description");
-        assertThat(fields(new ListingRequest("Valid title", "A clean, well kept item from a student.", null, null, null, null, null)))
+        assertThat(fields(new ListingRequest("Valid title", "A clean, well kept item from a student.", null, null, null, null, null, null)))
                 .containsExactlyInAnyOrder("price", "condition", "categoryId");
     }
 
     private static ListingRequest listing(String title, Long price, Long originalPrice) {
-        return new ListingRequest(title, "A clean, well kept item from a student.", price, originalPrice, ProductCondition.USED, 1, null);
+        return new ListingRequest(title, "A clean, well kept item from a student.", price, originalPrice, ProductCondition.USED, 1, null, null);
     }
 
     private static List<String> fields(ListingRequest request) {

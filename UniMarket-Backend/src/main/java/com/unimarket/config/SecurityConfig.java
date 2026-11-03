@@ -65,7 +65,11 @@ public class SecurityConfig {
     private static final String[] PUBLIC_GET = {
             "/api/health", "/actuator/health", "/api/products/**", "/api/categories/**",
             // Stage 3: read-only reference data and uploaded listing photos (public, like listing pages)
-            "/api/universities/**", "/api/campuses/**", "/media/products/**"};
+            "/api/universities/**", "/api/campuses/**", "/media/products/**",
+            // Stage 5: public profiles, ratings and reviews of active students; promotion packages (prices are public)
+            "/api/users/**", "/api/promotion-packages",
+            // V003: demo pickup / delivery areas (names only, no coordinates)
+            "/api/locations/zones"};
 
     @Bean
     SecurityFilterChain apiSecurity(HttpSecurity http, DatabaseUserJwtConverter jwtConverter,

@@ -15,7 +15,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Optional<User> findByEmail(String email);
 
     /** @return the account with its campus and university loaded, for profile responses */
-    @EntityGraph(attributePaths = {"campus", "campus.university"})
+    @EntityGraph(attributePaths = {"campus", "campus.university", "homeZone"})
     Optional<User> findWithCampusById(Integer id);
 
     /** @return true when an account already uses this (lower-case) email */

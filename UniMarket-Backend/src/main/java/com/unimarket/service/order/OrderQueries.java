@@ -36,10 +36,16 @@ public class OrderQueries {
                    o.CancelledAt, o.CancellationReason, b.FullName AS BuyerName, s.FullName AS SellerName,
                    CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.Payments p WHERE p.OrderId = o.OrderId AND p.Status = 'Pending') THEN 1 ELSE 0 END AS bit) AS HasPendingPayment,
                    CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.OrderDisputes d WHERE d.OrderId = o.OrderId AND d.Status = 'Open') THEN 1 ELSE 0 END AS bit) AS HasOpenDispute,
-                   (SELECT st.Status FROM dbo.SellerSettlements st WHERE st.OrderId = o.OrderId) AS SettlementStatus
+                   (SELECT st.Status FROM dbo.SellerSettlements st WHERE st.OrderId = o.OrderId) AS SettlementStatus,
+                   q.Carrier AS QuoteCarrier, q.DistanceKm AS QuoteDistanceKm, q.FormulaVersion AS QuoteFormula, q.IsSimulated AS QuoteSimulated,
+                   pz.ZoneId AS PickupZoneId, pz.Code AS PickupZoneCode, pz.Name AS PickupZoneName, pz.Province AS PickupZoneProvince,
+                   dz.ZoneId AS DeliveryZoneId, dz.Code AS DeliveryZoneCode, dz.Name AS DeliveryZoneName, dz.Province AS DeliveryZoneProvince
             FROM dbo.Orders AS o
             JOIN dbo.Users AS b ON b.UserId = o.BuyerId
             JOIN dbo.Users AS s ON s.UserId = o.SellerId
+            LEFT JOIN dbo.OrderShippingQuotes AS q ON q.OrderId = o.OrderId
+            LEFT JOIN dbo.LocationZones AS pz ON pz.ZoneId = q.PickupZoneId
+            LEFT JOIN dbo.LocationZones AS dz ON dz.ZoneId = q.DeliveryZoneId
             """;
 
     private final NamedParameterJdbcTemplate jdbc;
@@ -77,6 +83,23 @@ public class OrderQueries {
                 + (sqlStatuses.isEmpty() ? "" : " AND o.Status IN (:statuses)");
         return jdbc.query(ORDER_COLUMNS + where + " ORDER BY o.CreatedAt DESC, o.OrderId DESC OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY",
                 params, OrderQueries::orderRow);
+    }
+
+    /** Admins: one page of all orders, newest first, optional status filter (SQL values). */
+    public List<OrderRow> allOrders(List<String> sqlStatuses, int offset, int limit) {
+        MapSqlParameterSource params = new MapSqlParameterSource("offset", offset).addValue("limit", limit)
+                .addValue("statuses", sqlStatuses.isEmpty() ? List.of("-") : sqlStatuses);
+        String where = sqlStatuses.isEmpty() ? "" : " WHERE o.Status IN (:statuses)";
+        return jdbc.query(ORDER_COLUMNS + where + " ORDER BY o.CreatedAt DESC, o.OrderId DESC OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY",
+                params, OrderQueries::orderRow);
+    }
+
+    /** Admins: number of orders for {@link #allOrders}. */
+    public long countAllOrders(List<String> sqlStatuses) {
+        MapSqlParameterSource params = new MapSqlParameterSource("statuses", sqlStatuses.isEmpty() ? List.of("-") : sqlStatuses);
+        Long count = jdbc.queryForObject("SELECT COUNT(*) FROM dbo.Orders" + (sqlStatuses.isEmpty() ? "" : " WHERE Status IN (:statuses)"),
+                params, Long.class);
+        return count == null ? 0 : count;
     }
 
     /** @return number of a user's orders for {@link #ordersOf} */
@@ -231,7 +254,29 @@ public class OrderQueries {
                 utc(rs, "CreatedAt"), utc(rs, "ConfirmBy"), utc(rs, "ConfirmedAt"), utc(rs, "PaymentDueAt"), utc(rs, "PaidAt"),
                 utc(rs, "ShippedAt"), utc(rs, "CompletedAt"), utc(rs, "CancelledAt"), rs.getString("CancellationReason"),
                 rs.getString("BuyerName"), rs.getString("SellerName"), rs.getBoolean("HasPendingPayment"), rs.getBoolean("HasOpenDispute"),
-                rs.getString("SettlementStatus"));
+                rs.getString("SettlementStatus"), shipping(rs));
+    }
+
+    /** V003 shipping block: the stored simulated quote, or LEGACY for orders created before V003 (no quote row). */
+    private static com.unimarket.dto.shipping.ShippingDtos.OrderShipping shipping(ResultSet rs) throws SQLException {
+        long fee = rs.getBigDecimal("ShippingFee").longValueExact();
+        String carrier = rs.getString("QuoteCarrier");
+        if (carrier == null) {
+            return new com.unimarket.dto.shipping.ShippingDtos.OrderShipping("LEGACY", null, null, null, fee, null, null, null, null);
+        }
+        String label;
+        try {
+            label = com.unimarket.service.shipping.ShippingCalculator.Carrier.valueOf(carrier).label();
+        } catch (IllegalArgumentException ex) {
+            label = carrier;
+        }
+        return new com.unimarket.dto.shipping.ShippingDtos.OrderShipping("SIMULATED_QUOTE", carrier, label,
+                rs.getBigDecimal("QuoteDistanceKm"), fee,
+                new com.unimarket.dto.product.ReferenceDtos.ZoneRef(rs.getInt("PickupZoneId"), rs.getString("PickupZoneCode"),
+                        rs.getString("PickupZoneName"), rs.getString("PickupZoneProvince")),
+                new com.unimarket.dto.product.ReferenceDtos.ZoneRef(rs.getInt("DeliveryZoneId"), rs.getString("DeliveryZoneCode"),
+                        rs.getString("DeliveryZoneName"), rs.getString("DeliveryZoneProvince")),
+                rs.getBoolean("QuoteSimulated"), rs.getString("QuoteFormula"));
     }
 
     private static PaymentRow paymentRow(ResultSet rs, int rowNum) throws SQLException {
@@ -259,7 +304,8 @@ public class OrderQueries {
                            BigDecimal sellerPayoutTotal, String paymentProvider, String recipientName, String recipientPhone,
                            String deliveryAddress, Instant createdAt, Instant confirmBy, Instant confirmedAt, Instant paymentDueAt,
                            Instant paidAt, Instant shippedAt, Instant completedAt, Instant cancelledAt, String cancellationReason,
-                           String buyerName, String sellerName, boolean hasPendingPayment, boolean hasOpenDispute, String settlementStatus) {
+                           String buyerName, String sellerName, boolean hasPendingPayment, boolean hasOpenDispute, String settlementStatus,
+                           com.unimarket.dto.shipping.ShippingDtos.OrderShipping shipping) {
     }
 
     public record ItemRow(int productId, String title, BigDecimal unitPrice, int quantity, String imageUrl) {

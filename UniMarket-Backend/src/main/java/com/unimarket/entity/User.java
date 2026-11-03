@@ -53,9 +53,20 @@ public class User {
     @Column(name = "AvatarUrl", length = 1000)
     private String avatarUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "CampusId", nullable = false)
+    /** V003: optional; a student has an official campus OR a self-declared university name (CK_Users_Affiliation). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CampusId")
     private Campus campus;
+
+    /** V003: free text typed by the student when their school is not listed; NOT verified. */
+    @Nationalized
+    @Column(name = "DeclaredUniversityName", length = 200)
+    private String declaredUniversityName;
+
+    /** V003: optional default pickup / delivery area. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "HomeZoneId")
+    private LocationZone homeZone;
 
     @Convert(converter = UserRole.DatabaseConverter.class)
     @Column(name = "Role", nullable = false, length = 10)
@@ -81,19 +92,27 @@ public class User {
     /**
      * Creates a new, unverified, active student account. Admin accounts cannot be created here.
      *
-     * @param email        normalized (lower-case) institutional email
+     * @param email        normalized (lower-case) email address, any domain
      * @param passwordHash BCrypt hash of the password
      * @param fullName     display name
-     * @param campus       the student's campus
+     * @param campus       the student's official campus, or null when {@code declaredUniversityName} is given
+     * @param declaredUniversityName self-declared university / college name (trimmed), or null when a campus is given
+     * @param homeZone     optional default area
      * @param nowUtc       creation time (UTC)
      * @return the new account, not yet saved
      */
-    public static User newStudent(String email, String passwordHash, String fullName, Campus campus, LocalDateTime nowUtc) {
+    public static User newStudent(String email, String passwordHash, String fullName, Campus campus,
+                                  String declaredUniversityName, LocationZone homeZone, LocalDateTime nowUtc) {
+        if ((campus == null) == (declaredUniversityName == null)) {
+            throw new IllegalArgumentException("Exactly one of campus or declared university name is required");
+        }
         User user = new User();
         user.email = email;
         user.passwordHash = passwordHash;
         user.fullName = fullName;
         user.campus = campus;
+        user.declaredUniversityName = declaredUniversityName;
+        user.homeZone = homeZone;
         user.role = UserRole.STUDENT;
         user.status = UserStatus.ACTIVE;
         user.showContact = false;
@@ -125,6 +144,15 @@ public class User {
 
     public Campus getCampus() {
         return campus;
+    }
+
+    /** @return the self-declared (unverified) university name, or null */
+    public String getDeclaredUniversityName() {
+        return declaredUniversityName;
+    }
+
+    public LocationZone getHomeZone() {
+        return homeZone;
     }
 
     public UserRole getRole() {

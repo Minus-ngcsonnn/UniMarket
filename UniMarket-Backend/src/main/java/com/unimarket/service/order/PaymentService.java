@@ -53,7 +53,7 @@ public class PaymentService {
      * If an attempt is already in progress it is returned again ({@code resumed = true}); V002 allows one pending
      * attempt per order.
      *
-     * @param providerApi MOMO or ZALOPAY; may be null when it was chosen at checkout
+     * @param providerApi MOMO, ZALOPAY or BANK_QR; may be null when it was chosen at checkout
      */
     public PaymentResponses.PaymentAttempt start(long orderId, String providerApi, AuthenticatedUser buyer) {
         OrderQueries.OrderRow order = orders.requireSide(orderId, buyer, OrderMapper.BUYER);
@@ -90,12 +90,15 @@ public class PaymentService {
 
     private PaymentResponses.PaymentAttempt attempt(OrderQueries.PaymentRow p, OrderQueries.OrderRow order, boolean resumed) {
         String simulatorUrl = simulatorEnabled && p.sandbox() ? "/api/dev/payment-simulator/payments/" + p.id() + "/complete" : null;
-        return new PaymentResponses.PaymentAttempt(p.id(), p.orderId(), OrderValues.provider(p.provider()), OrderMapper.vnd(p.amount()),
-                OrderValues.upper(p.status()), p.sandbox(), resumed, p.createdAt(), order.paymentDueAt(), simulatorUrl);
+        long amount = OrderMapper.vnd(p.amount());
+        PaymentResponses.BankQrDemo bankQr = "BankQR".equals(p.provider()) && p.sandbox()
+                ? PaymentResponses.BankQrDemo.of(p.orderId(), p.id(), amount) : null;
+        return new PaymentResponses.PaymentAttempt(p.id(), p.orderId(), OrderValues.provider(p.provider()), amount,
+                OrderValues.upper(p.status()), p.sandbox(), resumed, p.createdAt(), order.paymentDueAt(), simulatorUrl, bankQr);
     }
 
     private static ValidationException invalidProvider() {
-        return new ValidationException(List.of(new ApiErrorResponse.FieldError("provider", "must be MOMO or ZALOPAY")));
+        return new ValidationException(List.of(new ApiErrorResponse.FieldError("provider", "must be MOMO, ZALOPAY or BANK_QR")));
     }
 
     private static byte[] randomBytes() {

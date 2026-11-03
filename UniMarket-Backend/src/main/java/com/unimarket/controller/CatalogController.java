@@ -113,6 +113,14 @@ public class CatalogController {
         return referenceData.universities();
     }
 
+    /**
+     * V003 demo pickup / delivery areas (approximate zones for simulated shipping, not addresses). Public.
+     */
+    @GetMapping("/api/locations/zones")
+    public List<ReferenceDtos.ZoneRef> zones() {
+        return referenceData.zones();
+    }
+
     /** Campuses, optionally of one university. */
     @GetMapping("/api/campuses")
     public List<ReferenceDtos.CampusRef> campuses(@RequestParam(required = false) Integer universityId) {

@@ -15,7 +15,8 @@ import java.time.Instant;
  * @param status        {@code AVAILABLE}, {@code RESERVED}, {@code SOLD} (owners may also see {@code DRAFT})
  * @param purchasable   true only when the item can be ordered now (available and approved)
  * @param category      category
- * @param campus        campus and university of the item
+ * @param campus        campus and university of the item, or null (V003: listing located by pickup area only)
+ * @param pickupZone    effective demo pickup area (explicit area, else the campus area); approximate
  * @param mainImageUrl  photo with the lowest sort order, or null
  * @param seller        seller's public name
  * @param featured      a paid promotion is running now
@@ -26,7 +27,7 @@ import java.time.Instant;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ProductSummaryResponse(
         Integer id, String title, Long price, Long originalPrice, String condition, String status, boolean purchasable,
-        ReferenceDtos.CategoryRef category, ReferenceDtos.CampusRef campus, String mainImageUrl, SellerRef seller,
+        ReferenceDtos.CategoryRef category, ReferenceDtos.CampusRef campus, ReferenceDtos.ZoneRef pickupZone, String mainImageUrl, SellerRef seller,
         boolean featured, Instant createdAt, String moderation, Boolean editable) {
 
     /**
