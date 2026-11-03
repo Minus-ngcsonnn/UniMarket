@@ -6,6 +6,7 @@ import useTranslation from '../../i18n/useTranslation'
 import { PATHS } from '../../routes/paths'
 import { BadgeCheckIcon, ChevronDownIcon, ChevronRightIcon, HeartIcon, LayoutDashboardIcon, LogOutIcon, MessageCircleIcon, PackageIcon, ShoppingCartIcon, SettingsIcon, StarIcon, StoreIcon, TagIcon, UserIcon } from '../icons'
 import Avatar from '../ui/Avatar'
+import { affiliationLabel } from '../../services/auth/viewerProfile'
 
 /** One number in the compact summary row. */
 function Stat({ value, label, title }) {
@@ -21,18 +22,26 @@ function Stat({ value, label, title }) {
  * Account drop-down from the approved header: who is signed in, a compact summary from their own
  * data (rating, listings, saved, orders) and the buyer/seller pages. In sample-data mode the account is
  * the demo student and is labelled as such; "Sign out" only switches the header to the guest view.
+ * With the real backend (VITE_AUTH_MODE=backend) the profile comes from GET /api/auth/me, numbers the backend does
+ * not provide are shown as "–", and "Sign out" forgets the session in this browser.
  *
- * @param {object} profile the signed-in student's profile (with rating and stats)
+ * @param {object} profile the signed-in account's profile (with rating and stats)
  * @param {boolean} isDemo sample-data mode
+ * @param {boolean} [isAdmin] the server says this account is an admin (backend mode)
  * @param {() => void} onSignOut
  */
-export default function AccountMenu({ profile, isDemo, onSignOut }) {
+export default function AccountMenu({ profile, isDemo, isAdmin = false, onSignOut }) {
   const { t } = useTranslation()
   const attention = useOrderAttention()
   const saved = useSaved()
   const { isOpen, close, containerRef, triggerRef, toggle, onTriggerKeyDown, onMenuKeyDown, itemRef } = useMenu()
 
   const isSeller = profile.stats.activeListings > 0 || profile.stats.completedSales > 0
+  const orderCount =
+    profile.stats.completedSales == null && profile.stats.completedPurchases == null
+      ? '–'
+      : (profile.stats.completedSales ?? 0) + (profile.stats.completedPurchases ?? 0)
+  const subtitle = isDemo ? t('account.demoAccount') : profile.isBackendUser ? affiliationLabel(t, profile) : profile.programme
   const todo = (count) => (count > 0 ? t('account.toDo', { count }) : null)
   const groups = [
     [
@@ -47,8 +56,9 @@ export default function AccountMenu({ profile, isDemo, onSignOut }) {
       { label: t('account.shop'), Icon: StoreIcon, to: PATHS.shop },
       { label: t('account.settings'), Icon: SettingsIcon, to: PATHS.settings },
     ],
-    // No admin sign-in exists yet; the demo workspace is reachable from the demo account only.
-    ...(isDemo ? [[{ label: t('account.admin'), Icon: LayoutDashboardIcon, to: PATHS.admin }]] : []),
+    // Demo mode: the demo workspace is reachable from the demo account. Backend mode: only for ADMIN accounts
+    // (the role comes from GET /api/auth/me; the backend enforces it on every admin API call).
+    ...(isDemo || isAdmin ? [[{ label: t('account.admin'), Icon: LayoutDashboardIcon, to: PATHS.admin }]] : []),
   ]
   let index = 0
 
@@ -92,7 +102,7 @@ export default function AccountMenu({ profile, isDemo, onSignOut }) {
                   </>
                 )}
               </p>
-              <p className="text-xs text-ink-muted">{isDemo ? t('account.demoAccount') : profile.programme}</p>
+              {subtitle && <p className="truncate text-xs text-ink-muted">{subtitle}</p>}
             </div>
             {isSeller && (
               <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-soft px-2 py-1 text-xs font-medium text-primary">
@@ -107,7 +117,7 @@ export default function AccountMenu({ profile, isDemo, onSignOut }) {
               label={t('account.rating')}
               title={profile.rating.count ? undefined : t('account.noRating')}
               value={
-                profile.rating.count ? (
+                profile.rating.count && profile.rating.average != null ? (
                   <>
                     <StarIcon className="size-3.5 text-amber-400" fill="currentColor" stroke="none" />
                     {profile.rating.average.toFixed(1)}
@@ -117,9 +127,9 @@ export default function AccountMenu({ profile, isDemo, onSignOut }) {
                 )
               }
             />
-            <Stat label={t('account.listings')} value={profile.stats.activeListings} />
+            <Stat label={t('account.listings')} value={profile.stats.activeListings ?? '–'} />
             <Stat label={t('account.saved')} value={saved.count} />
-            <Stat label={t('account.orders')} title={t('account.ordersHint')} value={profile.stats.completedSales + profile.stats.completedPurchases} />
+            <Stat label={t('account.orders')} title={t('account.ordersHint')} value={orderCount} />
           </dl>
 
           {groups.map((group, groupIndex) => (

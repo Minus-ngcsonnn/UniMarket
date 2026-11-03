@@ -5,6 +5,7 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.unimarket.repository.UserRepository;
 import com.unimarket.security.DatabaseUserJwtConverter;
 import com.unimarket.security.JsonSecurityErrorHandler;
+import com.unimarket.security.PasswordStamp;
 import com.unimarket.security.SecretKeys;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -59,6 +60,7 @@ public class SecurityConfig {
     /** Endpoints that never need a token. */
     private static final String[] PUBLIC_POST = {
             "/api/auth/register", "/api/auth/login", "/api/auth/verify-email", "/api/auth/resend-verification",
+            "/api/auth/forgot-password", "/api/auth/reset-password",
             // Stage 4: simulated provider -> server notification. No user token (like a real provider), but every
             // request must carry a valid HMAC signature; the endpoint only exists while the sandbox simulator is enabled.
             "/api/dev/payment-simulator/callback"};
@@ -99,8 +101,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    DatabaseUserJwtConverter databaseUserJwtConverter(ObjectProvider<UserRepository> users) {
-        return new DatabaseUserJwtConverter(users);
+    DatabaseUserJwtConverter databaseUserJwtConverter(ObjectProvider<UserRepository> users, PasswordStamp passwordStamp) {
+        return new DatabaseUserJwtConverter(users, passwordStamp);
     }
 
     @Bean

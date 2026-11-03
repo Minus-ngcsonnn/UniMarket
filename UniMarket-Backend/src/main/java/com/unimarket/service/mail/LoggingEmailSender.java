@@ -6,9 +6,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
- * LOCAL DEVELOPMENT ONLY: does not send anything, it writes the message (including the
- * verification code) to the application log so a developer can complete registration without SMTP.
- * Enabled by {@code unimarket.mail.mode=log}, which only the 'dev' profile sets by default.
+ * LOCAL DEVELOPMENT ONLY: does not send anything, it writes the plain-text message (including the
+ * verification code) to the application log so a developer can complete registration without a mail provider.
+ * Enabled by {@code unimarket.mail.mode=log}, which only the 'dev' profile sets by default. Never used when
+ * {@code MAIL_MODE=smtp}.
  */
 @Component
 @ConditionalOnProperty(name = "unimarket.mail.mode", havingValue = "log")
@@ -24,5 +25,10 @@ public class LoggingEmailSender implements EmailSender {
     @Override
     public void send(String to, String subject, String body) {
         log.info("[DEV E-MAIL, not sent] to={} subject=\"{}\"\n{}", to, subject, body);
+    }
+
+    @Override
+    public boolean deliversRealEmail() {
+        return false;
     }
 }

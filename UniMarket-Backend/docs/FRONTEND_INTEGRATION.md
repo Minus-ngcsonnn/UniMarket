@@ -311,7 +311,7 @@ needs `acknowledgeSimulated: true` and shows `payoutRecordType`; settlement tota
 | Reviews, reports, disputes, settlements, promotions, dashboard | Yes | Settlement / promotion payments are sandbox records. |
 | Shipping quotes | No | Carrier integration not implemented; details pending. |
 
-## 3.7 V003 contract changes (backend done and tested on an isolated copy; DB migration not applied to `UniMarketJava`)
+## 3.7 V003 contract changes (V003 applied to `UniMarketJava` on 2026-11-03)
 
 The full screen-by-screen mapping (registration with campus or typed university, pickup / delivery areas, carrier
 choice, "Free (≤ 3 km)", per-seller fees, quote expiry and refresh, unavailable groups, legacy orders, simulated Bank
@@ -319,6 +319,114 @@ QR screen) is in `database/docs/V003_DESIGN_nationwide_and_simulated_shipping.md
 `AUTH_API.md` (registration), `PRODUCTS_API.md` (zones, `pickupZoneId`), `ORDERS_API.md` (quotes, checkout, BankQR).
 Rows 3.2 / 3.4 / 3.6 above that say "`campusId` required" or describe `CHECKOUT_SHIPPING_FEE` describe the pre-V003
 contract.
+
+## 3.8 Stage 6.1 — authentication and profile integration (frontend)
+
+Connected: registration, email verification (OTP), sign-in, session restore, profile and sign-out. Products, cart,
+checkout, shipping quotes, payments, admin data, reviews and reports still use sample data (Stage 6.2+).
+
+### Configuration (`UniMarket-Frontend/.env.local`, git-ignored; template `.env.example`)
+
+| Variable | Meaning |
+|---|---|
+| `VITE_BACKEND_URL` | target of the Vite dev / preview proxy for `/api` (default `http://localhost:8080`). For integration tests use the **isolated** backend: `http://localhost:8081` → database `UniMarketJava_V003Test`. The dev server prints `[unimarket] /api -> <url>` when it starts. |
+| `VITE_API_BASE_URL` | API base URL in the browser, default `/api` (same origin through the proxy, so no CORS change was needed). An absolute URL requires the frontend origin in the backend's `CORS_ALLOWED_ORIGINS` (already `http://localhost:5173`). |
+| `VITE_AUTH_MODE` | `backend` = real auth; `demo` = previous preview (sample student, nothing sent). Default: `demo` while sample data is on (plain `npm run dev`), otherwise `backend`. In `backend` mode there is **no** mock-auth fallback. |
+
+### Code
+
+| File | Role |
+|---|---|
+| `src/config/apiConfig.js` | base URL, 15 s timeout, auth mode |
+| `src/services/apiClient.js` | Axios instance: JSON, `Authorization: Bearer` when signed in, every failure rejected as `ApiError`; a 401 on a request that carried a token ends the session |
+| `src/services/apiError.js` | `ApiError { kind: http/network/timeout, status, code, message, fieldErrors, retryAfterSeconds }` from the backend error body; proxy 502/503/504 = "can't reach UniMarket"; non-JSON bodies are never shown |
+| `src/utils/apiErrorMessage.js` | user-facing title / text for network, timeout, 429 and 5xx |
+| `src/services/auth/authApi.js` | `register`, `verifyEmail`, `resendVerification`, `forgotPassword`, `resetPassword`, `login`, `me`; reference data `GET /api/campuses`, `GET /api/locations/zones`, public profile `GET /api/users/{id}` |
+| `src/services/auth/tokenStore.js` | token + expiry only (see below) |
+| `src/services/auth/session.js`, `src/hooks/useSession.js` | `restoring / authenticated / anonymous`; restore on page load with `GET /api/auth/me`; sign-in = login + `/me`; `signInWithToken` (token from verify-email, also checked with `/me`); sign-out; follows other tabs |
+| `src/services/auth/viewerProfile.js` | `/me` (+ public profile) → profile shape of the header / profile card; unknown numbers stay `null` ("–") |
+| `src/hooks/useViewer.js` | real session in backend mode, demo student only in demo mode |
+| `src/components/auth/RequireAuth.jsx` | guard: sell, my listings, checkout, orders, messages, profile, shop and settings need a session (→ `/login?next=…`); `/admin` needs role `ADMIN` from `/me` |
+| `src/pages/auth/RegisterPage.jsx`, `src/components/auth/AffiliationFields.jsx` | registration with exactly one affiliation |
+| `src/pages/auth/VerifyEmailPage.jsx` | `/verify-email?email=`: 6-digit code, expiry, resend countdown, "Remember me", automatic sign-in |
+| `src/pages/auth/ForgotPasswordPage.jsx` | `/forgot-password?email=`: email → e-mailed code + new password → login page |
+| `src/pages/auth/LoginPage.jsx` | sign-in, error messages, "Remember me", role-based landing |
+| `ProfilePage.jsx`, `ProfileCard.jsx`, `SettingsPage.jsx`, `AccountMenu.jsx`, `Header.jsx` | real profile and sign-out |
+
+### Flow
+
+1. **Register** (`POST /api/auth/register`): full name (2–150), any valid email (≤ 254, no domain rule), password
+   (8–72 characters, ≤ 72 UTF-8 bytes, a letter and a digit) and **exactly one** affiliation: an official campus
+   (`campusId`, list from `GET /api/campuses`) **or** a typed university / college name (`universityName`, 2–200,
+   shown as "self-declared"). Nothing is pre-selected; FPT Hoa Lac is never assigned automatically; the request never
+   contains both. The form no longer asks for a home area (`homeZoneId` is never sent; the backend still accepts it).
+   Server errors appear on their fields: `EMAIL_ALREADY_REGISTERED` → email (+ "Sign in instead"), `INVALID_CAMPUS` → campus,
+   `affiliationProvided` / `universityNameLongEnough` / `password` field errors.
+2. **Verify** (`/verify-email`): `POST /api/auth/verify-email`; expiry shown from `codeExpiresAt`; resend
+   (`POST /api/auth/resend-verification`, always 202) disabled for 60 s after a code was sent (backend: 1 per 60 s,
+   5 per hour); `INVALID_VERIFICATION_CODE` (wrong, expired, used or replaced code) and `TOO_MANY_ATTEMPTS`
+   (5 wrong codes) are explained. A valid code returns a token: the page checks it with `/me`, stores it like a login
+   ("Remember me" → `localStorage`) and redirects (`?next=`, else `ADMIN` → `/admin`, students → home). If that sign-in
+   step fails, the page falls back to "Continue to sign in".
+3a. **Forgot password** (`/forgot-password`, link on the login page, pre-filled with the typed email):
+   `POST /api/auth/forgot-password` (always 202, never says whether the email exists; 503 `EMAIL_DELIVERY_FAILED` shown as
+   a retry message), then code + new password + confirmation → `POST /api/auth/reset-password`
+   (`INVALID_RESET_CODE`, `TOO_MANY_ATTEMPTS`, field errors). Success → `/login?email=` with "Your password has been
+   changed". Resend countdown 60 s, 5 codes per hour.
+3. **Sign in** (`POST /api/auth/login`, then `GET /api/auth/me`): `INVALID_CREDENTIALS`, `EMAIL_NOT_VERIFIED` (link to
+   the verification page), `ACCOUNT_DISABLED`, `TOO_MANY_ATTEMPTS` (5 failures / 15 min), network and 5xx messages.
+   Landing: `?next=` (same-site paths only), else `ADMIN` → `/admin`, students → home.
+4. **Session**: every page load re-validates the token with `/me`; an expired or rejected token (401) signs out quietly
+   and the login page says the session ended. The UI never trusts a stored role or profile.
+5. **Profile** (`/profile`): `/me` re-read on each visit, plus rating and active listings from `GET /api/users/{id}`
+   (students). Shows the official "university · campus" or "name (self-declared)", the home area, "Email verified" only
+   when `emailVerified` is true, never "verified student". Editing and reviews are hidden until they are connected.
+6. **Sign out**: account menu or Settings → token and user forgotten in this browser, back to home. There is **no backend
+   logout endpoint** (stateless JWT): the token stays valid on the server until it expires (1 h).
+
+### Token storage (academic MVP — not production-grade)
+
+Only `{ token, expiresAt }` is stored: `sessionStorage` by default (survives a refresh, cleared with the tab), or
+`localStorage` with "Remember me". Web storage is readable by any script on the origin (XSS risk). Production would use
+a short-lived in-memory access token plus an HttpOnly, Secure, SameSite refresh cookie, token revocation and refresh —
+all of which need backend work. The frontend never logs the token, password or OTP.
+
+### OTP in development
+
+With `MAIL_MODE=smtp` (Gmail SMTP, `unimarket.demo@gmail.com` with a Google App Password) the code arrives in the student's inbox. Without it, the `dev`
+profile uses `MAIL_MODE=log`: the email, including the code, is written to the backend log and never returned
+by the API. For the isolated backend on 8081, read its log (`[DEV E-MAIL, not sent] to=<email>` followed by
+`Your UniMarket verification code is: NNNNNN`). There is intentionally no endpoint that returns codes.
+
+### Manual test environment
+
+Frontend `.env.local`: `VITE_BACKEND_URL=http://localhost:8081`, `VITE_AUTH_MODE=backend`. Backend started with
+`SERVER_PORT=8081`, `DB_URL=…databaseName=UniMarketJava_V003Test…`, `MAIL_MODE=log`, `ORDER_EXPIRY_ENABLED=false`.
+Open `http://localhost:5173/register`.
+
+### Real OTP e-mails (Gmail SMTP) and the university directory (Stage 6.1 enhancement)
+
+- **E-mail**: backend `MAIL_MODE=smtp` sends the Vietnamese verification e-mail through Gmail SMTP
+  (`smtp.gmail.com:587`, STARTTLS; `MAIL_USERNAME`, `MAIL_PASSWORD` = Google App Password, `MAIL_FROM`; see
+  `AUTH_API.md`). No custom domain is used. The frontend never sees the credentials.
+  `POST /api/auth/register` returns `emailDelivery` (`SENT` / `LOGGED` / `FAILED`); the verification page shows
+  "check your inbox", the development note, or "account created but the e-mail could not be sent — request a new code
+  after the countdown". `resend-verification` may answer 503 `EMAIL_DELIVERY_FAILED`, shown as a retry message.
+  A duplicate registration (409) links to sign-in and to the verification page ("Not verified yet? Get a new code").
+- **Directory**: `src/data/vnHigherEducationDirectory.json` (230 institutions from the Ministry's list of
+  quality-recognised institutions, updated 30/9/2026; source and limits in `src/data/README.md`), loaded lazily as its
+  own chunk. `UniversityPicker` is an accessible combobox (type with or without accents, ↑/↓, Enter, Esc) offering:
+  official UniMarket campuses → `campusId`; directory entries → canonical name as `universityName` (self-declared);
+  "My university is not listed" → free text `universityName`. Never both fields.
+
+### Known limitations / remaining for Stage 6.2+
+
+- Password reset by e-mailed code exists; changing the password while signed in and profile / contact editing do not (backend contact settings exist; the UI is not connected).
+- Reviews, reports, products, listings, cart, checkout, shipping quotes, payments (MoMo / ZaloPay / BankQR) and the admin
+  workspace still use sample data even when signed in for real; admin data must move to `/api/admin/**`.
+- No refresh token: after 1 h the user is signed out on the next API call.
+- Login lockout is per backend instance and in memory (a restart clears it).
+- No frontend test runner is configured; logic was checked with Node scripts, API flows through the Vite proxy.
 
 ## 4. Conventions already in place (Stage 1)
 

@@ -12,7 +12,6 @@ import com.unimarket.security.AttemptLimiter;
 import com.unimarket.security.VerificationCodeHasher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -40,6 +39,9 @@ import java.util.Optional;
  *       one must be requested. Resends: at most one per {@code resendCooldown} (60 s) and
  *       {@code maxCodesPerHour} (5) per account, counted from the table itself.</li>
  *   <li>Responses never reveal whether an email is registered or already verified.</li>
+ *   <li>The e-mail is sent by {@link VerificationMailer} only AFTER the code is committed, outside the transaction.
+ *       A refused or failed delivery is reported (never as "sent"): resending then answers 503 EMAIL_DELIVERY_FAILED
+ *       and the undelivered code is closed. Codes are never logged in real-mail modes and never returned by the API.</li>
  * </ul>
  */
 @Service
@@ -56,34 +58,34 @@ public class EmailVerificationService {
     private final VerificationCodeHasher hasher;
     private final JdbcTemplate jdbc;
     private final TransactionTemplate transaction;
-    private final ApplicationEventPublisher events;
+    private final VerificationMailer mailer;
     private final SecurityProperties.Verification settings;
     private final Clock clock;
     private final AttemptLimiter wrongCodes;
 
     public EmailVerificationService(UserRepository users, EmailVerificationTokenRepository tokens, VerificationCodeHasher hasher,
-                                    JdbcTemplate jdbc, PlatformTransactionManager transactionManager, ApplicationEventPublisher events,
+                                    JdbcTemplate jdbc, PlatformTransactionManager transactionManager, VerificationMailer mailer,
                                     SecurityProperties properties, Clock clock) {
         this.users = users;
         this.tokens = tokens;
         this.hasher = hasher;
         this.jdbc = jdbc;
         this.transaction = new TransactionTemplate(transactionManager);
-        this.events = events;
+        this.mailer = mailer;
         this.settings = properties.verification();
         this.clock = clock;
         this.wrongCodes = new AttemptLimiter(settings.maxAttempts(), settings.codeTtl(), clock);
     }
 
     /**
-     * Issues a new code for an account inside the caller's transaction and schedules the e-mail
-     * for after commit. Older open codes of the account are closed.
+     * Issues a new code for an account inside the caller's transaction. Older open codes of the account are closed.
+     * The caller sends it with {@link VerificationMailer#deliver} AFTER the transaction commits.
      *
      * @param user an unverified account (already saved)
-     * @return expiry of the new code (UTC)
+     * @return the new code (memory only) and its expiry
      */
     @Transactional(propagation = Propagation.MANDATORY)
-    public LocalDateTime issueCode(User user) {
+    public VerificationMailer.IssuedCode issueCode(User user) {
         LocalDateTime now = nowUtc();
         tokens.closeOpenCodes(user.getId(), now);
         String code;
@@ -95,8 +97,7 @@ public class EmailVerificationService {
         LocalDateTime expiresAt = now.plus(settings.codeTtl());
         tokens.save(new EmailVerificationToken(user.getId(), digest, now, expiresAt));
         wrongCodes.reset(limiterKey(user.getId()));
-        events.publishEvent(new VerificationCodeIssuedEvent(user.getEmail(), user.getFullName(), code, expiresAt.toInstant(ZoneOffset.UTC)));
-        return expiresAt;
+        return new VerificationMailer.IssuedCode(user.getId(), user.getEmail(), user.getFullName(), code, expiresAt.toInstant(ZoneOffset.UTC));
     }
 
     /**
@@ -105,10 +106,11 @@ public class EmailVerificationService {
      *
      * @param email account email (any case)
      * @param code  6-digit code
+     * @return the id of the account that is now verified (the caller signs it in, see AuthService#signInVerified)
      * @throws ApiException INVALID_VERIFICATION_CODE (wrong, used, expired code, unknown or already
      *                      verified account) or TOO_MANY_ATTEMPTS (code closed after too many failures)
      */
-    public void verify(String email, String code) {
+    public int verify(String email, String code) {
         Optional<User> account = users.findByEmail(EmailAddresses.normalize(email))
                 .filter(user -> user.getEmailVerifiedAt() == null && user.getStatus() == UserStatus.ACTIVE);
         if (account.isEmpty()) {
@@ -123,6 +125,7 @@ public class EmailVerificationService {
             jdbc.update("EXEC dbo.usp_VerifyEmail ?", (Object) hasher.hash(userId, code));
             wrongCodes.reset(key);
             log.info("Email verified for user {}", userId);
+            return userId;
         } catch (DataAccessException ex) {
             if (sqlErrorCode(ex) != SQL_INVALID_TOKEN) {
                 throw ex;
@@ -140,16 +143,32 @@ public class EmailVerificationService {
     /**
      * Sends a new code when the account exists, is active, is not verified yet and the resend limits
      * allow it. Otherwise does nothing, so the caller cannot learn whether an email is registered.
+     * The code is committed first, then e-mailed outside the transaction.
      *
      * @param email account email (any case)
-     * @return true when a new code was issued (for logging/tests only, never sent to clients)
+     * @return true when a new code was issued and handed to the e-mail provider (for logging/tests only)
+     * @throws ApiException EMAIL_DELIVERY_FAILED (503) when the provider refused or did not answer; the undelivered
+     *                      code is closed and the student can try again after the cooldown. (This answer only occurs
+     *                      for a pending account while the provider fails — an accepted, narrow disclosure.)
      */
-    @Transactional
     public boolean resend(String email) {
+        Optional<VerificationMailer.IssuedCode> issued = transaction.execute(status -> issueIfAllowed(email));
+        if (issued == null || issued.isEmpty()) {
+            return false;
+        }
+        if (mailer.deliver(issued.get()) == VerificationMailer.Delivery.FAILED) {
+            int userId = issued.get().userId();
+            transaction.executeWithoutResult(status -> tokens.closeOpenCodes(userId, nowUtc()));
+            throw new ApiException(ErrorCode.EMAIL_DELIVERY_FAILED);
+        }
+        return true;
+    }
+
+    private Optional<VerificationMailer.IssuedCode> issueIfAllowed(String email) {
         Optional<User> account = users.findByEmail(EmailAddresses.normalize(email))
                 .filter(user -> user.getEmailVerifiedAt() == null && user.getStatus() == UserStatus.ACTIVE);
         if (account.isEmpty()) {
-            return false;
+            return Optional.empty();
         }
         User user = account.get();
         LocalDateTime now = nowUtc();
@@ -159,10 +178,9 @@ public class EmailVerificationService {
         boolean hourlyLimit = tokens.countByUserIdAndCreatedAtAfter(user.getId(), now.minusHours(1)) >= settings.maxCodesPerHour();
         if (tooSoon || hourlyLimit) {
             log.info("Resend for user {} refused by the {} limit", user.getId(), tooSoon ? "cooldown" : "hourly");
-            return false;
+            return Optional.empty();
         }
-        issueCode(user);
-        return true;
+        return Optional.of(issueCode(user));
     }
 
     private LocalDateTime nowUtc() {

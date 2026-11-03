@@ -19,12 +19,14 @@ Authentication is **stateless**: a signed JWT access token (HS256, 1 hour by def
 | POST | `/api/auth/register` | public | 201 |
 | POST | `/api/auth/verify-email` | public | 200 |
 | POST | `/api/auth/resend-verification` | public | 202 |
+| POST | `/api/auth/forgot-password` | public | 202 |
+| POST | `/api/auth/reset-password` | public | 200 |
 | POST | `/api/auth/login` | public | 200 |
 | GET | `/api/auth/me` | Bearer token | 200 |
 
 There is **no logout endpoint**. Signing out = the browser deletes its token. A token that was already
-issued stays valid until it expires (no server-side revocation), unless the account is suspended, closed
-or deleted – every request re-reads the account from the database.
+issued stays valid until it expires, unless the account is suspended, closed or deleted, or its password is
+reset – every request re-reads the account from the database.
 
 ### POST /api/auth/register
 
@@ -37,7 +39,7 @@ Request:
 | `password` | string | required, 8–72 characters (≤ 72 bytes), at least one letter and one digit |
 | `campusId` | number | an official campus from `GET /api/campuses` (must exist), **or** … |
 | `universityName` | string | … the university / college typed as free text when it is not listed (2–200 characters after trimming; inner spaces collapsed). Stored as **self-declared**, never matched to or inserted into `Universities`, never shown as verified. **Exactly one** of `campusId` / `universityName` is required (field error `affiliationProvided`; a 1-character name → `universityNameLongEnough`). Never derived from the email. |
-| `homeZoneId` | number | optional default area from `GET /api/locations/zones` (`INVALID_ZONE` if unknown / inactive) |
+| `homeZoneId` | number | optional default area from `GET /api/locations/zones` (`INVALID_ZONE` if unknown / inactive). Still accepted for compatibility; the web registration form no longer sends it |
 
 Any other field (e.g. `"role": "Admin"`) is ignored: public registration always creates a **STUDENT**.
 
@@ -51,7 +53,8 @@ Response 201:
                              "source": "OFFICIAL_CAMPUS" },
             "homeZone": null, "memberSince": "2026-11-02T11:00:00Z" },
   "verificationRequired": true,
-  "codeExpiresAt": "2026-11-02T11:10:00Z"
+  "codeExpiresAt": "2026-11-02T11:10:00Z",
+  "emailDelivery": "SENT"
 }
 ```
 
@@ -65,7 +68,16 @@ status, `role: "STUDENT"` is simply the ordinary marketplace account role, and t
 `campusName` are `null`, `university` is the typed name and `affiliation.source` is `SELF_DECLARED` (otherwise
 `OFFICIAL_CAMPUS`; admins without either: `NONE`). The UI must label a self-declared name as such.
 
-A 6-digit code is e-mailed (never returned by the API). Errors:
+A 6-digit code is e-mailed (never returned by the API). The account and the code are committed first; the e-mail is
+sent afterwards, outside the transaction, and `emailDelivery` reports the real outcome:
+
+| `emailDelivery` | Meaning |
+|---|---|
+| `SENT` | the SMTP server (Gmail) accepted the message — not proof that it reached the inbox |
+| `LOGGED` | development `MAIL_MODE=log`: nothing was sent, the e-mail is in the backend log |
+| `FAILED` | refused or no answer (wrong App Password, Gmail sending limit, rejected recipient, service unavailable, timeout). The account exists and is unverified: request a new code after 60 s (`resend-verification`); registering again answers `EMAIL_ALREADY_REGISTERED` |
+
+Errors:
 
 | Status | `code` | When |
 |---|---|---|
@@ -78,7 +90,16 @@ A 6-digit code is e-mailed (never returned by the API). Errors:
 
 Request: `{ "email": "...", "code": "123456" }` (code: exactly 6 digits).
 
-Response 200: `{ "message": "Your email is verified. You can now sign in." }`
+Response 200 — the email is verified **and the account is signed in** (same token as `/login`, so the student does not
+type the password again):
+
+```json
+{ "message": "Your email is verified. You are now signed in.", "accessToken": "eyJ...", "tokenType": "Bearer",
+  "expiresIn": 3600, "expiresAt": "2026-11-02T12:00:00Z", "user": { ...same as register, emailVerified: true... } }
+```
+
+A token is issued only after `usp_VerifyEmail` consumed a valid code for an active account; every error below returns
+no token. The code proves ownership of the address, which is the same proof a password reset relies on.
 
 | Status | `code` | When |
 |---|---|---|
@@ -95,6 +116,44 @@ Response 202 (always the same, whether or not a code was sent, so emails cannot 
 
 A new code is sent only to an active, unverified account, at most once per **60 s** and **5 codes per hour**.
 A new code closes all older codes of the account.
+
+| Status | `code` | When |
+|---|---|---|
+| 503 | `EMAIL_DELIVERY_FAILED` | a new code was issued but the e-mail provider refused it or did not answer; the undelivered code is closed. Try again after the cooldown. (Only possible for a pending account while the provider fails — an accepted, narrow disclosure.) |
+
+### POST /api/auth/forgot-password
+
+Request: `{ "email": "..." }`
+
+Response 202 (always the same, whether or not the email is registered):
+`{ "message": "If this email belongs to a UniMarket account, a password reset code has been sent. ..." }`
+
+A 6-digit reset code (subject "Mã đặt lại mật khẩu UniMarket") is e-mailed only to an **active** account (verified or
+not), at most once per **60 s** and **5 codes per hour**; it is valid **10 minutes**, single-use, and a new code closes
+older ones. Codes are stored in `dbo.PasswordResetTokens` (V001 table, no migration) as
+`HMAC-SHA-256(VERIFICATION_CODE_SECRET, "password-reset:" + userId + ":" + code)`, so a verification code can never be
+used as a reset code.
+
+| Status | `code` | When |
+|---|---|---|
+| 503 | `EMAIL_DELIVERY_FAILED` | the provider refused the e-mail; the undelivered code is closed (same narrow disclosure as `resend-verification`) |
+
+### POST /api/auth/reset-password
+
+Request: `{ "email": "...", "code": "123456", "newPassword": "..." }` (password rule as in registration).
+
+Response 200: `{ "message": "Your password has been changed. Sign in with your new password." }`
+
+The code is consumed and the new BCrypt hash saved in one transaction. A still-unverified address becomes verified
+(the code was e-mailed to it). The failed-login lockout of the email is cleared. The user is **not** signed in
+automatically. **Every access token issued before the reset stops working** (401 on the next request), see
+"Token contents". A failed reset changes nothing.
+
+| Status | `code` | When |
+|---|---|---|
+| 400 | `VALIDATION_FAILED` | code not 6 digits, weak password, password over 72 bytes |
+| 400 | `INVALID_RESET_CODE` | wrong, expired, used or replaced code; also unknown or disabled account (same answer) |
+| 429 | `TOO_MANY_ATTEMPTS` | 5 wrong codes: the current code is closed; request a new one |
 
 ### POST /api/auth/login
 
@@ -125,7 +184,7 @@ issuer/audience, or the account can no longer sign in.
 | Request | Rule |
 |---|---|
 | `GET /api/health`, `GET /actuator/health` | public |
-| `POST /api/auth/register`, `verify-email`, `resend-verification`, `login` | public |
+| `POST /api/auth/register`, `verify-email`, `resend-verification`, `forgot-password`, `reset-password`, `login` | public |
 | `GET /api/products/**`, `GET /api/categories/**`, `GET /api/campuses`, `GET /api/universities` | public (Stage 3) |
 | `/api/admin/**` | role ADMIN only → 403 `ACCESS_DENIED` for students |
 | everything else | any signed-in account → 401 `AUTHENTICATION_REQUIRED` otherwise |
@@ -136,8 +195,14 @@ Roles come from `dbo.Users.Role` on every request, never from the token or the f
 
 ## Token contents
 
-`iss = unimarket-api`, `aud = unimarket-web`, `sub = user id`, `iat`, `exp`, `jti`. No email, name, role or
+`iss = unimarket-api`, `aud = unimarket-web`, `sub = user id`, `iat`, `exp`, `jti`, `pwv`. No email, name, role or
 other personal data. Signed with HS256; the key comes from `JWT_SECRET` (Base64, ≥ 32 bytes).
+
+`pwv` (password version) = first 128 bits of `HMAC-SHA-256(JWT key, "pwv:" + userId + ":" + Users.PasswordHash)`,
+base64url. Every request recomputes it from the stored hash (`PasswordStamp`, `DatabaseUserJwtConverter`); a password
+reset stores a new BCrypt hash, so all tokens issued before it get 401. No schema change: the existing `PasswordHash`
+column acts as the version. Tokens without `pwv` (issued before this change) are rejected once — users sign in again.
+The claim reveals nothing about the password and cannot be altered without invalidating the signature.
 
 ## Configuration (environment / `UniMarket-Backend/.env`)
 
@@ -147,11 +212,25 @@ other personal data. Signed with HS256; the key comes from `JWT_SECRET` (Base64,
 | `VERIFICATION_CODE_SECRET` | Base64 HMAC key (≥ 32 bytes) used to hash codes before storing them. |
 | `JWT_ACCESS_TOKEN_TTL` | token lifetime, ISO-8601 (default `PT1H`) |
 | `CORS_ALLOWED_ORIGINS` | exact browser origins (default `http://localhost:5173`; the Vite proxy makes CORS unnecessary in dev) |
-| `MAIL_MODE` | `log` (dev: codes written to the console, nothing sent) or `smtp` |
-| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` | SMTP settings when `MAIL_MODE=smtp` |
+| `MAIL_MODE` | `smtp` (real e-mail; approved provider: Gmail SMTP) or `log` (dev / isolated tests: codes written to the console, nothing sent). The `dev` profile defaults to `log`, other profiles to `smtp`. |
+| `MAIL_USERNAME` | the Gmail sender account (`unimarket.demo@gmail.com`). Required with `MAIL_MODE=smtp`. |
+| `MAIL_PASSWORD` | a **Google App Password** of that account (2-Step Verification on), never the normal password. Secret: only in the environment / git-ignored `.env`, never in `VITE_*`, never logged. Missing → startup stops (no fallback to logging codes). |
+| `MAIL_FROM`, `MAIL_FROM_NAME` | sender address (default `MAIL_USERNAME`; Gmail only sends as the account or its verified aliases) and display name (default `UniMarket`) |
+| `MAIL_HOST`, `MAIL_PORT` | default `smtp.gmail.com`, `587`; SMTP AUTH on, STARTTLS **required** (`MAIL_STARTTLS_REQUIRED`, default `true`) |
+| `MAIL_TIMEOUT_MS` | connect / read / write timeout (default `10000`) |
+| `MAIL_VERIFY_ON_STARTUP` | default `true`: log in once at startup (no e-mail sent) and log only "succeeded" or the failure type |
 
 With the `dev` profile (default) missing secrets are replaced by random keys at startup, with a warning:
 tokens and codes then stop working after a restart. Set both secrets in `.env` for a stable local setup.
+
+## Verification and password-reset e-mails
+
+`VerificationEmailTemplate`: subjects "Mã xác thực UniMarket của bạn" and "Mã đặt lại mật khẩu UniMarket"; Vietnamese
+HTML (inline styles, responsive, UTF-8) plus a plain-text version. Website colours: blue header band (`#2459E0`) with the
+white UniMarket wordmark, white card on the warm off-white page (`#F7F6F2`), the code in large monospace type in a soft
+blue box (`#EDF3FF`, text `#1D47B8`), ink text `#18243B`, muted `#5D6879` (all WCAG AA). Content: heading, the code,
+10-minute validity with the expiry time (Vietnam time), "do not share" warning, "ignore this e-mail if you did not ask
+for it". The name is HTML-escaped. In `smtp` mode codes are never logged.
 
 ## How codes are stored
 

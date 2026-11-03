@@ -1,0 +1,2774 @@
+{
+ "version": "2026-09-30.1",
+ "source": {
+  "publisher": "Bộ Giáo dục và Đào tạo – Cục Quản lý chất lượng",
+  "title": "Danh sách các cơ sở giáo dục đại học và trường cao đẳng sư phạm được đánh giá, công nhận đạt tiêu chuẩn chất lượng giáo dục",
+  "page": "https://vqa.moet.gov.vn/vi/thong-bao-quan-ly-bao-dam/thong-bao/danh-sach-cac-co-so-giao-duc-chuong-trinh-dao-tao-giao-duc-dai-hoc-va-cao-dang-su-pham-duoc-cong-nhan-dat-tieu-chuan-chat-luong-giao-duc-cap-nhat-den-ngay-30-9-2026-95.html",
+  "file": "kdclgd-9_2026.rar / 1__ds-csgd-duoc-cong-nhan-dat-tccl-30-9-2026.docx",
+  "dataUpdatedTo": "2026-09-30",
+  "publishedAt": "2026-10-06",
+  "retrievedAt": "2026-11-03",
+  "archiveSha256": "6f236e8fa7f691cd1b5cf490a2889af47dafced0b722a771a6163da02f2c1f76"
+ },
+ "counts": {
+  "sourceRows": {
+   "domesticStandard": 210,
+   "pedagogicalColleges": 12,
+   "foreignStandard": 17
+  },
+  "duplicatesMerged": 9,
+  "institutions": 230,
+  "byType": {
+   "UNIVERSITY": 204,
+   "ACADEMY": 14,
+   "PEDAGOGICAL_COLLEGE": 12
+  }
+ },
+ "coverageNote": "Only institutions recognised as meeting education quality standards (domestic or foreign standards) and accredited pedagogical colleges, as listed by the Ministry on 30/9/2026. Institutions without such a recognition, newly founded institutions and non-pedagogical colleges are not included. Province / city and common abbreviations are not part of the source and are not included.",
+ "normalisation": [
+  "ĐHQG HN / ĐHQG Hà Nội → Đại học Quốc gia Hà Nội; ĐHQG TP. HCM / ĐHQG TP. Hồ Chí Minh → Đại học Quốc gia TP. Hồ Chí Minh",
+  "ĐH → Đại học; CĐSP → Cao đẳng Sư phạm; KHXH&NV, KHTN, CNTT, TDTT written out; TP. HCM → TP. Hồ Chí Minh",
+  "\"(Đại học Đà Nẵng)\", \"- ĐHQG Hà Nội\" … → \"– <system>\" and system field (ĐHQG HN, ĐHQG TP.HCM, ĐH Đà Nẵng, ĐH Huế, ĐH Thái Nguyên)",
+  "\"(trước đây là …)\" → former name kept as alias",
+  "spacing / capitalisation fixes only (Hải Phòng, Vũng Tàu, Yersin, Y - Dược, Khoa học Tự nhiên)",
+  "the source spelling is always kept as an alias; duplicates across tables merged by an accent-insensitive key"
+ ],
+ "institutions": [
+  {
+   "id": "dai-hoc-bach-khoa-ha-noi",
+   "name": "Đại học Bách Khoa Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "ĐH Bách Khoa Hà Nội"
+   ],
+   "sources": [
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-te-tp-ho-chi-minh",
+   "name": "Đại học Kinh tế TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD",
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-bao-chi-va-tuyen-truyen",
+   "name": "Học viện Báo chí và Tuyên truyền",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-can-bo-thanh-pho-ho-chi-minh",
+   "name": "Học viện Cán bộ Thành phố Hồ Chí Minh",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-chinh-sach-va-phat-trien",
+   "name": "Học viện Chính sách và Phát triển",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-cong-nghe-buu-chinh-vien-thong",
+   "name": "Học viện Công nghệ Bưu chính Viễn thông",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-hang-khong-viet-nam",
+   "name": "Học viện Hàng không Việt Nam",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-hanh-chinh-va-quan-tri-cong",
+   "name": "Học viện Hành chính và Quản trị công",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-ngan-hang",
+   "name": "Học viện Ngân hàng",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-ngoai-giao",
+   "name": "Học viện Ngoại giao",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-nong-nghiep-viet-nam",
+   "name": "Học viện Nông nghiệp Việt Nam",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-phu-nu-viet-nam",
+   "name": "Học viện Phụ nữ Việt Nam",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-quan-ly-giao-duc",
+   "name": "Học viện Quản lý giáo dục",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-tai-chinh",
+   "name": "Học viện Tài chính",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-thanh-thieu-nien-viet-nam",
+   "name": "Học viện Thanh thiếu niên Việt Nam",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "hoc-vien-y-duoc-hoc-co-truyen-viet-nam",
+   "name": "Học viện Y - Dược học cổ truyền Việt Nam",
+   "type": "ACADEMY",
+   "system": null,
+   "aliases": [
+    "Học viện Y- Dược học cổ truyền Việt Nam"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "cao-dang-su-pham-ba-ria-vung-tau",
+   "name": "Trường Cao đẳng Sư phạm Bà Rịa – Vũng Tàu",
+   "type": "PEDAGOGICAL_COLLEGE",
+   "system": null,
+   "aliases": [
+    "Trường CĐSP Bà Rịa – Vũng Tàu"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD_PEDAGOGICAL_COLLEGE"
+   ]
+  },
+  {
+   "id": "cao-dang-su-pham-bac-ninh",
+   "name": "Trường Cao đẳng Sư phạm Bắc Ninh",
+   "type": "PEDAGOGICAL_COLLEGE",
+   "system": null,
+   "aliases": [
+    "Trường CĐSP Bắc Ninh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD_PEDAGOGICAL_COLLEGE"
+   ]
+  },
+  {
+   "id": "cao-dang-su-pham-da-lat",
+   "name": "Trường Cao đẳng Sư phạm Đà Lạt",
+   "type": "PEDAGOGICAL_COLLEGE",
+   "system": null,
+   "aliases": [
+    "Trường CĐSP Đà Lạt"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD_PEDAGOGICAL_COLLEGE"
+   ]
+  },
+  {
+   "id": "cao-dang-su-pham-dien-bien",
+   "name": "Trường Cao đẳng Sư phạm Điện Biên",
+   "type": "PEDAGOGICAL_COLLEGE",
+   "system": null,
+   "aliases": [
+    "Trường CĐSP Điện Biên"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD_PEDAGOGICAL_COLLEGE"
+   ]
+  },
+  {
+   "id": "cao-dang-su-pham-hoa-binh",
+   "name": "Trường Cao đẳng Sư phạm Hoà Bình",
+   "type": "PEDAGOGICAL_COLLEGE",
+   "system": null,
+   "aliases": [
+    "Trường CĐSP Hoà Bình"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD_PEDAGOGICAL_COLLEGE"
+   ]
+  },
+  {
+   "id": "cao-dang-su-pham-kien-giang",
+   "name": "Trường Cao đẳng Sư phạm Kiên Giang",
+   "type": "PEDAGOGICAL_COLLEGE",
+   "system": null,
+   "aliases": [
+    "Trường CĐSP Kiên Giang"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD_PEDAGOGICAL_COLLEGE"
+   ]
+  },
+  {
+   "id": "cao-dang-su-pham-nam-dinh",
+   "name": "Trường Cao đẳng Sư phạm Nam Định",
+   "type": "PEDAGOGICAL_COLLEGE",
+   "system": null,
+   "aliases": [
+    "Trường CĐSP Nam Định"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD_PEDAGOGICAL_COLLEGE"
+   ]
+  },
+  {
+   "id": "cao-dang-su-pham-nghe-an",
+   "name": "Trường Cao đẳng Sư phạm Nghệ An",
+   "type": "PEDAGOGICAL_COLLEGE",
+   "system": null,
+   "aliases": [
+    "Trường CĐSP Nghệ An"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD_PEDAGOGICAL_COLLEGE"
+   ]
+  },
+  {
+   "id": "cao-dang-su-pham-thua-thien-hue",
+   "name": "Trường Cao đẳng Sư phạm Thừa Thiên Huế",
+   "type": "PEDAGOGICAL_COLLEGE",
+   "system": null,
+   "aliases": [
+    "Trường CĐSP Thừa Thiên Huế"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD_PEDAGOGICAL_COLLEGE"
+   ]
+  },
+  {
+   "id": "cao-dang-su-pham-trung-uong",
+   "name": "Trường Cao đẳng Sư phạm Trung ương",
+   "type": "PEDAGOGICAL_COLLEGE",
+   "system": null,
+   "aliases": [
+    "Trường CĐSP Trung ương"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD_PEDAGOGICAL_COLLEGE"
+   ]
+  },
+  {
+   "id": "cao-dang-su-pham-trung-uong-nha-trang",
+   "name": "Trường Cao đẳng Sư phạm Trung ương Nha Trang",
+   "type": "PEDAGOGICAL_COLLEGE",
+   "system": null,
+   "aliases": [
+    "Trường CĐSP Trung ương Nha Trang"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD_PEDAGOGICAL_COLLEGE"
+   ]
+  },
+  {
+   "id": "cao-dang-su-pham-trung-uong-tp-ho-chi-minh",
+   "name": "Trường Cao đẳng Sư phạm Trung ương TP. Hồ Chí Minh",
+   "type": "PEDAGOGICAL_COLLEGE",
+   "system": null,
+   "aliases": [
+    "Trường CĐSP Trung ương TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD_PEDAGOGICAL_COLLEGE"
+   ]
+  },
+  {
+   "id": "dai-hoc-an-giang",
+   "name": "Trường Đại học An Giang",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH An Giang"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-anh-quoc-viet-nam-buv",
+   "name": "Trường Đại học Anh quốc Việt Nam (BUV)",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "BUV"
+   ],
+   "sources": [
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ba-ria-vung-tau",
+   "name": "Trường Đại học Bà Rịa – Vũng Tàu",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Bà Rịa Vũng tàu"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-bac-lieu",
+   "name": "Trường Đại học Bạc Liêu",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Bạc Liêu"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-bach-khoa-dai-hoc-da-nang",
+   "name": "Trường Đại học Bách Khoa – Đại học Đà Nẵng",
+   "type": "UNIVERSITY",
+   "system": "Đại học Đà Nẵng",
+   "aliases": [
+    "Trường ĐH Bách Khoa (ĐH Đà Nẵng)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD",
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-bach-khoa-dai-hoc-quoc-gia-tp-ho-chi-minh",
+   "name": "Trường Đại học Bách khoa – Đại học Quốc gia TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia TP. Hồ Chí Minh",
+   "aliases": [
+    "Trường ĐH Bách khoa (ĐHQG TP. HCM)"
+   ],
+   "sources": [
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-binh-duong",
+   "name": "Trường Đại học Bình Dương",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Bình Dương"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-can-tho",
+   "name": "Trường Đại học Cần Thơ",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Cần Thơ"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cmc",
+   "name": "Trường Đại học CMC",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-doan",
+   "name": "Trường Đại học Công đoàn",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công đoàn"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-dai-hoc-quoc-gia-ha-noi",
+   "name": "Trường Đại học Công nghệ – Đại học Quốc gia Hà Nội",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia Hà Nội",
+   "aliases": [
+    "Trường ĐH Công nghệ (ĐHQG HN)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-dong-a",
+   "name": "Trường Đại học Công nghệ Đông Á",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghệ Đông Á"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-dong-nai",
+   "name": "Trường Đại học Công nghệ Đồng Nai",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghệ Đồng Nai"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-giao-thong-van-tai",
+   "name": "Trường Đại học Công nghệ Giao thông vận tải",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghệ Giao thông vận tải"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-ky-thuat-hung-yen",
+   "name": "Trường Đại học Công nghệ Kỹ thuật Hưng Yên",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghệ Kỹ thuật Hưng Yên"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-ky-thuat-tp-ho-chi-minh",
+   "name": "Trường Đại học Công nghệ Kỹ thuật TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghệ Kỹ thuật TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-ky-thuat-vinh",
+   "name": "Trường Đại học Công nghệ Kỹ thuật Vinh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghệ Kỹ thuật Vinh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-ky-thuat-vinh-long",
+   "name": "Trường Đại học Công nghệ Kỹ thuật Vĩnh Long",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghệ Kỹ thuật Vĩnh Long"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-mien-dong",
+   "name": "Trường Đại học Công nghệ Miền Đông",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghệ Miền Đông"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-sai-gon",
+   "name": "Trường Đại học Công nghệ Sài Gòn",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghệ Sài Gòn"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-thong-tin-dai-hoc-quoc-gia-tp-ho-chi-minh",
+   "name": "Trường Đại học Công nghệ Thông tin – Đại học Quốc gia TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia TP. Hồ Chí Minh",
+   "aliases": [
+    "Trường ĐH CNTT (ĐHQG TP. Hồ Chí Minh)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-thong-tin-va-truyen-thong-dai-hoc-thai-nguyen",
+   "name": "Trường Đại học Công nghệ Thông tin và Truyền thông – Đại học Thái Nguyên",
+   "type": "UNIVERSITY",
+   "system": "Đại học Thái Nguyên",
+   "aliases": [
+    "Trường ĐH Công nghệ Thông tin và Truyền thông (ĐH Thái Nguyên)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-thong-tin-va-truyen-thong-viet-han",
+   "name": "Trường Đại học Công nghệ Thông tin và Truyền thông Việt - Hàn",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghệ Thông tin và Truyền thông Việt - Hàn"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-tp-ho-chi-minh",
+   "name": "Trường Đại học Công nghệ TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghệ TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghe-va-quan-ly-huu-nghi",
+   "name": "Trường Đại học Công nghệ và Quản lý Hữu nghị",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghệ và Quản lý Hữu nghị"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghiep-det-may-ha-noi",
+   "name": "Trường Đại học Công nghiệp Dệt May Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghiệp Dệt May Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghiep-ha-noi",
+   "name": "Trường Đại học Công nghiệp Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghiệp Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghiep-quang-ninh",
+   "name": "Trường Đại học Công nghiệp Quảng Ninh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghiệp Quảng Ninh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghiep-tp-ho-chi-minh",
+   "name": "Trường Đại học Công nghiệp TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghiệp TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD",
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghiep-viet-hung",
+   "name": "Trường Đại học Công nghiệp Việt – Hung",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghiệp Việt – Hung"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-nghiep-viet-tri",
+   "name": "Trường Đại học Công nghiệp Việt Trì",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công nghiệp Việt Trì"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cong-thuong-tp-ho-chi-minh",
+   "name": "Trường Đại học Công Thương TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Công Thương TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-cuu-long",
+   "name": "Trường Đại học Cửu Long",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Cửu Long"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-dau-khi-viet-nam",
+   "name": "Trường Đại học Dầu khí Việt Nam",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Dầu khí Việt Nam"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-duy-tan",
+   "name": "Trường Đại học Duy Tân",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Duy Tân"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-duoc-ha-noi",
+   "name": "Trường Đại học Dược Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Dược Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-da-lat",
+   "name": "Trường Đại học Đà Lạt",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Đà Lạt"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-dai-nam",
+   "name": "Trường Đại học Đại Nam",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Đại Nam"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-dien-luc",
+   "name": "Trường Đại học Điện lực",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Điện lực"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-dieu-duong-nam-dinh",
+   "name": "Trường Đại học Điều dưỡng Nam Định",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Điều dưỡng Nam Định"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-dong-a",
+   "name": "Trường Đại học Đông Á",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Đông Á"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-dong-do",
+   "name": "Trường Đại học Đông Đô",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Đông Đô"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-dong-nai",
+   "name": "Trường Đại học Đồng Nai",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Đồng Nai"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-dong-thap",
+   "name": "Trường Đại học Đồng Tháp",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Đồng Tháp"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-fpt",
+   "name": "Trường Đại học FPT",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH FPT"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-gia-dinh",
+   "name": "Trường Đại học Gia Định",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Gia Định"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-giao-duc-dai-hoc-quoc-gia-ha-noi",
+   "name": "Trường Đại học Giáo dục – Đại học Quốc gia Hà Nội",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia Hà Nội",
+   "aliases": [
+    "Trường ĐH Giáo dục (ĐHQG HN)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-giao-thong-van-tai",
+   "name": "Trường Đại học Giao thông Vận tải",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Giao thông Vận tải"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-giao-thong-van-tai-tp-ho-chi-minh",
+   "name": "Trường Đại học Giao thông Vận tải TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Giao thông Vận tải TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ha-long",
+   "name": "Trường Đại học Hạ Long",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Hạ Long"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ha-noi",
+   "name": "Trường Đại học Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ha-tinh",
+   "name": "Trường Đại học Hà Tĩnh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Hà Tĩnh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-hai-duong",
+   "name": "Trường Đại học Hải Dương",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Hải Dương"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-hai-phong",
+   "name": "Trường Đại học Hải Phòng",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Hải Phòng"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-hang-hai-viet-nam",
+   "name": "Trường Đại học Hàng hải Việt Nam",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Hàng hải Việt Nam"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-hoa-binh",
+   "name": "Trường Đại học Hòa Bình",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Hòa Bình"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-hoa-lu",
+   "name": "Trường Đại học Hoa Lư",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Hoa Lư"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-hoa-sen",
+   "name": "Trường Đại học Hoa Sen",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Hoa Sen"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD",
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-hong-duc",
+   "name": "Trường Đại học Hồng Đức",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Hồng Đức"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-hung-vuong-phu-tho",
+   "name": "Trường Đại học Hùng Vương (Phú Thọ)",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Hùng Vương (Phú Thọ)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-hung-vuong-tp-ho-chi-minh",
+   "name": "Trường Đại học Hùng Vương TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Hùng Vương TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-intracom",
+   "name": "Trường Đại học Intracom",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Intracom (trước đây là Trường ĐH Chu Văn An)",
+    "Trường Đại học Chu Văn An"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-khanh-hoa",
+   "name": "Trường Đại học Khánh Hòa",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Khánh Hòa"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-khoa-hoc-dai-hoc-hue",
+   "name": "Trường Đại học Khoa học – Đại học Huế",
+   "type": "UNIVERSITY",
+   "system": "Đại học Huế",
+   "aliases": [
+    "Trường ĐH Khoa học (ĐH Huế)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-khoa-hoc-dai-hoc-thai-nguyen",
+   "name": "Trường Đại học Khoa học – Đại học Thái Nguyên",
+   "type": "UNIVERSITY",
+   "system": "Đại học Thái Nguyên",
+   "aliases": [
+    "Trường ĐH Khoa học (ĐH Thái Nguyên)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-khoa-hoc-tu-nhien-dai-hoc-quoc-gia-ha-noi",
+   "name": "Trường Đại học Khoa học Tự nhiên – Đại học Quốc gia Hà Nội",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia Hà Nội",
+   "aliases": [
+    "Trường ĐH Khoa học Tự nhiên(ĐHQG Hà Nội )",
+    "Trường ĐH Khoa học tự nhiên (ĐHQG HN)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD",
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-khoa-hoc-tu-nhien-dai-hoc-quoc-gia-tp-ho-chi-minh",
+   "name": "Trường Đại học Khoa học Tự nhiên – Đại học Quốc gia TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia TP. Hồ Chí Minh",
+   "aliases": [
+    "Trường ĐH KHTN (ĐHQG TP. Hồ Chí Minh)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-khoa-hoc-va-cong-nghe-ha-noi",
+   "name": "Trường Đại học Khoa học và Công nghệ Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-khoa-hoc-xa-hoi-va-nhan-van-dai-hoc-quoc-gia-ha-noi",
+   "name": "Trường Đại học Khoa học Xã hội và Nhân văn – Đại học Quốc gia Hà Nội",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia Hà Nội",
+   "aliases": [
+    "Trường ĐH Khoa học Xã hội và Nhân văn (ĐHQG HN)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-khoa-hoc-xa-hoi-va-nhan-van-dai-hoc-quoc-gia-tp-ho-chi-minh",
+   "name": "Trường Đại học Khoa học Xã hội và Nhân văn – Đại học Quốc gia TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia TP. Hồ Chí Minh",
+   "aliases": [
+    "Trường ĐH KHXH&NV (ĐHQG TP. Hồ Chí Minh)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kiem-sat-ha-noi",
+   "name": "Trường Đại học Kiểm sát Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kiểm sát Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kien-giang",
+   "name": "Trường Đại học Kiên Giang",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kiên Giang"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kien-truc-da-nang",
+   "name": "Trường Đại học Kiến trúc Đà Nẵng",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kiến trúc Đà Nẵng"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kien-truc-ha-noi",
+   "name": "Trường Đại học Kiến trúc Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kiến trúc Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kien-truc-tp-ho-chi-minh",
+   "name": "Trường Đại học Kiến trúc TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kiến trúc TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-bac",
+   "name": "Trường Đại học Kinh Bắc",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kinh Bắc"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-doanh-va-cong-nghe-ha-noi",
+   "name": "Trường Đại học Kinh doanh và Công nghệ Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kinh doanh và Công nghệ Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-te-cong-nghe-thai-nguyen",
+   "name": "Trường Đại học Kinh tế - Công nghệ Thái Nguyên",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kinh tế - Công nghệ Thái Nguyên"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-te-ky-thuat-binh-duong",
+   "name": "Trường Đại học Kinh tế - Kỹ thuật Bình Dương",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kinh tế - Kỹ thuật Bình Dương"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-te-luat-dai-hoc-quoc-gia-tp-ho-chi-minh",
+   "name": "Trường Đại học Kinh tế - Luật – Đại học Quốc gia TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia TP. Hồ Chí Minh",
+   "aliases": [
+    "Trường ĐH Kinh tế - Luật(ĐHQG TP. Hồ Chí Minh)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-te-tai-chinh-tp-ho-chi-minh",
+   "name": "Trường Đại học Kinh tế - Tài chính TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kinh tế - Tài chính TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-te-dai-hoc-da-nang",
+   "name": "Trường Đại học Kinh tế – Đại học Đà Nẵng",
+   "type": "UNIVERSITY",
+   "system": "Đại học Đà Nẵng",
+   "aliases": [
+    "Trường ĐH Kinh tế (ĐH Đà Nẵng)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-te-dai-hoc-hue",
+   "name": "Trường Đại học Kinh tế – Đại học Huế",
+   "type": "UNIVERSITY",
+   "system": "Đại học Huế",
+   "aliases": [
+    "Trường ĐH Kinh tế (ĐH Huế)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-te-dai-hoc-quoc-gia-ha-noi",
+   "name": "Trường Đại học Kinh tế – Đại học Quốc gia Hà Nội",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia Hà Nội",
+   "aliases": [
+    "Trường ĐH Kinh tế (ĐHQG HN)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-te-cong-nghiep-long-an",
+   "name": "Trường Đại học Kinh tế Công nghiệp Long An",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kinh tế Công nghiệp Long An"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-te-ky-thuat-cong-nghiep-bo-cong-thuong",
+   "name": "Trường Đại học Kinh tế Kỹ thuật công nghiệp (Bộ Công thương)",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kinh tế Kỹ thuật công nghiệp (Bộ Công thương)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-te-nghe-an",
+   "name": "Trường Đại học Kinh tế Nghệ An",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kinh tế Nghệ An"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-te-quoc-dan",
+   "name": "Trường Đại học Kinh tế Quốc dân",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kinh tế Quốc dân"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD",
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-kinh-te-va-quan-tri-kinh-doanh-dai-hoc-thai-nguyen",
+   "name": "Trường Đại học Kinh tế và Quản trị kinh doanh – Đại học Thái Nguyên",
+   "type": "UNIVERSITY",
+   "system": "Đại học Thái Nguyên",
+   "aliases": [
+    "Trường ĐH Kinh tế và Quản trị kinh doanh (ĐH Thái Nguyên)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ky-thuat-cong-nghe-can-tho",
+   "name": "Trường Đại học Kỹ thuật – Công nghệ Cần Thơ",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kỹ thuật – Công nghệ Cần Thơ"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ky-thuat-cong-nghiep-dai-hoc-thai-nguyen",
+   "name": "Trường Đại học Kỹ thuật công nghiệp – Đại học Thái Nguyên",
+   "type": "UNIVERSITY",
+   "system": "Đại học Thái Nguyên",
+   "aliases": [
+    "Trường ĐH Kỹ thuật công nghiệp (ĐH Thái Nguyên)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ky-thuat-y-duoc-da-nang",
+   "name": "Trường Đại học Kỹ thuật Y – Dược Đà Nẵng",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kỹ thuật Y – Dược Đà Nẵng"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ky-thuat-y-te-hai-duong",
+   "name": "Trường Đại học Kỹ thuật Y tế Hải Dương",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Kỹ thuật Y tế Hải Dương"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-lac-hong",
+   "name": "Trường Đại học Lạc Hồng",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Lạc Hồng"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD",
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-lao-dong-xa-hoi",
+   "name": "Trường Đại học Lao động – Xã hội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Lao động – Xã hội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-lam-nghiep",
+   "name": "Trường Đại học Lâm nghiệp",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Lâm nghiệp"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-luat-dai-hoc-hue",
+   "name": "Trường Đại học Luật – Đại học Huế",
+   "type": "UNIVERSITY",
+   "system": "Đại học Huế",
+   "aliases": [
+    "Trường ĐH Luật (ĐH Huế)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-luat-dai-hoc-quoc-gia-ha-noi",
+   "name": "Trường Đại học Luật – Đại học Quốc gia Hà Nội",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia Hà Nội",
+   "aliases": [
+    "Trường ĐH Luật - ĐHQG Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-luat-ha-noi",
+   "name": "Trường Đại học Luật Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Luật Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-luat-tp-ho-chi-minh",
+   "name": "Trường Đại học Luật TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Luật TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-mo-dia-chat",
+   "name": "Trường Đại học Mỏ - Địa chất",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Mỏ - Địa chất"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-mo-ha-noi",
+   "name": "Trường Đại học Mở Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Mở Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-mo-tp-ho-chi-minh",
+   "name": "Trường Đại học Mở TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Mở TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-my-thuat-cong-nghiep",
+   "name": "Trường Đại học Mỹ thuật Công nghiệp",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Mỹ thuật Công nghiệp"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-my-thuat-tp-ho-chi-minh",
+   "name": "Trường Đại học Mỹ thuật TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Mỹ thuật TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-my-thuat-viet-nam",
+   "name": "Trường Đại học Mỹ thuật Việt Nam",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Mỹ thuật Việt Nam"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-nam-can-tho",
+   "name": "Trường Đại học Nam Cần Thơ",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Nam Cần Thơ"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ngan-hang-tp-ho-chi-minh",
+   "name": "Trường Đại học Ngân hàng TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Ngân hàng TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-nghe-thuat-dai-hoc-hue",
+   "name": "Trường Đại học Nghệ thuật – Đại học Huế",
+   "type": "UNIVERSITY",
+   "system": "Đại học Huế",
+   "aliases": [
+    "Trường Đại học Nghệ thuật (ĐH Huế)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ngoai-ngu-tin-hoc-tp-ho-chi-minh",
+   "name": "Trường Đại học Ngoại ngữ - Tin học TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Ngoại ngữ - Tin học TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ngoai-ngu-dai-hoc-da-nang",
+   "name": "Trường Đại học Ngoại ngữ – Đại học Đà Nẵng",
+   "type": "UNIVERSITY",
+   "system": "Đại học Đà Nẵng",
+   "aliases": [
+    "Trường ĐH Ngoại ngữ (ĐH Đà Nẵng)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ngoai-ngu-dai-hoc-hue",
+   "name": "Trường Đại học Ngoại ngữ – Đại học Huế",
+   "type": "UNIVERSITY",
+   "system": "Đại học Huế",
+   "aliases": [
+    "Trường ĐH Ngoại ngữ (ĐH Huế)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ngoai-ngu-dai-hoc-quoc-gia-ha-noi",
+   "name": "Trường Đại học Ngoại ngữ – Đại học Quốc gia Hà Nội",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia Hà Nội",
+   "aliases": [
+    "Trường ĐH Ngoại ngữ (ĐHQG HN)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ngoai-thuong",
+   "name": "Trường Đại học Ngoại thương",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Ngoại thương"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-nguyen-tat-thanh",
+   "name": "Trường Đại học Nguyễn Tất Thành",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Nguyễn Tất Thành"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-nha-trang",
+   "name": "Trường Đại học Nha Trang",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Nha Trang"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-noi-vu-ha-noi",
+   "name": "Trường Đại học Nội vụ Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Nội vụ Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-nong-lam-dai-hoc-hue",
+   "name": "Trường Đại học Nông Lâm – Đại học Huế",
+   "type": "UNIVERSITY",
+   "system": "Đại học Huế",
+   "aliases": [
+    "Trường ĐH Nông Lâm (ĐH Huế)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-nong-lam-dai-hoc-thai-nguyen",
+   "name": "Trường Đại học Nông Lâm – Đại học Thái Nguyên",
+   "type": "UNIVERSITY",
+   "system": "Đại học Thái Nguyên",
+   "aliases": [
+    "Trường ĐH Nông Lâm (ĐH Thái Nguyên)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-nong-lam-bac-giang",
+   "name": "Trường Đại học Nông Lâm Bắc Giang",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Nông Lâm Bắc Giang"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-nong-lam-tp-ho-chi-minh",
+   "name": "Trường Đại học Nông Lâm TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Nông Lâm TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-pham-van-dong",
+   "name": "Trường Đại học Phạm Văn Đồng",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Phạm Văn Đồng"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-phan-chau-trinh",
+   "name": "Trường Đại học Phan Châu Trinh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Phan Châu Trinh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-phan-thiet",
+   "name": "Trường Đại học Phan Thiết",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Phan Thiết"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-phenikaa",
+   "name": "Trường Đại học Phenikaa",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Phenikaa"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-phu-xuan",
+   "name": "Trường Đại học Phú Xuân",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Phú Xuân"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-phu-yen",
+   "name": "Trường Đại học Phú Yên",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Phú Yên"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-phuong-dong",
+   "name": "Trường Đại học Phương Đông",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Phương Đông"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-quan-ly-va-cong-nghe-hai-phong",
+   "name": "Trường Đại học Quản lý và Công nghệ Hải Phòng",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Quản lý và Công nghệ Hải phòng"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-quang-binh",
+   "name": "Trường Đại học Quảng Bình",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Quảng Bình"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-quang-nam",
+   "name": "Trường Đại học Quảng Nam",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Quảng Nam"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-quang-trung",
+   "name": "Trường Đại học Quang Trung",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Quang Trung"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-quoc-te-dai-hoc-quoc-gia-tp-ho-chi-minh",
+   "name": "Trường Đại học Quốc tế – Đại học Quốc gia TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia TP. Hồ Chí Minh",
+   "aliases": [
+    "Trường ĐH Quốc tế (ĐHQG TP. Hồ Chí Minh)",
+    "Trường ĐH Quốc tế (ĐHQG TP. HCM)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD",
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-quoc-te-hong-bang",
+   "name": "Trường Đại học Quốc tế Hồng Bàng",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Quốc tế Hồng Bàng"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-quoc-te-mien-dong",
+   "name": "Trường Đại học Quốc tế Miền Đông",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Quốc tế Miền Đông"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-quoc-te-sai-gon",
+   "name": "Trường Đại học Quốc tế Sài Gòn",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Quốc tế Sài Gòn"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-quy-nhon",
+   "name": "Trường Đại học Quy Nhơn",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Quy Nhơn"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-sai-gon",
+   "name": "Trường Đại học Sài Gòn",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Sài Gòn"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-sao-do",
+   "name": "Trường Đại học Sao Đỏ",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Sao Đỏ"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-san-khau-dien-anh-ha-noi",
+   "name": "Trường Đại học Sân khấu – Điện ảnh Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Sân khấu – Điện ảnh Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-su-pham-dai-hoc-da-nang",
+   "name": "Trường Đại học Sư phạm – Đại học Đà Nẵng",
+   "type": "UNIVERSITY",
+   "system": "Đại học Đà Nẵng",
+   "aliases": [
+    "Trường ĐH Sư phạm (ĐH Đà Nẵng)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-su-pham-dai-hoc-hue",
+   "name": "Trường Đại học Sư phạm – Đại học Huế",
+   "type": "UNIVERSITY",
+   "system": "Đại học Huế",
+   "aliases": [
+    "Trường ĐH Sư phạm (ĐH Huế)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-su-pham-dai-hoc-thai-nguyen",
+   "name": "Trường Đại học Sư phạm – Đại học Thái Nguyên",
+   "type": "UNIVERSITY",
+   "system": "Đại học Thái Nguyên",
+   "aliases": [
+    "Trường ĐH Sư phạm (ĐH Thái Nguyên)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-su-pham-ha-noi",
+   "name": "Trường Đại học Sư phạm Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Sư phạm Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-su-pham-ha-noi-2",
+   "name": "Trường Đại học Sư phạm Hà Nội 2",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Sư phạm Hà Nội 2"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-su-pham-ky-thuat-dai-hoc-da-nang",
+   "name": "Trường Đại học Sư phạm Kỹ thuật – Đại học Đà Nẵng",
+   "type": "UNIVERSITY",
+   "system": "Đại học Đà Nẵng",
+   "aliases": [
+    "Trường ĐH Sư phạm Kỹ thuật - Đại học Đà Nẵng"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-su-pham-nghe-thuat-trung-uong",
+   "name": "Trường Đại học Sư phạm Nghệ thuật Trung ương",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Sư phạm Nghệ thuật Trung ương"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-su-pham-the-duc-the-thao-ha-noi",
+   "name": "Trường Đại học Sư phạm Thể dục Thể thao Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Sư phạm Thể dục Thể thao Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-su-pham-the-duc-the-thao-tp-ho-chi-minh",
+   "name": "Trường Đại học Sư phạm Thể dục Thể thao TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Sư phạm Thể dục Thể thao TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-su-pham-tp-ho-chi-minh",
+   "name": "Trường Đại học Sư phạm TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Sư phạm TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-tai-chinh-ngan-hang-ha-noi",
+   "name": "Trường Đại học Tài chính - Ngân hàng Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Tài chính - Ngân hàng Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-tai-chinh-marketing",
+   "name": "Trường Đại học Tài chính – Marketing",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Tài chính – Marketing"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-tai-chinh-quan-tri-kinh-doanh",
+   "name": "Trường Đại học Tài chính – Quản trị kinh doanh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Tài chính – Quản trị kinh doanh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-tai-nguyen-va-moi-truong-ha-noi",
+   "name": "Trường Đại học Tài nguyên và Môi trường Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Tài nguyên và Môi trường Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-tai-nguyen-va-moi-truong-tp-ho-chi-minh",
+   "name": "Trường Đại học Tài nguyên và Môi trường TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Tài nguyên và Môi trường TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-tan-tao",
+   "name": "Trường Đại học Tân Tạo",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Tân Tạo"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-tan-trao",
+   "name": "Trường Đại học Tân Trào",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Tân Trào"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-tay-bac",
+   "name": "Trường Đại học Tây Bắc",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Tây Bắc"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-tay-do",
+   "name": "Trường Đại học Tây Đô",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Tây Đô"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-tay-nguyen",
+   "name": "Trường Đại học Tây Nguyên",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Tây Nguyên"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-thai-binh",
+   "name": "Trường Đại học Thái Bình",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Thái Bình"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-thai-binh-duong",
+   "name": "Trường Đại học Thái Bình Dương",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Thái Bình Dương"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-thanh-do",
+   "name": "Trường Đại học Thành Đô",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Thành Đô"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-thanh-dong",
+   "name": "Trường Đại học Thành Đông",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Thành Đông"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-thang-long",
+   "name": "Trường Đại học Thăng Long",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Thăng Long"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-the-duc-the-thao-bac-ninh",
+   "name": "Trường Đại học Thể dục thể thao Bắc Ninh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Thể dục thể thao Bắc Ninh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-the-duc-the-thao-da-nang",
+   "name": "Trường Đại học Thể dục Thể thao Đà Nẵng",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH TDTT Đà Nẵng"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-the-duc-the-thao-tp-ho-chi-minh",
+   "name": "Trường Đại học Thể dục Thể thao TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Thể dục Thể thao TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-thu-dau-mot",
+   "name": "Trường Đại học Thủ Dầu Một",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Thủ Dầu Một"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-thu-do-ha-noi",
+   "name": "Trường Đại học Thủ đô Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Thủ đô Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-thuy-loi",
+   "name": "Trường Đại học Thuỷ lợi",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Thuỷ lợi"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-thuong-mai",
+   "name": "Trường Đại học Thương mại",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Thương mại"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-tien-giang",
+   "name": "Trường Đại học Tiền Giang",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Tiền Giang"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-ton-duc-thang",
+   "name": "Trường Đại học Tôn Đức Thắng",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Tôn Đức Thắng"
+   ],
+   "sources": [
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-tra-vinh",
+   "name": "Trường Đại học Trà Vinh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Trà Vinh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-trung-vuong",
+   "name": "Trường Đại học Trưng Vương",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Trưng Vương"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-van-hien",
+   "name": "Trường Đại học Văn Hiến",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Văn Hiến"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-van-hoa-ha-noi",
+   "name": "Trường Đại học Văn hóa Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Văn hóa Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-van-hoa-the-thao-va-du-lich-thanh-hoa",
+   "name": "Trường Đại học Văn hóa Thể thao và Du lịch Thanh Hóa",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Văn hóa Thể thao và Du lịch Thanh Hóa"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-van-hoa-tp-ho-chi-minh",
+   "name": "Trường Đại học Văn hóa TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Văn hóa TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-van-lang",
+   "name": "Trường Đại học Văn Lang",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Văn Lang"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD",
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-viet-bac",
+   "name": "Trường Đại học Việt Bắc",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Việt Bắc"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-viet-nhat",
+   "name": "Trường Đại học Việt Nhật",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-vinh",
+   "name": "Trường Đại học Vinh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Vinh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-vinuni",
+   "name": "Trường Đại học VinUni",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [],
+   "sources": [
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-vo-truong-toan",
+   "name": "Trường Đại học Võ Trường Toản",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Võ Trường Toản"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-xay-dung-ha-noi",
+   "name": "Trường Đại học Xây dựng Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Xây dựng Hà Nội"
+   ],
+   "sources": [
+    "FOREIGN_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-xay-dung-mien-tay",
+   "name": "Trường Đại học Xây dựng Miền Tây",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Xây dựng Miền Tây"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-xay-dung-mien-trung",
+   "name": "Trường Đại học Xây dựng Miền Trung",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Xây dựng Miền Trung"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-y-duoc-dai-hoc-thai-nguyen",
+   "name": "Trường Đại học Y - Dược – Đại học Thái Nguyên",
+   "type": "UNIVERSITY",
+   "system": "Đại học Thái Nguyên",
+   "aliases": [
+    "Trường ĐH Y-Dược (ĐH Thái Nguyên)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-y-duoc-dai-hoc-hue",
+   "name": "Trường Đại học Y Dược – Đại học Huế",
+   "type": "UNIVERSITY",
+   "system": "Đại học Huế",
+   "aliases": [
+    "Trường ĐH Y Dược (ĐH Huế)"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-y-duoc-dai-hoc-quoc-gia-ha-noi",
+   "name": "Trường Đại học Y Dược – Đại học Quốc gia Hà Nội",
+   "type": "UNIVERSITY",
+   "system": "Đại học Quốc gia Hà Nội",
+   "aliases": [
+    "Trường ĐH Y Dược – ĐHQG Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-y-duoc-buon-ma-thuot",
+   "name": "Trường Đại học Y Dược Buôn Ma Thuột",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Y Dược Buôn Ma Thuột"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-y-duoc-can-tho",
+   "name": "Trường Đại học Y Dược Cần Thơ",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Y Dược Cần Thơ"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-y-duoc-hai-phong",
+   "name": "Trường Đại học Y Dược Hải Phòng",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Y Dược Hải Phòng"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-y-duoc-thai-binh",
+   "name": "Trường Đại học Y Dược Thái Bình",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Y Dược Thái Bình"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-y-duoc-tp-ho-chi-minh",
+   "name": "Trường Đại học Y Dược TP. Hồ Chí Minh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Y Dược TP. Hồ Chí Minh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-y-ha-noi",
+   "name": "Trường Đại học Y Hà Nội",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Y Hà Nội"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-y-khoa-pham-ngoc-thach",
+   "name": "Trường Đại học Y khoa Phạm Ngọc Thạch",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Y khoa Phạm Ngọc Thạch"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-y-khoa-vinh",
+   "name": "Trường Đại học Y khoa Vinh",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Y khoa Vinh"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-y-te-cong-cong",
+   "name": "Trường Đại học Y tế Công cộng",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH Y tế Công cộng"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  },
+  {
+   "id": "dai-hoc-yersin-da-lat",
+   "name": "Trường Đại học Yersin Đà Lạt",
+   "type": "UNIVERSITY",
+   "system": null,
+   "aliases": [
+    "Trường ĐH YERSIN Đà Lạt"
+   ],
+   "sources": [
+    "DOMESTIC_STANDARD"
+   ]
+  }
+ ]
+}

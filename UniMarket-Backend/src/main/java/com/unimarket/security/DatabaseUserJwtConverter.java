@@ -18,18 +18,22 @@ import java.util.Optional;
  *
  * <p>The signature, issuer, audience and expiry are already checked by the JWT decoder. Here the
  * account is loaded from {@code dbo.Users} on every request: if it no longer exists, is not active
- * or not verified, the token is rejected (401). The role comes from the database, never from the
+ * or not verified, or its password was changed after the token was issued ({@link PasswordStamp}), the token is
+ * rejected (401). The role comes from the database, never from the
  * token or the frontend.</p>
  */
 public class DatabaseUserJwtConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
     private final ObjectProvider<UserRepository> users;
+    private final PasswordStamp passwordStamp;
 
     /**
-     * @param users account repository; absent with the 'nodb' profile, where every token is rejected
+     * @param users         account repository; absent with the 'nodb' profile, where every token is rejected
+     * @param passwordStamp checks the token's {@code pwv} claim against the current password hash
      */
-    public DatabaseUserJwtConverter(ObjectProvider<UserRepository> users) {
+    public DatabaseUserJwtConverter(ObjectProvider<UserRepository> users, PasswordStamp passwordStamp) {
         this.users = users;
+        this.passwordStamp = passwordStamp;
     }
 
     @Override
@@ -38,6 +42,7 @@ public class DatabaseUserJwtConverter implements Converter<Jwt, AbstractAuthenti
         Integer userId = parseUserId(jwt.getSubject());
         Optional<User> user = repository == null || userId == null ? Optional.empty() : repository.findById(userId);
         User account = user.filter(User::canSignIn)
+                .filter(found -> passwordStamp.matches(found, jwt.getClaimAsString(PasswordStamp.CLAIM)))
                 .orElseThrow(() -> new InvalidBearerTokenException("The account for this token cannot sign in."));
         AuthenticatedUser principal = new AuthenticatedUser(account.getId(), account.getEmail(), account.getRole());
         return new UsernamePasswordAuthenticationToken(principal, null,

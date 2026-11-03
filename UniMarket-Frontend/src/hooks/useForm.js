@@ -16,11 +16,23 @@ export default function useForm({ initialValues, validate, onSubmit }) {
   const [errors, setErrors] = useState({})
   const [touched, setTouched] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  // Errors returned by the server for specific fields; each one disappears when its field changes.
+  const [serverErrors, setServerErrorsState] = useState({})
+
+  function clearServerError(name) {
+    setServerErrorsState((current) => {
+      if (!(name in current)) return current
+      const rest = { ...current }
+      delete rest[name]
+      return rest
+    })
+  }
 
   function handleChange(event) {
     const { name, value, type, checked } = event.target
     const nextValues = { ...values, [name]: type === 'checkbox' ? checked : value }
     setValues(nextValues)
+    clearServerError(name)
     // Re-validate live only after the field has been touched, so fixes are confirmed immediately.
     if (touched[name]) setErrors(validate(nextValues))
   }
@@ -38,12 +50,23 @@ export default function useForm({ initialValues, validate, onSubmit }) {
   function setFieldValue(name, value) {
     const nextValues = { ...values, [name]: value }
     setValues(nextValues)
+    clearServerError(name)
     setTouched((current) => ({ ...current, [name]: true }))
+    setErrors(validate(nextValues))
+  }
+
+  /** Sets several values at once (e.g. a choice that changes related fields) and marks them touched. */
+  function setFieldValues(partial) {
+    const nextValues = { ...values, ...partial }
+    setValues(nextValues)
+    Object.keys(partial).forEach(clearServerError)
+    setTouched((current) => ({ ...current, ...Object.fromEntries(Object.keys(partial).map((name) => [name, true])) }))
     setErrors(validate(nextValues))
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (isSubmitting) return // ignore double submits while a request is running
     const form = event.currentTarget
     const nextErrors = validate(values)
     setErrors(nextErrors)
@@ -73,8 +96,16 @@ export default function useForm({ initialValues, validate, onSubmit }) {
       value: values[name],
       onChange: handleChange,
       onBlur: handleBlur,
-      error: touched[name] ? errors[name] : undefined,
+      error: (touched[name] ? errors[name] : undefined) ?? serverErrors[name],
     }
+  }
+
+  /**
+   * Shows errors returned by the server, e.g. { email: 'An account with this email already exists.' }.
+   * Field names must match the form's value names; each error disappears when its field changes.
+   */
+  function setServerErrors(fieldErrors) {
+    setServerErrorsState(fieldErrors ?? {})
   }
 
   /**
@@ -92,9 +123,14 @@ export default function useForm({ initialValues, validate, onSubmit }) {
       checked: Boolean(values[name]),
       onChange: handleChange,
       onBlur: handleBlur,
-      error: touched[name] ? errors[name] : undefined,
+      error: (touched[name] ? errors[name] : undefined) ?? serverErrors[name],
     }
   }
 
-  return { values, errors, touched, isSubmitting, handleSubmit, getFieldProps, getCheckboxProps, setFieldValue, revalidate }
+  /** Current error of any field (client rule after a touch / submit, otherwise the server's). */
+  function getError(name) {
+    return (touched[name] ? errors[name] : undefined) ?? serverErrors[name]
+  }
+
+  return { values, errors, touched, isSubmitting, handleSubmit, getFieldProps, getCheckboxProps, setFieldValue, setFieldValues, revalidate, setServerErrors, getError }
 }

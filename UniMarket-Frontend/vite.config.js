@@ -16,6 +16,11 @@ export default defineConfig(({ command, mode }) => {
   const useMockData = env.VITE_USE_MOCK_DATA ? env.VITE_USE_MOCK_DATA === 'true' : command === 'serve'
   const apiImpl = (mockFile, realFile) => fileURLToPath(new URL(useMockData ? mockFile : realFile, import.meta.url))
 
+  if (command === 'serve') {
+    // Make it obvious which backend (and therefore which database) this dev server talks to.
+    console.info(`[unimarket] /api -> ${backendUrl} | auth mode: ${env.VITE_AUTH_MODE || (useMockData ? 'demo' : 'backend')}`)
+  }
+
   const apiProxy = {
     '/api': {
       target: backendUrl,

@@ -62,7 +62,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthIntegrationTest {
 
-    private static final Pattern CODE = Pattern.compile("verification code is: (\\d{6})");
+    /** The plain-text part of the (Vietnamese) verification e-mail, see VerificationEmailTemplate. */
+    private static final Pattern CODE = Pattern.compile("Mã xác thực email của bạn là: (\\d{6})");
+    /** The plain-text part of the password-reset e-mail. */
+    private static final Pattern RESET_CODE = Pattern.compile("Mã đặt lại mật khẩu của bạn là: (\\d{6})");
 
     @Autowired private MockMvc mvc;
     @Autowired private ObjectMapper json;
@@ -92,9 +95,17 @@ class AuthIntegrationTest {
         }
 
         String lastCodeFor(String email) {
+            return lastMatch(email, CODE);
+        }
+
+        String lastResetCodeFor(String email) {
+            return lastMatch(email, RESET_CODE);
+        }
+
+        private String lastMatch(String email, Pattern pattern) {
             for (int i = sent.size() - 1; i >= 0; i--) {
                 if (sent.get(i)[0].equals(email)) {
-                    Matcher m = CODE.matcher(sent.get(i)[2]);
+                    Matcher m = pattern.matcher(sent.get(i)[2]);
                     if (m.find()) {
                         return m.group(1);
                     }
@@ -498,6 +509,235 @@ class AuthIntegrationTest {
         }
     }
 
+    // ------------------------------------------------------------------ automatic sign-in after verification
+
+    @Nested
+    class SignInAfterVerification {
+
+        @Test
+        void aValidCodeVerifiesAndSignsInWithoutThePassword() throws Exception {
+            String email = registered();
+            String body = verify(email, mail.lastCodeFor(email))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.message").isNotEmpty())
+                    .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                    .andExpect(jsonPath("$.expiresIn").isNumber())
+                    .andExpect(jsonPath("$.user.email").value(email))
+                    .andExpect(jsonPath("$.user.role").value("STUDENT"))
+                    .andExpect(jsonPath("$.user.emailVerified").value(true))
+                    .andExpect(jsonPath("$.user.passwordHash").doesNotExist())
+                    .andReturn().getResponse().getContentAsString();
+            String token = readTree(body).get("accessToken").asText();
+            assertThat(token).isNotBlank();
+            mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.email").value(email));
+        }
+
+        @Test
+        void wrongUsedOrUnknownCodesNeverIssueAToken() throws Exception {
+            String email = registered();
+            String code = mail.lastCodeFor(email);
+            verify(email, otherCode(code)).andExpect(status().isBadRequest()).andExpect(jsonPath("$.accessToken").doesNotExist());
+            verify(email, code).andExpect(status().isOk()).andExpect(jsonPath("$.accessToken").isNotEmpty());
+            verify(email, code).andExpect(status().isBadRequest()).andExpect(jsonPath("$.accessToken").doesNotExist());
+            verify(newEmail(), "123456").andExpect(status().isBadRequest()).andExpect(jsonPath("$.accessToken").doesNotExist());
+        }
+
+        @Test
+        void aSuspendedAccountCannotBeVerifiedOrSignedIn() throws Exception {
+            String email = registered();
+            jdbc.update("UPDATE dbo.Users SET Status = 'Suspended' WHERE Email = ?", email);
+            verify(email, mail.lastCodeFor(email)).andExpect(status().isBadRequest()).andExpect(jsonPath("$.accessToken").doesNotExist());
+        }
+    }
+
+    // ------------------------------------------------------------------ forgot password
+
+    @Nested
+    class PasswordReset {
+
+        @Test
+        void aMailedCodeSetsANewPasswordOnce() throws Exception {
+            String email = verifiedStudent("Secret123");
+            forgot(email).andExpect(status().isAccepted()).andExpect(jsonPath("$.code").doesNotExist());
+            String code = mail.lastResetCodeFor(email);
+            byte[] stored = jdbc.queryForObject("SELECT TOP 1 t.TokenHash FROM dbo.PasswordResetTokens t JOIN dbo.Users u ON u.UserId = t.UserId "
+                    + "WHERE u.Email = ? ORDER BY t.TokenId DESC", byte[].class, email);
+            assertThat(stored).hasSize(32);
+            assertThat(new String(stored, java.nio.charset.StandardCharsets.ISO_8859_1)).doesNotContain(code);
+
+            reset(email, code, "NewPass456").andExpect(status().isOk()).andExpect(jsonPath("$.message").isNotEmpty());
+            login(email, "Secret123").andExpect(status().isUnauthorized());
+            login(email, "NewPass456").andExpect(status().isOk());
+            String hash = jdbc.queryForObject("SELECT PasswordHash FROM dbo.Users WHERE Email = ?", String.class, email);
+            assertThat(hash).startsWith("$2a$10$").doesNotContain("NewPass456");
+            reset(email, code, "Another789").andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_RESET_CODE"));
+            login(email, "NewPass456").andExpect(status().isOk());
+        }
+
+        @Test
+        void unknownEmailsGetTheSameAnswerAndNoMail() throws Exception {
+            String known = verifiedStudent("Secret123");
+            String unknown = newEmail();
+            String a = forgot(known).andExpect(status().isAccepted()).andReturn().getResponse().getContentAsString();
+            String b = forgot(unknown).andExpect(status().isAccepted()).andReturn().getResponse().getContentAsString();
+            assertThat(a).isEqualTo(b);
+            assertThat(mail.countFor(unknown)).isZero();
+            reset(unknown, "123456", "NewPass456").andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_RESET_CODE"));
+        }
+
+        @Test
+        void cooldownAndANewerCodeReplacesTheOlderOne() throws Exception {
+            String email = verifiedStudent("Secret123");
+            forgot(email).andExpect(status().isAccepted());
+            String first = mail.lastResetCodeFor(email);
+            long mails = mail.countFor(email);
+            forgot(email).andExpect(status().isAccepted());   // inside the 60 s cooldown: nothing sent
+            assertThat(mail.countFor(email)).isEqualTo(mails);
+            ageResetCodes(email, 2);
+            forgot(email).andExpect(status().isAccepted());
+            String second = mail.lastResetCodeFor(email);
+            assertThat(mail.countFor(email)).isEqualTo(mails + 1);
+            if (!first.equals(second)) {
+                reset(email, first, "NewPass456").andExpect(status().isBadRequest());   // closed by the newer code
+            }
+            reset(email, second, "NewPass456").andExpect(status().isOk());
+        }
+
+        @Test
+        void hourlyLimitStopsFurtherCodes() throws Exception {
+            String email = verifiedStudent("Secret123");
+            for (int i = 0; i < 5; i++) {
+                forgot(email).andExpect(status().isAccepted());
+                jdbc.update("UPDATE t SET CreatedAt = DATEADD(second, -61, t.CreatedAt) FROM dbo.PasswordResetTokens t "
+                        + "JOIN dbo.Users u ON u.UserId = t.UserId WHERE u.Email = ?", email);
+            }
+            long mails = mail.countFor(email);
+            forgot(email).andExpect(status().isAccepted());
+            assertThat(mail.countFor(email)).isEqualTo(mails);
+        }
+
+        @Test
+        void fiveWrongCodesCloseTheCode() throws Exception {
+            String email = verifiedStudent("Secret123");
+            forgot(email).andExpect(status().isAccepted());
+            String code = mail.lastResetCodeFor(email);
+            for (int i = 0; i < 4; i++) {
+                reset(email, otherCode(code), "NewPass456").andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_RESET_CODE"));
+            }
+            reset(email, otherCode(code), "NewPass456").andExpect(status().isTooManyRequests()).andExpect(jsonPath("$.code").value("TOO_MANY_ATTEMPTS"));
+            reset(email, code, "NewPass456").andExpect(status().isTooManyRequests());
+            login(email, "Secret123").andExpect(status().isOk());   // password unchanged
+            ageResetCodes(email, 2);
+            forgot(email).andExpect(status().isAccepted());
+            reset(email, mail.lastResetCodeFor(email), "NewPass456").andExpect(status().isOk());
+        }
+
+        @Test
+        void anExpiredCodeIsRefused() throws Exception {
+            String email = verifiedStudent("Secret123");
+            forgot(email).andExpect(status().isAccepted());
+            String code = mail.lastResetCodeFor(email);
+            ageResetCodes(email, 11);
+            reset(email, code, "NewPass456").andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_RESET_CODE"));
+            login(email, "Secret123").andExpect(status().isOk());
+        }
+
+        @Test
+        void weakPasswordsAndMalformedCodesAreValidationErrors() throws Exception {
+            String email = verifiedStudent("Secret123");
+            reset(email, "123456", "short1").andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                    .andExpect(jsonPath("$.fieldErrors[0].field").value("newPassword"));
+            reset(email, "12ab56", "NewPass456").andExpect(status().isBadRequest()).andExpect(jsonPath("$.fieldErrors[0].field").value("code"));
+            reset(email, "123456", "abcdefgh").andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
+        }
+
+        @Test
+        void aVerificationCodeIsNotAResetCode() throws Exception {
+            String email = registered();
+            String verificationCode = mail.lastCodeFor(email);
+            forgot(email).andExpect(status().isAccepted());
+            String resetCode = mail.lastResetCodeFor(email);
+            if (!verificationCode.equals(resetCode)) {
+                reset(email, verificationCode, "NewPass456").andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_RESET_CODE"));
+            }
+        }
+
+        @Test
+        void resettingAnUnverifiedAccountAlsoVerifiesTheEmail() throws Exception {
+            String email = registered();
+            forgot(email).andExpect(status().isAccepted());
+            reset(email, mail.lastResetCodeFor(email), "NewPass456").andExpect(status().isOk());
+            assertThat(jdbc.queryForObject("SELECT EmailVerifiedAt FROM dbo.Users WHERE Email = ?", java.sql.Timestamp.class, email)).isNotNull();
+            login(email, "NewPass456").andExpect(status().isOk());
+        }
+
+        @Test
+        void suspendedAccountsGetNoCode() throws Exception {
+            String email = verifiedStudent("Secret123");
+            jdbc.update("UPDATE dbo.Users SET Status = 'Suspended' WHERE Email = ?", email);
+            long mails = mail.countFor(email);
+            forgot(email).andExpect(status().isAccepted());
+            assertThat(mail.countFor(email)).isEqualTo(mails);
+        }
+
+        @Test
+        void aPasswordResetEndsEveryOlderSessionButAFailedOneDoesNot() throws Exception {
+            String email = registered();
+            String fromVerification = readTree(verify(email, mail.lastCodeFor(email)).andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString()).get("accessToken").asText();
+            String fromLogin = tokenFor(email, "Secret123");
+            me(fromVerification).andExpect(status().isOk());
+            me(fromLogin).andExpect(status().isOk());
+
+            forgot(email).andExpect(status().isAccepted());
+            String code = mail.lastResetCodeFor(email);
+            reset(email, otherCode(code), "NewPass456").andExpect(status().isBadRequest());
+            reset(email, code, "short").andExpect(status().isBadRequest());
+            me(fromVerification).andExpect(status().isOk());
+            me(fromLogin).andExpect(status().isOk());
+
+            reset(email, code, "NewPass456").andExpect(status().isOk());
+            me(fromVerification).andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"));
+            me(fromLogin).andExpect(status().isUnauthorized());
+            String fresh = tokenFor(email, "NewPass456");
+            me(fresh).andExpect(status().isOk()).andExpect(jsonPath("$.email").value(email));
+        }
+
+        @Test
+        void signedTokensWithoutOrWithAForeignPasswordStampAreRejected() throws Exception {
+            String a = verifiedStudent("Secret123");
+            String b = verifiedStudent("Secret123");
+            Integer userA = userIdOf(a);
+            Instant now = Instant.now();
+            String noStamp = jwtEncoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(),
+                    JwtClaimsSet.builder().issuer("unimarket-api").audience(List.of("unimarket-web")).subject(String.valueOf(userA))
+                            .issuedAt(now).expiresAt(now.plusSeconds(600)).build())).getTokenValue();
+            me(noStamp).andExpect(status().isUnauthorized());
+            String stampOfB = json.readTree(new String(java.util.Base64.getUrlDecoder().decode(tokenFor(b, "Secret123").split("\\.")[1]),
+                    java.nio.charset.StandardCharsets.UTF_8)).get("pwv").asText();
+            String borrowed = jwtEncoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(),
+                    JwtClaimsSet.builder().issuer("unimarket-api").audience(List.of("unimarket-web")).subject(String.valueOf(userA))
+                            .issuedAt(now).expiresAt(now.plusSeconds(600)).claim("pwv", stampOfB).build())).getTokenValue();
+            me(borrowed).andExpect(status().isUnauthorized());
+            String token = tokenFor(a, "Secret123");
+            String payload = new String(java.util.Base64.getUrlDecoder().decode(token.split("\\.")[1]), java.nio.charset.StandardCharsets.UTF_8);
+            assertThat(payload).doesNotContain("$2a$").doesNotContain("Secret123");
+        }
+
+        @Test
+        void aResetEndsTheFailedLoginLockout() throws Exception {
+            String email = verifiedStudent("Secret123");
+            for (int i = 0; i < 5; i++) {
+                login(email, "Wrong999").andExpect(status().isUnauthorized());
+            }
+            login(email, "Secret123").andExpect(status().isTooManyRequests());
+            forgot(email).andExpect(status().isAccepted());
+            reset(email, mail.lastResetCodeFor(email), "NewPass456").andExpect(status().isOk());
+            login(email, "NewPass456").andExpect(status().isOk());
+        }
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private static String newEmail() {
@@ -537,6 +777,26 @@ class AuthIntegrationTest {
         return mvc.perform(post("/api/auth/resend-verification").contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(Map.of("email", email))))
                 .andExpect(status().isAccepted()).andReturn().getResponse().getContentAsString();
+    }
+
+    private ResultActions me(String token) throws Exception {
+        return mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token));
+    }
+
+    private ResultActions forgot(String email) throws Exception {
+        return mvc.perform(post("/api/auth/forgot-password").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("email", email))));
+    }
+
+    private ResultActions reset(String email, String code, String newPassword) throws Exception {
+        return mvc.perform(post("/api/auth/reset-password").contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("email", email, "code", code, "newPassword", newPassword))));
+    }
+
+    /** Moves the account's password-reset codes {@code minutes} into the past. */
+    private void ageResetCodes(String email, int minutes) {
+        jdbc.update("UPDATE t SET CreatedAt = DATEADD(minute, -?, t.CreatedAt), ExpiresAt = DATEADD(minute, -?, t.ExpiresAt) "
+                + "FROM dbo.PasswordResetTokens t JOIN dbo.Users u ON u.UserId = t.UserId WHERE u.Email = ?", minutes, minutes, email);
     }
 
     private ResultActions login(String email, String password) throws Exception {

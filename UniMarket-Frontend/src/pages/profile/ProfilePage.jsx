@@ -12,7 +12,11 @@ import ErrorState from '../../components/ui/ErrorState'
 import useAsyncData from '../../hooks/useAsyncData'
 import useOrderAttention from '../../hooks/useOrderAttention'
 import { PATHS } from '../../routes/paths'
+import { USES_BACKEND_AUTH } from '../../config/apiConfig'
 import { accountService } from '../../services/account/accountService'
+import { referenceApi } from '../../services/auth/authApi'
+import { session } from '../../services/auth/session'
+import { toViewerProfile } from '../../services/auth/viewerProfile'
 import useTranslation from '../../i18n/useTranslation'
 
 function Section({ title, description, action, children, id }) {
@@ -57,12 +61,32 @@ function VerificationStatus({ profile }) {
 const withCount = (t, label, count) => (count > 0 ? `${t(label)} · ${t('{count} to do', { count })}` : label)
 
 /**
+ * Backend mode: the account from GET /api/auth/me (re-read from the server on every visit) plus, for students,
+ * rating and active listings from the public profile GET /api/users/{id}. Nothing is taken from local storage.
+ */
+async function loadBackendProfile() {
+  const user = await session.refresh()
+  let publicProfile = null
+  if (user?.role === 'STUDENT') {
+    try {
+      publicProfile = await referenceApi.publicProfile(user.id)
+    } catch (error) {
+      if (error.status !== 404) throw error
+    }
+  }
+  return toViewerProfile(user, publicProfile)
+}
+
+/**
  * My profile (approved design; not in Figma): profile summary, account shortcuts, verification,
  * edit form (preview until the backend exists) and the reviews other students left.
  */
 export default function ProfilePage() {
   const { t } = useTranslation()
-  const { data: profile, error, isLoading, reload } = useAsyncData(() => accountService.getMyProfile(), 'my-profile')
+  const { data: profile, error, isLoading, reload } = useAsyncData(
+    () => (USES_BACKEND_AUTH ? loadBackendProfile() : accountService.getMyProfile()),
+    'my-profile',
+  )
   const attention = useOrderAttention()
   const [isEditing, setIsEditing] = useState(false)
 
@@ -78,7 +102,7 @@ export default function ProfilePage() {
 
   let content
   if (error) {
-    content = <ErrorState title={t("Couldn’t load your profile")} message={error.message} onRetry={reload} />
+    content = <ErrorState title={t("Couldn’t load your profile")} message={t(error.message)} onRetry={reload} />
   } else if (isLoading) {
     content = (
       <div className="grid animate-pulse gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]" aria-busy="true" aria-label={t("Loading profile")}>
@@ -97,6 +121,9 @@ export default function ProfilePage() {
           titleAs="h2"
           className="lg:sticky lg:top-36"
           actions={
+            USES_BACKEND_AUTH ? (
+              <p className="text-xs text-ink-muted">{t('Editing your profile and contact details will be connected in a later stage.')}</p>
+            ) : (
             <>
               <Button variant="secondary" onClick={() => setIsEditing(true)} disabled={isEditing}>
                 <PencilIcon className="size-4" />
@@ -107,6 +134,7 @@ export default function ProfilePage() {
                 <ArrowRightIcon className="size-4" />
               </Link>
             </>
+            )
           }
         />
 
@@ -140,9 +168,11 @@ export default function ProfilePage() {
             <VerificationStatus profile={profile} />
           </Section>
 
-          <Section id="reviews-title" title={t("Reviews about you")} description={t("Left by students you bought from or sold to, after completed orders.")}>
-            <ReviewList userId={profile.id} rating={profile.rating} emptyText="Complete an order and ask the other student to leave a review." />
-          </Section>
+          {!USES_BACKEND_AUTH && (
+            <Section id="reviews-title" title={t("Reviews about you")} description={t("Left by students you bought from or sold to, after completed orders.")}>
+              <ReviewList userId={profile.id} rating={profile.rating} emptyText="Complete an order and ask the other student to leave a review." />
+            </Section>
+          )}
         </div>
       </div>
     )
@@ -156,9 +186,11 @@ export default function ProfilePage() {
         <UserIcon className="hidden size-7 text-primary sm:block" />
         <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight text-ink sm:text-[2rem]">{t("My profile")}</h1>
       </header>
-      <SampleDataNotice className="mb-6">
-        {t("You’re seeing the profile of a demo student. Sign-in isn’t connected yet, so profile changes can’t be saved.")}
-      </SampleDataNotice>
+      {!USES_BACKEND_AUTH && (
+        <SampleDataNotice className="mb-6">
+          {t("You’re seeing the profile of a demo student. Sign-in isn’t connected yet, so profile changes can’t be saved.")}
+        </SampleDataNotice>
+      )}
       {content}
     </PageContainer>
   )
