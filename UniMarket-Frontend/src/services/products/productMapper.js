@@ -1,4 +1,5 @@
 import { frontendCategorySlug } from '../../constants/categorySlugs'
+import { demoPhotoFor, isDemoReference } from '../../utils/demoImages'
 
 /**
  * Backend listing JSON (docs/PRODUCTS_API.md) → the product shape the pages and cards use (same as the sample data in
@@ -71,7 +72,8 @@ export function toProduct(item) {
     campusInfo: item.campus ?? null,
     pickupZone: item.pickupZone ?? null,
     locationLabel: locationLabelOf(item.campus, item.pickupZone),
-    images: images.map((image) => image.url).filter(Boolean),
+    // Seeded demo references without a verified reference photo are left out (never shown as another product's photo).
+    images: images.map((image) => image.url).filter((url) => url && (!isDemoReference(url) || demoPhotoFor(url))),
     imageItems: images.filter((image) => image.url),
     sellerId: item.seller?.id ?? null,
     seller: toSeller(item.seller),

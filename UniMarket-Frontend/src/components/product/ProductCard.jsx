@@ -28,7 +28,7 @@ export default function ProductCard({ product, preview = false }) {
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card transition-[border-color,box-shadow] duration-200 hover:border-ink/15 hover:shadow-pop">
       <div className="relative aspect-[4/3] overflow-hidden bg-subtle">
-        <ImageSlot src={images[0]} alt="" className={`transition-transform duration-300 group-hover:scale-[1.02] ${isUnavailable ? 'opacity-70' : ''}`} />
+        <ImageSlot src={images[0]} alt="" demoLabel className={`transition-transform duration-300 group-hover:scale-[1.02] ${isUnavailable ? 'opacity-70' : ''}`} />
 
         {isUnavailable ? (
           <ProductStatusBadge status={status} className="absolute top-2.5 left-2.5" />

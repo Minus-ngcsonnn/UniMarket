@@ -1,8 +1,36 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
+
+/**
+ * A missing static image must be a 404, not the SPA's index.html with status 200 (which a browser would report as a
+ * broken image only after downloading HTML, and which looks like a successful load to any HTTP check). Applies to
+ * `vite` (public/) and `vite preview` (dist/). Production hosting must be configured the same way.
+ */
+function missingStaticImagesAre404() {
+  const guard = (rootDir) => (req, res, next) => {
+    const pathname = decodeURIComponent((req.url || '').split('?')[0])
+    if (!pathname.startsWith('/images/')) return next()
+    const file = path.resolve(rootDir, `.${pathname}`)
+    if (file.startsWith(path.resolve(rootDir) + path.sep) && fs.existsSync(file) && fs.statSync(file).isFile()) return next()
+    res.statusCode = 404
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+    res.end('Image not found')
+  }
+  return {
+    name: 'unimarket-missing-static-images-404',
+    configureServer(server) {
+      server.middlewares.use(guard(server.config.publicDir))
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(guard(path.resolve(server.config.root, server.config.build.outDir)))
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -49,7 +77,7 @@ export default defineConfig(({ command, mode }) => {
   }
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), missingStaticImagesAre404()],
     define: {
       'import.meta.env.VITE_USE_MOCK_DATA': JSON.stringify(String(useMockData)),
       'import.meta.env.VITE_USE_MOCK_PRODUCTS': JSON.stringify(String(useMockProducts)),

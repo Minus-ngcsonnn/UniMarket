@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ChevronLeftIcon, ChevronRightIcon } from '../icons'
 import ImageSlot from '../ui/ImageSlot'
 import useTranslation from '../../i18n/useTranslation'
+import { demoPhotoFor } from '../../utils/demoImages'
 
 /**
  * Product photo gallery: large photo + thumbnails. With several photos it also offers
@@ -15,6 +16,8 @@ export default function ProductImageGallery({ images = [], title }) {
   const show = (next) => setIndex((next + count) % count)
 
   const frame = 'relative aspect-[4/3] overflow-hidden rounded-2xl border border-line bg-subtle'
+  // Attribution required by the licence of a demo reference photo (CC BY / CC BY-SA), shown under the large image.
+  const credit = count > 0 ? demoPhotoFor(images[index])?.credit : null
 
   if (count === 0) {
     return (
@@ -36,7 +39,7 @@ export default function ProductImageGallery({ images = [], title }) {
       }}
     >
       <div className={frame}>
-        <ImageSlot src={images[index]} alt={t('{title}, photo {number} of {count}', { title, number: index + 1, count })} />
+        <ImageSlot src={images[index]} alt={t('{title}, photo {number} of {count}', { title, number: index + 1, count })} demoLabel />
 
         {hasMany && (
           <>
@@ -62,6 +65,25 @@ export default function ProductImageGallery({ images = [], title }) {
           </>
         )}
       </div>
+
+      {credit && (
+        <p className="text-xs text-ink-muted">
+          {t('Reference photo of this product, not a photo of the item the seller is selling.')}{' '}
+          {t('Photo: {author}', { author: credit.creator })} ·{' '}
+          <a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">
+            {credit.sourceName}
+          </a>{' '}
+          ·{' '}
+          {credit.licenseUrl ? (
+            <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer license" className="underline hover:text-ink">
+              {credit.license}
+            </a>
+          ) : (
+            credit.license
+          )}
+          {credit.modified && ` · ${t('resized and reframed to 4:3')}`}
+        </p>
+      )}
 
       {hasMany && (
         <ul className="grid grid-cols-5 gap-2" aria-label={t("Choose photo")}>

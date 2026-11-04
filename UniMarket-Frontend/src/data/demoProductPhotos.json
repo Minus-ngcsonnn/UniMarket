@@ -1,0 +1,618 @@
+{
+  "01": {
+    "front": {
+      "file": "item-01-front.webp",
+      "title": "java books in waterstones",
+      "creator": "osde8info",
+      "sourceUrl": "https://www.flickr.com/photos/8764442@N07/4416537759",
+      "sourceName": "Flickr",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "01-22"
+    }
+  },
+  "05": {
+    "front": {
+      "file": "item-05-front.webp",
+      "title": "The Language God Talks",
+      "creator": "brewbooks",
+      "sourceUrl": "https://www.flickr.com/photos/93452909@N00/4960427509",
+      "sourceName": "Flickr",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "05-18"
+    }
+  },
+  "08": {
+    "front": {
+      "file": "item-08-front.webp",
+      "title": "Minna no Nihongo.jpg",
+      "creator": "Yusufjonov3107",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Minna_no_Nihongo.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "08-01"
+    },
+    "detail": {
+      "file": "item-08-detail.webp",
+      "title": "Minna no Nihongo, Asosiy grammatika mashqali kitobi.jpg",
+      "creator": "Yusufjonov3107",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Minna_no_Nihongo,_Asosiy_grammatika_mashqali_kitobi.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "08-00"
+    }
+  },
+  "09": {
+    "front": {
+      "file": "item-09-front.webp",
+      "title": "Bookabooka!",
+      "creator": "wstryder",
+      "sourceUrl": "https://www.flickr.com/photos/36514345@N00/3484270250",
+      "sourceName": "Flickr",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "09-13"
+    }
+  },
+  "10": {
+    "front": {
+      "file": "item-10-front.webp",
+      "title": "English textbook.jpg",
+      "creator": "Penarc",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:English_textbook.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "10-08"
+    }
+  },
+  "11": {
+    "front": {
+      "file": "item-11-front.webp",
+      "title": "MiNe-M 100-3007U.jpg",
+      "creator": "MiNe",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:MiNe-M_100-3007U.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "11-07"
+    },
+    "detail": {
+      "file": "item-11-detail.webp",
+      "title": "MiNe-M 100-3011U.jpg",
+      "creator": "MiNe",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:MiNe-M_100-3011U.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "11-05"
+    }
+  },
+  "12": {
+    "front": {
+      "file": "item-12-front.webp",
+      "title": "Logitech M331 Silent Mouse.jpg",
+      "creator": "Basana Saha",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Logitech_M331_Silent_Mouse.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "12-00"
+    }
+  },
+  "13": {
+    "front": {
+      "file": "item-13-front.webp",
+      "title": "Dell 2407WFP 24-inch Widescreen UltraSharp LCD Monitor VS. Dell UltraSharp 1704FPT 17-inch LCD Monitor",
+      "creator": "liewcf",
+      "sourceUrl": "https://www.flickr.com/photos/34353636@N00/472777730",
+      "sourceName": "Flickr",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "13-09"
+    },
+    "detail": {
+      "file": "item-13-detail.webp",
+      "title": "Dell 2407WFP 24-inch Widescreen UltraSharp LCD Monitor VS. Dell UltraSharp 1704FPT 17-inch LCD Monitor",
+      "creator": "liewcf",
+      "sourceUrl": "https://www.flickr.com/photos/34353636@N00/472792571",
+      "sourceName": "Flickr",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "13-12"
+    }
+  },
+  "14": {
+    "front": {
+      "file": "item-14-front.webp",
+      "title": "ThinkPad T480.jpg",
+      "creator": "Elizabeth K. Joseph",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:ThinkPad_T480.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "14-01"
+    },
+    "detail": {
+      "file": "item-14-detail.webp",
+      "title": "ThinkPad T480 on open air.jpg",
+      "creator": "Elizabeth K. Joseph",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:ThinkPad_T480_on_open_air.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "14-05"
+    }
+  },
+  "15": {
+    "front": {
+      "file": "item-15-front.webp",
+      "title": "Sony WH-CH510 Bluetooth Over-Ear Headphone.jpg",
+      "creator": "RPSkokie",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sony_WH-CH510_Bluetooth_Over-Ear_Headphone.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "15-00"
+    }
+  },
+  "18": {
+    "front": {
+      "file": "item-18-front.webp",
+      "title": "Webcam on computer screen.jpg",
+      "creator": "Peterhcharlton",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Webcam_on_computer_screen.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "18-01"
+    }
+  },
+  "20": {
+    "front": {
+      "file": "item-20-front.webp",
+      "title": "USB-C Hubb 5 portar.jpg",
+      "creator": "Khalid Bencherifa",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:USB-C_Hubb_5_portar.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "20-03"
+    }
+  },
+  "22": {
+    "front": {
+      "file": "item-22-front.webp",
+      "title": "Battery powered LED desk lamp-7420.jpg",
+      "creator": "Raimond Spekking",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Battery_powered_LED_desk_lamp-7420.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "22-00"
+    }
+  },
+  "23": {
+    "front": {
+      "file": "item-23-front.webp",
+      "title": "Thomas Hart Benton Home and Studio State Historic Site - home - small bookshelf.jpg",
+      "creator": "Ser Amantio di Nicolao",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Thomas_Hart_Benton_Home_and_Studio_State_Historic_Site_-_home_-_small_bookshelf.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "23-04"
+    }
+  },
+  "24": {
+    "front": {
+      "file": "item-24-front.webp",
+      "title": "Mesa de cafe da manha pra usar MacBook na Cama",
+      "creator": "Marco Gomes",
+      "sourceUrl": "https://www.flickr.com/photos/39802787@N00/3185129617",
+      "sourceName": "Flickr",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "24y14"
+    }
+  },
+  "25": {
+    "front": {
+      "file": "item-25-front.webp",
+      "title": "Chair used as meditation seat in a scientific study (Rodriguez et al, 2018).jpg",
+      "creator": "Victor H. Rodriguez, Carlos T. Medrano, and Inmaculada Plaza",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Chair_used_as_meditation_seat_in_a_scientific_study_(Rodriguez_et_al,_2018).jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "25-02"
+    }
+  },
+  "26": {
+    "front": {
+      "file": "item-26-front.webp",
+      "title": "Zojirushi Rice Cooker NP-RG05.jpg",
+      "creator": "Mr.ちゅらさん",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Zojirushi_Rice_Cooker_NP-RG05.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "26x03"
+    }
+  },
+  "28": {
+    "front": {
+      "file": "item-28-front.webp",
+      "title": "Garment rack.jpg",
+      "creator": "John Manoogian III from California",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Garment_rack.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "28-08"
+    }
+  },
+  "29": {
+    "front": {
+      "file": "item-29-front.webp",
+      "title": "Orange plastic storage container on top of a stack.jpg",
+      "creator": "Ser Amantio di Nicolao",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Orange_plastic_storage_container_on_top_of_a_stack.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "29x01"
+    }
+  },
+  "31": {
+    "front": {
+      "file": "item-31-front.webp",
+      "title": "Jean jacket.jpg",
+      "creator": "NikosLikomitros",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Jean_jacket.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC0",
+      "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "31-01"
+    }
+  },
+  "32": {
+    "front": {
+      "file": "item-32-front.webp",
+      "title": "New, Waterproof Backpack",
+      "creator": "Singpolyma",
+      "sourceUrl": "https://www.flickr.com/photos/40107278@N00/17080733870",
+      "sourceName": "Flickr",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "32-14"
+    }
+  },
+  "33": {
+    "front": {
+      "file": "item-33-front.webp",
+      "title": "White Sneakers - Coach (49688016318).jpg",
+      "creator": "Ajay Suresh from New York, NY, USA",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:White_Sneakers_-_Coach_(49688016318).jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "33-09"
+    }
+  },
+  "34": {
+    "front": {
+      "file": "item-34-front.webp",
+      "title": "Collar.agr.jpg",
+      "creator": "ArnoldReinhold",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Collar.agr.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "34y05"
+    }
+  },
+  "35": {
+    "front": {
+      "file": "item-35-front.webp",
+      "title": "Canvas two-tone tote Navy and Natural7 (9038437258).jpg",
+      "creator": "Tom Beatty",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Canvas_two-tone_tote_Navy_and_Natural7_(9038437258).jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "35-01"
+    }
+  },
+  "37": {
+    "front": {
+      "file": "item-37-front.webp",
+      "title": "Women's Pair of Blue Jeans Worn by Grace Strobel - DPLA - e94c33e652b48ea0513c90bc9b383e89 (page 1).jpg",
+      "creator": "AG Jeans",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Women%27s_Pair_of_Blue_Jeans_Worn_by_Grace_Strobel_-_DPLA_-_e94c33e652b48ea0513c90bc9b383e89_(page_1).jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "Public domain",
+      "licenseUrl": "",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "37y03"
+    },
+    "detail": {
+      "file": "item-37-detail.webp",
+      "title": "Women's Pair of Blue Jeans Worn by Grace Strobel - DPLA - e94c33e652b48ea0513c90bc9b383e89 (page 2).jpg",
+      "creator": "AG Jeans",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Women%27s_Pair_of_Blue_Jeans_Worn_by_Grace_Strobel_-_DPLA_-_e94c33e652b48ea0513c90bc9b383e89_(page_2).jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "Public domain",
+      "licenseUrl": "",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "37y00"
+    }
+  },
+  "38": {
+    "front": {
+      "file": "item-38-front.webp",
+      "title": "Hat.JPG",
+      "creator": "Lukeyhano",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hat.JPG",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "38-06"
+    }
+  },
+  "39": {
+    "front": {
+      "file": "item-39-front.webp",
+      "title": "Vintage 90's Lacoste Polo Shirt.jpg",
+      "creator": "Quercus acuta",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Vintage_90%27s_Lacoste_Polo_Shirt.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "39-04"
+    }
+  },
+  "40": {
+    "front": {
+      "file": "item-40-front.webp",
+      "title": "Cardigan, sweater.JPG",
+      "creator": "Rovdyr",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cardigan,_sweater.JPG",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY 2.5",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.5",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "40y00"
+    }
+  },
+  "41": {
+    "front": {
+      "file": "item-41-front.webp",
+      "title": "May tinh 580.jpg",
+      "creator": "Hoangnguyenngo71",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:May_tinh_580.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "41-00"
+    }
+  },
+  "42": {
+    "front": {
+      "file": "item-42-front.webp",
+      "title": "Wacom One graphics tablet with pen and disc, front.jpg",
+      "creator": "W.carter",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wacom_One_graphics_tablet_with_pen_and_disc,_front.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "42-01"
+    },
+    "detail": {
+      "file": "item-42-detail.webp",
+      "title": "Wacom One graphics tablet with pen and disc, back.jpg",
+      "creator": "W.carter",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wacom_One_graphics_tablet_with_pen_and_disc,_back.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "42-00"
+    }
+  },
+  "43": {
+    "front": {
+      "file": "item-43-front.webp",
+      "title": "Laptop stand.jpg",
+      "creator": "Solijon Solayev",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Laptop_stand.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "43-03"
+    }
+  },
+  "44": {
+    "front": {
+      "file": "item-44-front.webp",
+      "title": "Instruments",
+      "creator": "Dvortygirl",
+      "sourceUrl": "https://www.flickr.com/photos/21093323@N02/6805568447",
+      "sourceName": "Flickr",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "44-21"
+    }
+  },
+  "45": {
+    "front": {
+      "file": "item-45-front.webp",
+      "title": "College whiteboard.jpg",
+      "creator": "Kwsn",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:College_whiteboard.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "45x03"
+    }
+  },
+  "46": {
+    "front": {
+      "file": "item-46-front.webp",
+      "title": "Laptop cooler.JPG",
+      "creator": "User:Littletung",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Laptop_cooler.JPG",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "46-00"
+    }
+  },
+  "47": {
+    "front": {
+      "file": "item-47-front.webp",
+      "title": "Clean Blank Notebook and a Pen - Credit to https://bestpicko.com/",
+      "creator": "Bestpicko",
+      "sourceUrl": "https://www.flickr.com/photos/157089461@N07/28580015498",
+      "sourceName": "Flickr",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "47-22"
+    }
+  },
+  "48": {
+    "front": {
+      "file": "item-48-front.webp",
+      "title": "Inateck WP1002 Wireless Presenter (16592473328).jpg",
+      "creator": "Mack Male from Edmonton, AB, Canada",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Inateck_WP1002_Wireless_Presenter_(16592473328).jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "48-01"
+    },
+    "detail": {
+      "file": "item-48-detail.webp",
+      "title": "Inateck WP1002 Wireless Presenter (16593914759).jpg",
+      "creator": "Mack Male from Edmonton, AB, Canada",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Inateck_WP1002_Wireless_Presenter_(16593914759).jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "48-02"
+    }
+  },
+  "49": {
+    "front": {
+      "file": "item-49-front.webp",
+      "title": "Joonlaud.jpg",
+      "creator": "Johhhannna",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Joonlaud.jpg",
+      "sourceName": "Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "modified": true,
+      "change": "resized and placed on a blurred backdrop made from the same photo (4:3)",
+      "candidate": "49-13"
+    }
+  },
+  "50": {
+    "front": {
+      "file": "item-50-front.webp",
+      "title": "Pomodoro timer",
+      "creator": "David (Standout)",
+      "sourceUrl": "https://www.flickr.com/photos/13827494@N00/5222790553",
+      "sourceName": "Flickr",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+      "modified": true,
+      "change": "resized and cropped to 4:3",
+      "candidate": "50-09"
+    }
+  }
+}
