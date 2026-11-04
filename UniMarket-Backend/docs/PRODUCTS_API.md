@@ -61,7 +61,7 @@ Query parameters (all optional):
 | `deals` | bool | "Student deals": `originalPrice` set and price at least 40 % below it (`DEAL_MIN_SAVINGS`) |
 | `zoneId` | int ≥ 1 | V003 (Stage 6.2): listings whose **effective pickup area** is this zone — `Products.PickupZoneId`, else the zone of the listing's campus (same rule as the `pickupZone` in responses) |
 | `province` | text ≤ 100 | V003 (Stage 6.2): effective pickup area in this province / city (`LocationZones.Province`, exact value as returned by `/api/locations/zones`, e.g. `Hà Nội`) |
-| `sort` | `newest` (default), `price_asc`, `price_desc` | Ties broken by id (stable paging) |
+| `sort` | `recommended` (default), `newest`, `price_asc`, `price_desc` | `recommended`: listings with a running paid promotion first, then newest; the priority is part of the SQL `ORDER BY`, so it is applied before `OFFSET/FETCH` (correct across pages). Explicit sorts ignore promotions. Ties broken by id (stable paging) |
 | `page` | int ≥ 1 | **1-based**, default 1 |
 | `size` | 1–50 | Default 20 (the frontend uses 9) |
 

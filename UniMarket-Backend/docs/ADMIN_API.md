@@ -172,6 +172,10 @@ Opening: `POST /api/orders/{id}/disputes` (Stage 4, buyer or seller of a PAID / 
   concurrent HTTP calls. Remaining risk: there is **no database constraint** (e.g. a filtered unique index on
   `ProductId WHERE Status = 'Pending'`); code that writes `ProductPromotions` outside `PromotionService` could still
   create overlaps. Proposed in the V003 list; not created.
+- **Visibility (frontend):** a featured listing shows a "Featured / Nổi bật" badge and a blue outline on cards and on its
+  product page (only while it is Available), appears in the homepage "Featured Products" section (`featured=true`, up
+  to 8, hidden when none run) and first in the default `recommended` catalog order. My listings shows "Promoted until …",
+  "Promotion payment pending" or "Promotion ended …" from `GET /api/me/promotions`.
 - Starting does **not** feature the listing. It becomes PAID — and `featured` — only through a signed provider
   notification (the Stage 4 HMAC simulator path, `X-Simulator-Signature`; amount must equal the stored package price;
   identical repeats ignored, conflicting ones 409). The window starts at payment (truncated to the second) and lasts

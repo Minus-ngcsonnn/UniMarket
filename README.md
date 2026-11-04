@@ -20,7 +20,7 @@ It is a full-stack web application: a **Spring Boot** REST API, a **React (Vite)
 |---|---|
 | Accounts | Register with any valid email + 6-digit OTP (10 min, 5 tries), choose an official campus **or** type your own university (self-declared, not verified); login with JWT; forgot / reset password by email; roles Student and Admin; suspended accounts cannot sign in |
 | Listings | Create / edit / delete with photos (stored on disk, metadata stripped), condition New / Like New / Used, category, price, pickup area; **pre-moderation**: a new or edited listing is hidden until an admin approves it |
-| Browsing | Catalog with keyword, category, price, condition, university / campus filters; product page; seller profile with ratings; saved items (favorites); featured (promoted) listings |
+| Browsing | Catalog with keyword, category, price, condition, university / campus filters; product page; seller profile with ratings; saved items (favorites); featured (promoted) listings with a "Featured" badge, a homepage section and priority in the default "Recommended" sort |
 | Cart & checkout | Cart grouped by seller; checkout creates **one order per seller** (several items each, quantity 1); delivery address and area; **simulated shipping quote per seller** (free ≤ 3 km), total shown before placing the order |
 | Orders | `PENDING` → seller confirms within 24 h → `AWAITING_PAYMENT` → buyer pays within 24 h → `PAID` → seller ships → `DELIVERING` → buyer confirms receipt → `COMPLETED`; or `CANCELLED`. Buyer and seller views, action badges refreshed every 30 s |
 | Payments | Online only (no COD, no direct transfer to sellers): **MoMo, ZaloPay, Bank QR — all simulated**, server-verified signed results |

@@ -535,6 +535,57 @@ class AdminIntegrationTest {
         }
 
         @Test
+        void recommendedOrderPutsRunningPromotionsFirstBeforePagination() throws Exception {
+            String token = "RecLamp" + System.nanoTime(); // unique per run: test copies keep rows of earlier runs
+            int listing = approvedListing(sellerId, token + " desk lamp", 70_000);
+            // Old listing: without a promotion it would be on the last page of both orders.
+            jdbc.update("UPDATE dbo.Products SET CreatedAt = DATEADD(day, -900, CreatedAt) WHERE ProductId = ?", listing);
+            assertThat(catalogIds(getJson("/api/products?size=5", null))).doesNotContain(listing);
+
+            // A failed payment changes nothing.
+            JsonNode failed = readJson(promote(seller, listing, packageId(24), "MOMO").andExpect(status().isCreated()));
+            completePromotion(seller, failed.get("id").asLong(), false).andExpect(status().isOk());
+            assertThat(catalogIds(getJson("/api/products?size=5", null))).doesNotContain(listing);
+
+            JsonNode started = readJson(promote(seller, listing, packageId(24), "ZALOPAY").andExpect(status().isCreated()));
+            completePromotion(seller, started.get("id").asLong(), true).andExpect(status().isOk());
+            int running = jdbc.queryForObject("SELECT COUNT(DISTINCT c.ProductId) FROM dbo.vw_ProductCatalog c WHERE c.IsFeatured = 1", Integer.class);
+            JsonNode all = getJson("/api/products?size=50", null);
+            List<Integer> order = catalogIds(all);
+            assertThat(order).contains(listing);
+            // Every featured listing comes before every ordinary one, and newest first inside each group.
+            for (int i = 0; i < order.size(); i++) {
+                assertThat(all.get("items").get(i).get("featured").asBoolean()).as("position %d", i).isEqualTo(i < running);
+            }
+            List<String> featuredDates = new ArrayList<>();
+            all.get("items").forEach(item -> { if (item.get("featured").asBoolean()) featuredDates.add(item.get("createdAt").asText()); });
+            assertThat(featuredDates).isSortedAccordingTo((a, b) -> b.compareTo(a));
+
+            // Applied before pagination: the pages of the recommended order are disjoint and cover the same total.
+            JsonNode first = getJson("/api/products?size=5&page=1", null);
+            JsonNode second = getJson("/api/products?size=5&page=2", null);
+            assertThat(first.get("totalItems").asInt()).isEqualTo(getJson("/api/products?size=5&sort=newest", null).get("totalItems").asInt());
+            assertThat(catalogIds(first)).doesNotContainAnyElementsOf(catalogIds(second));
+            if (running <= 5) assertThat(catalogIds(first)).contains(listing);
+            // Explicit sorts are kept, filters still apply.
+            assertThat(catalogIds(getJson("/api/products?size=5&sort=newest", null))).doesNotContain(listing);
+            assertThat(catalogIds(getJson("/api/products?size=50&maxPrice=60000", null))).doesNotContain(listing);
+            assertThat(catalogIds(getJson("/api/products?size=50&q=" + token, null))).containsExactly(listing);
+
+            // A listing that is no longer available is never shown, even while its promotion runs.
+            jdbc.update("UPDATE dbo.Products SET Status = 'Reserved' WHERE ProductId = ?", listing);
+            assertThat(catalogIds(getJson("/api/products?size=50", null))).doesNotContain(listing);
+            assertThat(catalogIds(getJson("/api/products?size=50&featured=true", null))).doesNotContain(listing);
+            jdbc.update("UPDATE dbo.Products SET Status = 'Available' WHERE ProductId = ?", listing);
+
+            // When the window has passed the listing loses its priority again.
+            jdbc.update("UPDATE dbo.ProductPromotions SET StartsAt = DATEADD(day, -10, StartsAt), EndsAt = DATEADD(day, -10, EndsAt) WHERE PromotionId = ?",
+                    started.get("id").asLong());
+            assertThat(catalogIds(getJson("/api/products?size=5", null))).doesNotContain(listing);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM dbo.ProductPromotions WHERE ProductId = ? AND Status = 'Paid'", Integer.class, listing)).isEqualTo(1);
+        }
+
+        @Test
         void onlyTheSellerOfAnEligibleListingCanBuyAndFailuresAreNotFeatured() throws Exception {
             int listing = approvedListing(sellerId, "Promotion rules", 80_000);
             promote(stranger, listing, packageId(24), "MOMO").andExpect(status().isNotFound());
@@ -851,6 +902,13 @@ class AdminIntegrationTest {
             request.header("Authorization", bearer(token));
         }
         return readJson(mvc.perform(request).andExpect(status().isOk()));
+    }
+
+    /** @return listing ids of a catalog page, in response order */
+    private static List<Integer> catalogIds(JsonNode page) {
+        List<Integer> ids = new ArrayList<>();
+        page.get("items").forEach(item -> ids.add(item.get("id").asInt()));
+        return ids;
     }
 
     private JsonNode readJson(ResultActions result) throws Exception {

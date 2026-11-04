@@ -43,7 +43,8 @@ public class CatalogController {
     /**
      * Catalog: public available listings only.
      * Query: {@code q, categoryId, condition (repeatable or comma separated), campusId, universityId, sellerId,
-     * minPrice, maxPrice, featured, deals, sort (newest|price_asc|price_desc), page (1-based), size (1-50), zoneId, province}.
+     * minPrice, maxPrice, featured, deals, sort (recommended|newest|price_asc|price_desc; default recommended = featured
+     * listings first, then newest), page (1-based), size (1-50), zoneId, province}.
      * {@code zoneId} / {@code province} (V003) filter by the listing's effective demo pickup area.
      */
     @GetMapping("/api/products")

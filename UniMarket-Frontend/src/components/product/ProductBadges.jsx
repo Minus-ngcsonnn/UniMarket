@@ -1,7 +1,19 @@
 import { LISTING_MODERATION } from '../../constants/moderation'
 import { CONDITIONS, STATUSES } from '../../constants/product'
 import useTranslation from '../../i18n/useTranslation'
+import { SparklesIcon } from '../icons'
 import StatusPill from '../ui/StatusPill'
+
+/** "Featured" tag of promoted listings (cards, product page). */
+export function FeaturedBadge({ className = '' }) {
+  const { t } = useTranslation()
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-md bg-primary px-1.5 py-0.5 text-[11px] font-semibold text-white shadow-sm ${className}`}>
+      <SparklesIcon className="size-3" />
+      {t('Featured')}
+    </span>
+  )
+}
 
 /** Item condition tag (Figma card: "Like new" green, "New" blue, "Used" grey). */
 export function ConditionBadge({ condition, className = '' }) {

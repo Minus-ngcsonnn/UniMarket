@@ -21,7 +21,8 @@ import { findCategory } from '../../services/products/catalogReference'
 import { describeApiError } from '../../utils/apiErrorMessage'
 import { PATHS } from '../../routes/paths'
 import { productService } from '../../services/products/productService'
-import { formatDate, formatPrice, formatTime } from '../../utils/format'
+import { promotionApi } from '../../services/promotions/promotionApi'
+import { formatDate, formatDateTime, formatPrice, formatTime } from '../../utils/format'
 import useTranslation from '../../i18n/useTranslation'
 
 const TABS = [{ key: 'ALL', label: 'All' }, ...STATUS_KEYS.map((key) => ({ key, label: STATUSES[key].label }))]
@@ -65,6 +66,44 @@ function ModerationNote({ listing }) {
   return null
 }
 
+const noPromotions = () => Promise.resolve([])
+
+/**
+ * Promotion shown for each listing: the running one if any, otherwise the newest (GET /api/me/promotions is newest
+ * first). Only one promotion can be pending or running at a time.
+ */
+function promotionsByListing(promotions) {
+  const byId = {}
+  for (const promotion of promotions ?? []) {
+    const current = byId[promotion.productId]
+    if (!current || (promotion.active && !current.active)) byId[promotion.productId] = promotion
+  }
+  return byId
+}
+
+/**
+ * Promotion status of one of my listings, from the server's promotion records (never inferred from a started payment):
+ * running → "Promoted until …"; payment pending; paid but no longer running = ended (a new promotion is refused while one
+ * runs, so a paid one never waits to start). Failed attempts show nothing.
+ */
+function PromotionNote({ promotion }) {
+  const { t } = useTranslation()
+  if (!promotion) return null
+  if (promotion.active) {
+    return (
+      <p className="mt-1 inline-flex w-fit items-center gap-1 rounded-md bg-primary-soft px-1.5 py-0.5 text-xs font-medium text-primary">
+        <SparklesIcon className="size-3.5 shrink-0" />
+        {promotion.endsAt ? t('Promoted until {time}', { time: formatDateTime(promotion.endsAt) }) : t('Promoted')}
+      </p>
+    )
+  }
+  if (promotion.status === 'PENDING') return <p className="mt-1 text-xs text-ink-muted">{t('Promotion payment pending')}</p>
+  if (promotion.status === 'PAID' && promotion.endsAt) {
+    return <p className="mt-1 text-xs text-ink-muted">{t('Promotion ended {time}', { time: formatDateTime(promotion.endsAt) })}</p>
+  }
+  return null
+}
+
 function TableSkeleton() {
   const { t } = useTranslation()
   return (
@@ -88,6 +127,9 @@ export default function MyListingsPage() {
   const { t } = useTranslation()
   const { data: listings, error, isLoading, reload } = useAsyncData(() => productService.listMyListings(), 'my-listings')
   const { reference } = useCatalogReference()
+  // Real API only: my promotion records, to show which listings are promoted now (sample data has none).
+  const promotions = useAsyncData(USE_MOCK_ADMIN ? noPromotions : () => promotionApi.mine(), 'my-promotions')
+  const promotionOf = promotionsByListing(promotions.data)
   const categoryName = (listing) => findCategory(reference, listing.categorySlug)?.name ?? listing.categoryName ?? '—'
   // Set by Create Listing after a real save.
   const created = useLocation().state?.created
@@ -175,6 +217,7 @@ export default function MyListingsPage() {
                         </Link>
                         <p className="text-xs text-ink-muted">{listingCode(listing.id)}</p>
                         <ModerationNote listing={listing} />
+                        <PromotionNote promotion={promotionOf[listing.id]} />
                       </div>
                     </div>
                   </td>
@@ -218,6 +261,7 @@ export default function MyListingsPage() {
                   {listingCode(listing.id)} · {formatDate(listing.createdAt)}
                 </div>
                 <ModerationNote listing={listing} />
+                <PromotionNote promotion={promotionOf[listing.id]} />
               </div>
             </li>
           ))}
@@ -279,6 +323,7 @@ export default function MyListingsPage() {
           onClose={() => {
             setPromoting(null)
             reload()
+            promotions.reload()
           }}
         />
       )}

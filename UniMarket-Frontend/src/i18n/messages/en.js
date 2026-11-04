@@ -92,6 +92,10 @@ export const en = {
     fashion: 'Fashion',
     'study-gear': 'Study Gear',
   },
+  featuredHome: {
+    title: 'Featured Products',
+    description: 'Listings promoted by their sellers right now.',
+  },
   deals: {
     title: 'Student Deals',
     description: 'Listings priced at least {percent}% below their original retail price.',

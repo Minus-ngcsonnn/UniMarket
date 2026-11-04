@@ -93,6 +93,10 @@ export const vi = {
     fashion: 'Thời trang',
     'study-gear': 'Dụng cụ học tập',
   },
+  featuredHome: {
+    title: 'Sản phẩm nổi bật',
+    description: 'Tin đăng đang được người bán quảng bá.',
+  },
   deals: {
     title: 'Ưu đãi sinh viên',
     description: 'Tin đăng có giá thấp hơn giá mới ban đầu ít nhất {percent}%.',
