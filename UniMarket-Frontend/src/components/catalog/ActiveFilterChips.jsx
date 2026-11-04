@@ -1,15 +1,16 @@
-import { CATEGORIES } from '../../constants/categories'
-import { CAMPUSES, CONDITIONS } from '../../constants/product'
+import { CONDITIONS } from '../../constants/product'
+import useCatalogReference from '../../hooks/useCatalogReference'
+import { findCampus, findCategory, findZone } from '../../services/products/catalogReference'
 import { formatPrice } from '../../utils/format'
 import { XIcon } from '../icons'
 import useTranslation from '../../i18n/useTranslation'
 
 /** Builds removable chips for every active filter. */
-function chipsFor(filters, t) {
+function chipsFor(filters, t, reference) {
   const chips = []
   if (filters.q) chips.push({ key: 'q', label: t('Search: “{query}”', { query: filters.q }), remove: { q: '' } })
   if (filters.category) {
-    const name = CATEGORIES.find((c) => c.slug === filters.category)?.name
+    const name = findCategory(reference, filters.category)?.name ?? filters.category
     chips.push({ key: 'category', label: t('Category: {name}', { name: t(name) }), remove: { category: '' } })
   }
   if (filters.minPrice != null || filters.maxPrice != null) {
@@ -21,15 +22,25 @@ function chipsFor(filters, t) {
     chips.push({ key: `condition-${key}`, label: t('Condition: {name}', { name: t(CONDITIONS[key].label) }), remove: { conditions: filters.conditions.filter((c) => c !== key) } }),
   )
   filters.campuses.forEach((key) =>
-    chips.push({ key: `campus-${key}`, label: t('Campus: {name}', { name: t(CAMPUSES[key].label) }), remove: { campuses: filters.campuses.filter((c) => c !== key) } }),
+    chips.push({
+      key: `campus-${key}`,
+      label: t('Campus: {name}', { name: t(findCampus(reference, key)?.label ?? key) }),
+      remove: { campuses: filters.campuses.filter((c) => c !== key) },
+    }),
   )
+  if (filters.province) chips.push({ key: 'province', label: t('Province: {name}', { name: filters.province }), remove: { province: '', zone: '' } })
+  if (filters.zone) {
+    const zone = findZone(reference, filters.zone)
+    chips.push({ key: 'zone', label: t('Area: {name}', { name: zone ? zone.name : `#${filters.zone}` }), remove: { zone: '' } })
+  }
   return chips
 }
 
 /** Active filter chips with "Clear all" (Figma: "Campus: Hanoi ×   Clear all"). */
 export default function ActiveFilterChips({ filters, onChange, onClearAll }) {
   const { t } = useTranslation()
-  const chips = chipsFor(filters, t)
+  const { reference } = useCatalogReference()
+  const chips = chipsFor(filters, t, reference)
   if (chips.length === 0) return null
 
   return (

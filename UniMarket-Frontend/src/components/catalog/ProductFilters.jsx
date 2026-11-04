@@ -1,13 +1,28 @@
 import { useId } from 'react'
-import { CATEGORIES } from '../../constants/categories'
-import { CAMPUSES, CAMPUS_KEYS, CONDITIONS, CONDITION_KEYS, UNIVERSITY_NAME } from '../../constants/product'
+import { CONDITIONS, CONDITION_KEYS } from '../../constants/product'
+import useCatalogReference from '../../hooks/useCatalogReference'
 import { PanelLeftCloseIcon, SlidersIcon } from '../icons'
+import Select from '../ui/Select'
 import FilterSection from './FilterSection'
 import PriceRangeFilter from './PriceRangeFilter'
 import useTranslation from '../../i18n/useTranslation'
 
 function toggle(list, value) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]
+}
+
+/** One campus at a time: the backend filters a single campusId. */
+const toggleSingle = (list, value) => (list.includes(value) ? [] : [value])
+
+/** Campuses grouped by university, in API order. */
+function byUniversity(campuses) {
+  const groups = new Map()
+  campuses.forEach((campus) => {
+    const key = campus.university ?? ''
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key).push(campus)
+  })
+  return [...groups.entries()]
 }
 
 function Count({ value }) {
@@ -26,8 +41,9 @@ function CheckboxRow({ label, checked, count, onChange }) {
 }
 
 /**
- * Catalog filter panel (Figma sidebar): Categories, Price range, Item condition, University campus.
- * Every change is applied immediately through onChange(partialFilters).
+ * Catalog filter panel (Figma sidebar): Categories, Price range, Item condition, University campus and (real API, V003)
+ * pickup area by province / area. Categories, campuses and areas come from the API (useCatalogReference).
+ * Every change is applied immediately through onChange(partialFilters); the backend filters the whole catalog.
  *
  * @param {object} filters current filters from useCatalogParams
  * @param {object} [facets] counts per category/condition/campus from the product service
@@ -37,6 +53,8 @@ function CheckboxRow({ label, checked, count, onChange }) {
 export default function ProductFilters({ filters, facets, onChange, onCollapse, bare = false }) {
   const { t } = useTranslation()
   const headingId = useId()
+  const { reference } = useCatalogReference()
+  const zonesInProvince = reference.zones.filter((zone) => !filters.province || zone.province === filters.province)
 
   return (
     <div aria-labelledby={headingId} role="group" className={bare ? '' : 'rounded-2xl border border-line bg-surface p-5'}>
@@ -60,7 +78,7 @@ export default function ProductFilters({ filters, facets, onChange, onCollapse, 
 
       <FilterSection title={t("Categories")}>
         <ul className="flex flex-col gap-0.5">
-          {[{ slug: '', name: 'All categories' }, ...CATEGORIES].map(({ slug, name }) => {
+          {[{ slug: '', name: 'All categories' }, ...reference.categories].map(({ slug, name }) => {
             const isSelected = filters.category === slug
             const count = slug ? facets?.categories?.[slug] : facets?.total
             return (
@@ -103,18 +121,49 @@ export default function ProductFilters({ filters, facets, onChange, onCollapse, 
         ))}
       </FilterSection>
 
-      <FilterSection title={t("University campus")}>
-        <p className="mb-2 text-xs font-semibold tracking-wide text-ink-muted uppercase">{t(UNIVERSITY_NAME)}</p>
-        {CAMPUS_KEYS.map((key) => (
-          <CheckboxRow
-            key={key}
-            label={CAMPUSES[key].label}
-            checked={filters.campuses.includes(key)}
-            count={facets?.campuses?.[key]}
-            onChange={() => onChange({ campuses: toggle(filters.campuses, key) })}
-          />
-        ))}
-      </FilterSection>
+      {reference.campuses.length > 0 && (
+        <FilterSection title={t("University campus")}>
+          {byUniversity(reference.campuses).map(([university, campuses]) => (
+            <div key={university || 'campuses'} className="mb-2 last:mb-0">
+              {university && <p className="mb-2 text-xs font-semibold tracking-wide text-ink-muted uppercase">{t(university)}</p>}
+              {campuses.map((campus) => (
+                <CheckboxRow
+                  key={campus.key}
+                  label={campus.label}
+                  checked={filters.campuses.includes(campus.key)}
+                  count={facets?.campuses?.[campus.key]}
+                  onChange={() => onChange({ campuses: toggleSingle(filters.campuses, campus.key) })}
+                />
+              ))}
+            </div>
+          ))}
+        </FilterSection>
+      )}
+
+      {reference.zones.length > 0 && (
+        <FilterSection title={t('Pickup area')}>
+          <div className="flex flex-col gap-3">
+            <Select
+              label={t('Province / city')}
+              name="province"
+              options={[{ value: '', label: t('All provinces') }, ...reference.provinces.map((province) => ({ value: province, label: province }))]}
+              value={filters.province}
+              onChange={(province) => {
+                const zone = reference.zones.find((z) => String(z.id) === filters.zone)
+                onChange({ province, zone: zone && province && zone.province !== province ? '' : filters.zone })
+              }}
+            />
+            <Select
+              label={t('Area')}
+              name="zone"
+              options={[{ value: '', label: t('All areas') }, ...zonesInProvince.map((zone) => ({ value: String(zone.id), label: filters.province ? zone.name : `${zone.name} — ${zone.province}` }))]}
+              value={filters.zone}
+              onChange={(zone) => onChange({ zone })}
+            />
+            <p className="text-xs text-ink-muted">{t('Approximate area where the seller hands over the item.')}</p>
+          </div>
+        </FilterSection>
+      )}
     </div>
   )
 }

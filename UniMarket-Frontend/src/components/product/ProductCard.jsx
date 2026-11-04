@@ -14,13 +14,14 @@ import SaveItemButton from './SaveItemButton'
  * listing time; save heart on the photo. The whole card links to Product Detail.
  * A discount tag is shown only when the listing has an original price above its price.
  *
- * @param {object} product { id, title, price, originalPrice, condition, status, campus, images, createdAt, seller? }
+ * @param {object} product { id, title, price, originalPrice, condition, status, campus, locationLabel?, images, createdAt, seller? }
  * @param {boolean} [preview] render without link/save button (live preview in the listing form)
  */
 export default function ProductCard({ product, preview = false }) {
   const { t, lang } = useTranslation()
-  const { id, title, price, originalPrice, condition, status, campus, images = [], createdAt, seller } = product
-  const campusLabel = CAMPUSES[campus]?.label
+  const { id, title, price, originalPrice, condition, status, campus, images = [], createdAt, seller, locationLabel } = product
+  // Real API: campus name or V003 pickup area; sample data: campus key.
+  const campusLabel = locationLabel ?? CAMPUSES[campus]?.label
   const savings = savingsPercent(price, originalPrice)
   const isUnavailable = status && status !== 'AVAILABLE'
 
@@ -71,7 +72,7 @@ export default function ProductCard({ product, preview = false }) {
             {(seller || campusLabel) && (
               <span className="flex min-w-0 items-center gap-1">
                 <MapPinIcon className="size-3.5 shrink-0" />
-                <span className="truncate">{[seller?.name, campusLabel].filter(Boolean).join(' · ')}</span>
+                <span className="truncate">{[seller?.name, t(campusLabel)].filter(Boolean).join(' · ')}</span>
               </span>
             )}
             {createdAt && (

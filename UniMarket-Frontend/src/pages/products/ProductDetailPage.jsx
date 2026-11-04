@@ -16,10 +16,12 @@ import Button from '../../components/ui/Button'
 import { buttonClasses } from '../../components/ui/buttonClasses'
 import EmptyState from '../../components/ui/EmptyState'
 import ErrorState from '../../components/ui/ErrorState'
-import { CATEGORIES } from '../../constants/categories'
 import { isPubliclyListed } from '../../constants/moderation'
 import { CAMPUSES, CONDITIONS, UNIVERSITY_NAME, listingCode } from '../../constants/product'
 import useAsyncData from '../../hooks/useAsyncData'
+import useCatalogReference from '../../hooks/useCatalogReference'
+import { findCategory } from '../../services/products/catalogReference'
+import { describeApiError } from '../../utils/apiErrorMessage'
 import useCart from '../../hooks/useCart'
 import { PATHS, marketplaceUrl } from '../../routes/paths'
 import { productService } from '../../services/products/productService'
@@ -60,7 +62,8 @@ export default function ProductDetailPage() {
   const { t } = useTranslation()
   const { id } = useParams()
   const { data: product, error, isLoading, reload } = useAsyncData(() => productService.getProduct(id), `product-${id}`)
-  const category = CATEGORIES.find((c) => c.slug === product?.categorySlug)
+  const { reference } = useCatalogReference()
+  const category = findCategory(reference, product?.categorySlug) ?? (product?.categoryName ? { slug: product.categorySlug, name: product.categoryName } : undefined)
   const related = useAsyncData(
     () => (product ? productService.listProducts({ category: product.categorySlug, pageSize: 5 }) : Promise.resolve(null)),
     `related-${product?.id ?? 'none'}`,
@@ -84,7 +87,7 @@ export default function ProductDetailPage() {
   if (error) {
     return (
       <PageContainer className="py-10">
-        <ErrorState title={t("Couldn’t load this listing")} message={error.message} onRetry={reload} />
+        <ErrorState title={t("Couldn’t load this listing")} message={describeApiError(error).message} onRetry={reload} />
       </PageContainer>
     )
   }
@@ -127,7 +130,13 @@ export default function ProductDetailPage() {
   const details = [
     ['Category', t(category?.name)],
     ['Condition', t(CONDITIONS[product.condition]?.label)],
-    ['Campus', `${t(UNIVERSITY_NAME)} · ${t(CAMPUSES[product.campus]?.label)}`],
+    // Real API: the listing's campus and / or V003 pickup area; sample data: FPT campus key.
+    ...(product.campusInfo || product.pickupZone
+      ? [
+          ...(product.campusInfo ? [['Campus', `${product.campusInfo.university} · ${product.campusInfo.name}`]] : []),
+          ...(product.pickupZone ? [['Pickup area', `${product.pickupZone.name}, ${product.pickupZone.province}`]] : []),
+        ]
+      : [['Campus', `${t(UNIVERSITY_NAME)} · ${t(CAMPUSES[product.campus]?.label)}`]]),
     ['Listed on', formatDate(product.createdAt)],
     ['Listing ID', listingCode(product.id)],
   ]

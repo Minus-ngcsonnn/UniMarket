@@ -14,15 +14,29 @@ export default defineConfig(({ command, mode }) => {
   // The '@…-api-impl' aliases point to the mock APIs or the real APIs, so builds without sample data
   // never include the mock modules or their images.
   const useMockData = env.VITE_USE_MOCK_DATA ? env.VITE_USE_MOCK_DATA === 'true' : command === 'serve'
-  const apiImpl = (mockFile, realFile) => fileURLToPath(new URL(useMockData ? mockFile : realFile, import.meta.url))
+  const apiImpl = (mockFile, realFile, useMock = useMockData) => fileURLToPath(new URL(useMock ? mockFile : realFile, import.meta.url))
+  // Stage 6.2: products, categories, listings and favorites can use the real API while cart, orders and admin still
+  // use sample data. VITE_USE_MOCK_PRODUCTS decides; by default real products go with real sign-in (VITE_AUTH_MODE=backend).
+  const useMockProducts = env.VITE_USE_MOCK_PRODUCTS
+    ? env.VITE_USE_MOCK_PRODUCTS === 'true'
+    : env.VITE_AUTH_MODE === 'backend'
+      ? false
+      : useMockData
 
   if (command === 'serve') {
     // Make it obvious which backend (and therefore which database) this dev server talks to.
-    console.info(`[unimarket] /api -> ${backendUrl} | auth mode: ${env.VITE_AUTH_MODE || (useMockData ? 'demo' : 'backend')}`)
+    console.info(
+      `[unimarket] /api -> ${backendUrl} | auth mode: ${env.VITE_AUTH_MODE || (useMockData ? 'demo' : 'backend')} | products: ${useMockProducts ? 'sample data' : 'backend'}`,
+    )
   }
 
   const apiProxy = {
     '/api': {
+      target: backendUrl,
+      changeOrigin: true,
+    },
+    // Uploaded listing photos (ProductImages.ImageUrl = /media/products/<file>), served by the backend.
+    '/media': {
       target: backendUrl,
       changeOrigin: true,
     },
@@ -32,10 +46,11 @@ export default defineConfig(({ command, mode }) => {
     plugins: [react(), tailwindcss()],
     define: {
       'import.meta.env.VITE_USE_MOCK_DATA': JSON.stringify(String(useMockData)),
+      'import.meta.env.VITE_USE_MOCK_PRODUCTS': JSON.stringify(String(useMockProducts)),
     },
     resolve: {
       alias: {
-        '@product-api-impl': apiImpl('./src/mocks/mockProductApi.js', './src/services/products/productApi.js'),
+        '@product-api-impl': apiImpl('./src/mocks/mockProductApi.js', './src/services/products/productApi.js', useMockProducts),
         '@order-api-impl': apiImpl('./src/mocks/mockOrderApi.js', './src/services/orders/orderApi.js'),
         '@account-api-impl': apiImpl('./src/mocks/mockAccountApi.js', './src/services/account/accountApi.js'),
         '@admin-api-impl': apiImpl('./src/mocks/mockAdminApi.js', './src/services/admin/adminApi.js'),

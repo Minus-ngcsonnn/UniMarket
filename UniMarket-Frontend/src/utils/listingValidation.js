@@ -8,10 +8,12 @@ const L = LISTING_LIMITS
  * Client-side validation for the Create/Edit Listing form.
  * Returns { fieldName: message } for invalid fields only. The backend must validate again.
  *
- * @param {object} values { photos, title, categorySlug, condition, description, price, originalPrice, campus }
+ * @param {object} values { photos, title, categorySlug, condition, description, price, originalPrice, campus, pickupZone }
  *   price/originalPrice are whole VND numbers or null.
+ * @param {{ location?: 'campus'|'zone' }} [options] real API (V003): 'campus' = seller with an official campus (campus
+ *   required, pickup area optional); 'zone' = seller without a campus (pickup area required). Default: campus.
  */
-export function validateListing(values) {
+export function validateListing(values, { location = 'campus' } = {}) {
   const errors = {}
   const title = values.title.trim()
   const description = values.description.trim()
@@ -47,7 +49,11 @@ export function validateListing(values) {
     errors.originalPrice = 'The original price should be higher than your price, or leave it empty.'
   }
 
-  if (isBlank(values.campus)) errors.campus = 'Choose your campus.'
+  if (location === 'zone') {
+    if (isBlank(values.pickupZone)) errors.pickupZone = 'Choose the area where buyers can pick up the item.'
+  } else if (isBlank(values.campus)) {
+    errors.campus = 'Choose your campus.'
+  }
 
   return errors
 }

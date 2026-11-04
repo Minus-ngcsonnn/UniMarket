@@ -9,3 +9,9 @@
  * contain the mock module or its images at all.
  */
 export const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
+
+/**
+ * Products, categories, listings and saved items (Stage 6.2). Real API unless VITE_USE_MOCK_PRODUCTS=true; by default
+ * it follows real sign-in (VITE_AUTH_MODE=backend), so cart, orders and admin may still show sample data meanwhile.
+ */
+export const USE_MOCK_PRODUCTS = import.meta.env.VITE_USE_MOCK_PRODUCTS === 'true'

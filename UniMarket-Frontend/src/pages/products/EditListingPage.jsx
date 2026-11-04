@@ -13,7 +13,8 @@ import { listingCode, listingToFormValues } from '../../constants/product'
 import useAsyncData from '../../hooks/useAsyncData'
 import useListingSubmit from '../../hooks/useListingSubmit'
 import { PATHS } from '../../routes/paths'
-import { productService } from '../../services/products/productService'
+import { isSampleData, productService } from '../../services/products/productService'
+import { describeApiError } from '../../utils/apiErrorMessage'
 import useTranslation from '../../i18n/useTranslation'
 
 const MESSAGES = {
@@ -42,11 +43,15 @@ export default function EditListingPage() {
   const { t } = useTranslation()
   const { id } = useParams()
   const { data: listing, error, isLoading, reload } = useAsyncData(() => productService.getMyListing(id), `my-listing-${id}`)
-  const { result, submit } = useListingSubmit((payload) => productService.updateListing(id, payload), MESSAGES)
+  const { result, submit, serverErrors, uploadProgress } = useListingSubmit(
+    (payload, options) => productService.updateListing(id, payload, options),
+    MESSAGES,
+    { onSaved: reload },
+  )
 
   let content
   if (error) {
-    content = <ErrorState title={t("Couldn’t load this listing")} message={error.message} onRetry={reload} />
+    content = <ErrorState title={t("Couldn’t load this listing")} message={describeApiError(error).message} onRetry={reload} />
   } else if (isLoading) {
     content = <LoadingState message={t("Loading your listing…")} />
   } else if (!listing) {
@@ -61,11 +66,15 @@ export default function EditListingPage() {
         }
       />
     )
-  } else if (listing.status === 'SOLD') {
+  } else if (listing.status === 'SOLD' || listing.editable === false) {
     content = (
       <EmptyState
-        title={t("Sold listings can’t be edited")}
-        description={t("This item has already been sold, so its details are kept as they were.")}
+        title={listing.status === 'SOLD' ? t("Sold listings can’t be edited") : t('This listing can’t be edited now')}
+        description={
+          listing.status === 'SOLD'
+            ? t("This item has already been sold, so its details are kept as they were.")
+            : t('It is reserved or part of an open order. You can edit it again if the order is cancelled.')
+        }
         action={
           <Link to={PATHS.product(listing.id)} className={buttonClasses({ variant: 'secondary' })}>
             {t("View listing")}
@@ -76,9 +85,11 @@ export default function EditListingPage() {
   } else {
     content = (
       <ProductForm
-        key={listing.id}
+        key={`${listing.id}-${listing.updatedAt ?? ''}`}
         initialValues={listingToFormValues(listing)}
         onSubmit={submit}
+        serverErrors={serverErrors}
+        uploadProgress={uploadProgress}
         submitLabel={t("Save changes")}
         cancelTo={PATHS.myListings}
         notice={result && <Alert variant={result.variant} title={result.title}>{result.text}</Alert>}
@@ -103,15 +114,17 @@ export default function EditListingPage() {
       </header>
 
       <SampleDataNotice className="mb-4">{t("You’re editing a sample listing. Sign-in and saving aren’t connected yet.")}</SampleDataNotice>
-      {listing && listing.status !== 'SOLD' && (
+      {listing && listing.status !== 'SOLD' && listing.editable !== false && (
         <div className="mb-6 flex flex-col gap-3">
           <Alert variant="info" title={REVIEW_NOTES[listing.moderation]?.title ?? REVIEW_NOTES.APPROVED.title}>
             {t(REVIEW_NOTES[listing.moderation]?.text ?? REVIEW_NOTES.APPROVED.text)}
             {listing.moderation === 'BLOCKED' && listing.moderationNote && <span className="mt-1 block">{t('Admin’s note:')} “{listing.moderationNote}”</span>}
           </Alert>
-          <Alert variant="warning" title={t("Saving isn’t connected yet")}>
-            {t("You can edit and check the form, but changes can’t be saved until the UniMarket backend is ready.")}
-          </Alert>
+          {isSampleData && (
+            <Alert variant="warning" title={t("Saving isn’t connected yet")}>
+              {t("You can edit and check the form, but changes can’t be saved until the UniMarket backend is ready.")}
+            </Alert>
+          )}
         </div>
       )}
 

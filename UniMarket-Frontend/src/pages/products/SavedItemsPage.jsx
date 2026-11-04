@@ -11,21 +11,28 @@ import ErrorState from '../../components/ui/ErrorState'
 import { isPubliclyListed } from '../../constants/moderation'
 import useAsyncData from '../../hooks/useAsyncData'
 import useSaved from '../../hooks/useSaved'
-import { PATHS } from '../../routes/paths'
+import { PATHS, loginUrl } from '../../routes/paths'
+import apiClient from '../../services/apiClient'
+import { toProduct } from '../../services/products/productMapper'
 import { productService } from '../../services/products/productService'
+import { describeApiError } from '../../utils/apiErrorMessage'
 import useTranslation from '../../i18n/useTranslation'
 
+/** Real API: GET /api/me/favorites = saved listings that are still public, newest saved first. */
+const loadFavorites = () => apiClient.get('/me/favorites').then(({ data }) => data.map(toProduct))
+
 /**
- * Saved items (wishlist): listings the student hearted, newest first. Kept in this browser until
- * accounts exist. Listings that were removed or hidden by moderation are listed separately so the
- * student can clear them.
+ * Saved items (wishlist): listings the student hearted, newest first. Real API: the account's favorites in the
+ * database (sign-in required); sample data: kept in this browser. Listings that were removed or hidden by moderation
+ * are listed separately so the student can clear them.
  */
 export default function SavedItemsPage() {
   const { t } = useTranslation()
   const saved = useSaved()
+  const needsLogin = saved.isBackend && saved.status === 'anonymous'
   const { data, previousData, error, isLoading, reload } = useAsyncData(
-    () => (saved.ids.length ? productService.getProductsByIds(saved.ids) : Promise.resolve([])),
-    `saved-${saved.ids.join(',')}`,
+    () => (saved.isBackend ? (saved.status === 'ready' ? loadFavorites() : Promise.resolve(null)) : saved.ids.length ? productService.getProductsByIds(saved.ids) : Promise.resolve([])),
+    `saved-${saved.status}-${saved.ids.join(',')}`,
   )
   const products = data ?? previousData ?? []
   const byId = new Map(products.map((p) => [p.id, p]))
@@ -34,8 +41,29 @@ export default function SavedItemsPage() {
   const sold = visible.filter((p) => p.status !== 'AVAILABLE')
 
   let content
-  if (error) {
-    content = <ErrorState title={t("Couldn’t load your saved items")} message={error.message} onRetry={reload} />
+  if (needsLogin) {
+    content = (
+      <EmptyState
+        icon={<HeartIcon className="size-6" />}
+        title={t('Sign in to see your saved items')}
+        description={t('Saved items are kept with your UniMarket account, so they follow you on every device.')}
+        action={
+          <Link to={loginUrl(PATHS.saved)} className={buttonClasses({ size: 'sm' })}>
+            {t('Login')}
+          </Link>
+        }
+      />
+    )
+  } else if (error || (saved.isBackend && saved.status === 'error')) {
+    content = (
+      <ErrorState
+        title={t("Couldn’t load your saved items")}
+        message={describeApiError(error ?? saved.error).message}
+        onRetry={() => (error ? reload() : saved.refresh())}
+      />
+    )
+  } else if (saved.isBackend && saved.status === 'loading') {
+    content = <ProductGrid isLoading layout="wide" skeletonCount={4} />
   } else if (saved.count === 0) {
     content = (
       <EmptyState
@@ -88,6 +116,9 @@ export default function SavedItemsPage() {
         <p className="mt-1.5 text-ink-muted">{t("Listings you’ve hearted. Saving doesn’t reserve an item, so check out when you’re ready.")}</p>
       </header>
       <SampleDataNotice className="mb-6">{t("Saved items are kept in this browser only until accounts are connected.")}</SampleDataNotice>
+      {saved.isBackend && saved.status === 'ready' && saved.count > 0 && (
+        <p className="-mt-3 mb-6 text-xs text-ink-muted">{t('Saved with your account. Saving never reserves an item or notifies the seller.')}</p>
+      )}
       {content}
     </PageContainer>
   )

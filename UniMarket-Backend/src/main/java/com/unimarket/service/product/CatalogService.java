@@ -67,6 +67,8 @@ public class CatalogService {
                 ProductSpecifications.withConditions(query.conditions()),
                 ProductSpecifications.atCampus(query.campusId()),
                 ProductSpecifications.atUniversity(query.universityId()),
+                ProductSpecifications.inPickupZone(query.zoneId()),
+                ProductSpecifications.inProvince(query.province()),
                 ProductSpecifications.bySeller(query.sellerId()),
                 ProductSpecifications.priceAtLeast(query.minPrice()),
                 ProductSpecifications.priceAtMost(query.maxPrice()),

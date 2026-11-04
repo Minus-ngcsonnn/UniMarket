@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { PackageIcon, PencilIcon, PlusIcon, TrashIcon } from '../../components/icons'
 import Breadcrumbs from '../../components/layout/Breadcrumbs'
 import PageContainer from '../../components/layout/PageContainer'
@@ -12,23 +12,27 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import EmptyState from '../../components/ui/EmptyState'
 import ErrorState from '../../components/ui/ErrorState'
 import ImageSlot from '../../components/ui/ImageSlot'
-import { CATEGORIES } from '../../constants/categories'
 import { STATUSES, STATUS_KEYS, listingCode } from '../../constants/product'
 import useAsyncData from '../../hooks/useAsyncData'
+import useCatalogReference from '../../hooks/useCatalogReference'
+import { findCategory } from '../../services/products/catalogReference'
+import { describeApiError } from '../../utils/apiErrorMessage'
 import { PATHS } from '../../routes/paths'
 import { productService } from '../../services/products/productService'
 import { formatDate, formatPrice, formatTime } from '../../utils/format'
 import useTranslation from '../../i18n/useTranslation'
 
 const TABS = [{ key: 'ALL', label: 'All' }, ...STATUS_KEYS.map((key) => ({ key, label: STATUSES[key].label }))]
-const categoryName = (slug) => CATEGORIES.find((c) => c.slug === slug)?.name ?? '—'
-
-/** Row actions for one listing: view, edit (not for sold items), delete. */
+/**
+ * Row actions for one listing: view, edit, delete. Real API: only while the backend says the listing is `editable`
+ * (DRAFT / AVAILABLE and not in an open order); sample data: not for sold items.
+ */
 function actionsFor(listing, onDelete) {
+  const canChange = listing.editable ?? listing.status !== 'SOLD'
   return [
     { label: 'View listing', Icon: PackageIcon, to: PATHS.product(listing.id) },
-    ...(listing.status !== 'SOLD' ? [{ label: 'Edit', Icon: PencilIcon, to: PATHS.editListing(listing.id) }] : []),
-    { label: 'Delete', Icon: TrashIcon, danger: true, onSelect: () => onDelete(listing) },
+    ...(canChange ? [{ label: 'Edit', Icon: PencilIcon, to: PATHS.editListing(listing.id) }] : []),
+    ...(canChange || listing.editable == null ? [{ label: 'Delete', Icon: TrashIcon, danger: true, onSelect: () => onDelete(listing) }] : []),
   ]
 }
 
@@ -78,6 +82,10 @@ function TableSkeleton() {
 export default function MyListingsPage() {
   const { t } = useTranslation()
   const { data: listings, error, isLoading, reload } = useAsyncData(() => productService.listMyListings(), 'my-listings')
+  const { reference } = useCatalogReference()
+  const categoryName = (listing) => findCategory(reference, listing.categorySlug)?.name ?? listing.categoryName ?? '—'
+  // Set by Create Listing after a real save.
+  const created = useLocation().state?.created
   const [tab, setTab] = useState('ALL')
   const [deleting, setDeleting] = useState(null) // { listing, isWorking, result }
 
@@ -101,7 +109,11 @@ export default function MyListingsPage() {
       })
       if (response.saved) reload()
     } catch (deleteError) {
-      setDeleting({ listing, result: { variant: 'warning', title: 'Not deleted', text: deleteError.message } })
+      const text =
+        deleteError?.code === 'LISTING_NOT_EDITABLE'
+          ? 'This listing is reserved, sold or part of an open order, so it can’t be deleted now.'
+          : describeApiError(deleteError).message
+      setDeleting({ listing, result: { variant: 'warning', title: 'Not deleted', text } })
     }
   }
 
@@ -109,7 +121,7 @@ export default function MyListingsPage() {
 
   let content
   if (error) {
-    content = <ErrorState title={t("Couldn’t load your listings")} message={error.message} onRetry={reload} />
+    content = <ErrorState title={t("Couldn’t load your listings")} message={describeApiError(error).message} onRetry={reload} />
   } else if (isLoading) {
     content = <TableSkeleton />
   } else if (listings.length === 0) {
@@ -160,7 +172,7 @@ export default function MyListingsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-ink-muted">{t(categoryName(listing.categorySlug))}</td>
+                  <td className="px-4 py-3 text-ink-muted">{t(categoryName(listing))}</td>
                   <td className="px-4 py-3 font-medium whitespace-nowrap text-ink">{formatPrice(listing.price)}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col items-start gap-1">
@@ -224,6 +236,11 @@ export default function MyListingsPage() {
         </Link>
       </header>
 
+      {created && (
+        <Alert variant="success" title={t('Listing sent for review')} className="mt-5">
+          {t('“{title}” is pending review. It appears in the marketplace once an admin approves it.', { title: created.title ?? '' })}
+        </Alert>
+      )}
       <SampleDataNotice className="mt-5">
         {t("These are sample listings of a demo student. Sign-in isn’t connected yet, so they aren’t your real listings.")}
       </SampleDataNotice>

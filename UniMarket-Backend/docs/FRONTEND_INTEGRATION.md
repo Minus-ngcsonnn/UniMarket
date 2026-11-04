@@ -422,11 +422,97 @@ Open `http://localhost:5173/register`.
 ### Known limitations / remaining for Stage 6.2+
 
 - Password reset by e-mailed code exists; changing the password while signed in and profile / contact editing do not (backend contact settings exist; the UI is not connected).
-- Reviews, reports, products, listings, cart, checkout, shipping quotes, payments (MoMo / ZaloPay / BankQR) and the admin
+- Reviews, reports, cart, checkout, shipping quotes, payments (MoMo / ZaloPay / BankQR) and the admin
   workspace still use sample data even when signed in for real; admin data must move to `/api/admin/**`.
 - No refresh token: after 1 h the user is signed out on the next API call.
 - Login lockout is per backend instance and in memory (a restart clears it).
 - No frontend test runner is configured; logic was checked with Node scripts, API flows through the Vite proxy.
+
+## 3.9 Stage 6.2 — products, search, listings and favorites (frontend)
+
+### Data source switch
+
+| Variable (`UniMarket-Frontend/.env.local`) | Effect |
+|---|---|
+| `VITE_USE_MOCK_PRODUCTS=false` | catalog, product page, Sell / Edit, My listings and Saved items use the real API |
+| not set | real API when `VITE_AUTH_MODE=backend`, otherwise it follows `VITE_USE_MOCK_DATA` |
+
+`vite.config.js` resolves `@product-api-impl` with this switch; cart, checkout, orders, public profiles / reviews and
+the admin workspace keep following `VITE_USE_MOCK_DATA` (out of scope until Stage 6.3+). The dev / preview proxy now
+forwards `/media` (uploaded photos) to the backend as well as `/api`.
+
+### Code
+
+| File | Role |
+|---|---|
+| `src/services/products/productApi.js` | real implementation of the product service (same functions as `mocks/mockProductApi.js`) |
+| `src/services/products/productMapper.js` | API JSON → card / page shape (`locationLabel`, `imageItems`, seller affiliation), facets, backend field errors → form fields |
+| `src/services/products/catalogReference.js`, `src/hooks/useCatalogReference.js` | `GET /api/categories`, `/api/campuses`, `/api/locations/zones`, loaded once and shared; design icons / names added by slug |
+| `src/constants/categorySlugs.js` | backend slug ↔ design slug (`dormitory-items` ↔ `dorm-items`, `study-equipment` ↔ `study-gear`) |
+| `src/services/saved/favoritesStore.js`, `src/hooks/useSaved.js` | favorites from `GET/PUT/DELETE /api/me/favorites` (optimistic, rolled back on error); browser list only with sample data |
+| `useCatalogParams`, `ProductFilters`, `ActiveFilterChips` | URL filters incl. `province` and `zone`; one campus at a time |
+| `ProductForm`, `useListingSubmit`, `CreateListingPage`, `EditListingPage`, `MyListingsPage` | real create / edit / delete with photo upload |
+
+### Behaviour
+
+- **Catalog** (`/marketplace`, homepage sections, deals, related items): `GET /api/products` with `q`, `categoryId`,
+  `condition`, `campusId`, `zoneId`, `province`, `minPrice`, `maxPrice`, `sort`, `page`, `size` (9). The backend
+  filters, counts and pages the whole catalog (only Available + Approved listings of active sellers); the frontend
+  never filters a page locally. Any filter change returns to page 1 (stable sort by id, so no duplicates across
+  pages). Unknown category / campus values in old links match nothing ("No items match") instead of showing everything.
+  Keyword search runs on submit from the header search bar (one request per search, no request per keystroke).
+- **Product page**: `GET /api/products/{id}` (token sent when signed in). 404 or a non-numeric id → "Listing not
+  found". Reserved / sold listings show their status and cannot be bought. The seller block shows name, "Email
+  verified", rating from the response, official "University · Campus" or "University (self-declared)", member since.
+  `seller.contact` is not displayed (not part of the existing layout). Owners see their pending / blocked listing
+  with the moderation badge.
+- **Sell** (`/sell`, sign-in required): `POST /api/products` multipart (`listing` JSON + `photos`). Categories from the
+  API. Seller with an official campus: campus of their university (default their campus) + optional pickup area.
+  Seller without a campus (self-declared university, V003): pickup area **required**, no campus sent; default = home area.
+  Photo checks before upload (JPG/PNG/WebP, ≤ 5 MB, ≤ 8) and again on the server (magic bytes); server field / photo
+  errors appear on their fields; upload progress is shown; the button is disabled while sending. Success → My listings
+  with "pending review"; the listing is not public until an admin approves it.
+- **Edit** (`/my-listings/:id/edit`): owner view of `GET /api/products/{id}`; `PUT` for the fields, then photo changes
+  (delete removed, upload new, reorder) in an order that keeps 1–8 photos at every step. Every change returns the
+  listing to PENDING. If a photo step fails after the fields were saved, the page says "Partly saved".
+  Not editable (`editable: false`, sold / reserved / open order) → explained, no form.
+- **My listings**: `GET /api/me/products` (all own listings except removed, with moderation). Edit / Delete only when
+  `editable`. Delete = `DELETE /api/products/{id}` (soft: `Status = Removed`, rows and photos kept).
+- **Saved items**: hearts on cards and the product page call `PUT` / `DELETE /api/me/favorites/{id}`; visitors are sent
+  to `/login?next=…`. State is loaded per account when the session starts and cleared on sign-out, so accounts never
+  share hearts. `/saved` lists `GET /api/me/favorites` (only listings that are still public).
+
+### API gaps found (not changed)
+
+| Gap | Effect |
+|---|---|
+| The rejection / block reason is not part of the product responses | the frontend reads it from `GET /api/me/products/{id}/moderation` (Stage 5) for the seller's blocked listings |
+| `campusId` filter accepts one campus | the campus filter is single-select |
+| Photos are not re-encoded | EXIF metadata (e.g. GPS) of uploaded photos is kept (see PRODUCTS_API.md storage audit) |
+| Demo photos `/images/demo/products/*.svg` do not exist | demo listings show the placeholder |
+| Cart / checkout / orders still sample data | "Add to cart" / "Buy now" on real listings lead to the sample checkout, which cannot order them (Stage 6.3) |
+
+### Manual test (browser)
+
+1. Backend on **8081** with `DB_URL=…databaseName=UniMarketJava_V003Test…`, `ORDER_EXPIRY_ENABLED=false`,
+   `MAIL_MODE=log` (or `smtp`). Frontend `.env.local`: `VITE_BACKEND_URL=http://localhost:8081`, `VITE_AUTH_MODE=backend`
+   (real products follow automatically). `npm run dev` → <http://localhost:5173>.
+2. Sign in (or register + OTP) with a test account. A self-declared account tests the "pickup area required" path.
+3. **Sell an item**: fill the form, add 1–8 photos, publish → My listings shows it as "Pending review".
+4. Pending check: the marketplace and a signed-out window do not show it; its own page opens for the seller only.
+5. **Approve it through the Stage 5 Admin API** (business rules, stale-version protection and the `AdminActions` audit
+   row; never by editing `ModerationStatus` in SQL). The admin UI is not connected yet, so use the helper script (no
+   Postman needed):
+   `powershell -ExecutionPolicy Bypass -File UniMarket-Backend\docs\scripts\approve-listing.ps1 -ProductId <id>`
+   It signs in as an ADMIN of the test copy (default `demo.admin@fpt.edu.vn`; password typed hidden, from the team),
+   reads `GET /api/admin/listings/{id}` for its `version`, then calls `POST /api/admin/listings/{id}/approve`
+   `{ "version": "…" }`. Add `-Reject -Reason "…"` (10–1000 characters) to test a rejection: the seller then sees
+   "Blocked" with the admin's reason in My listings / Edit (from `GET /api/me/products/{id}/moderation`).
+   Calls go through `http://localhost:5173/api`, i.e. the isolated backend 8081. The listing then appears in the
+   marketplace and search.
+6. Filters: category, price, condition, campus, province / area, sort, pages; open a filtered URL in a new tab.
+7. Heart a listing, reload, check `/saved`; sign out → hearts empty; another account has its own list.
+8. My listings: edit (photos, price), delete (confirmation).
 
 ## 4. Conventions already in place (Stage 1)
 

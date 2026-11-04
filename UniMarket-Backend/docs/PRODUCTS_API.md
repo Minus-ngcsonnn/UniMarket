@@ -59,6 +59,8 @@ Query parameters (all optional):
 | `minPrice`, `maxPrice` | int ≥ 0 | Inclusive; `minPrice ≤ maxPrice` |
 | `featured` | bool | Only listings with a running **paid** promotion (`ProductPromotions`, `Status='Paid'`, now within `StartsAt–EndsAt`) |
 | `deals` | bool | "Student deals": `originalPrice` set and price at least 40 % below it (`DEAL_MIN_SAVINGS`) |
+| `zoneId` | int ≥ 1 | V003 (Stage 6.2): listings whose **effective pickup area** is this zone — `Products.PickupZoneId`, else the zone of the listing's campus (same rule as the `pickupZone` in responses) |
+| `province` | text ≤ 100 | V003 (Stage 6.2): effective pickup area in this province / city (`LocationZones.Province`, exact value as returned by `/api/locations/zones`, e.g. `Hà Nội`) |
 | `sort` | `newest` (default), `price_asc`, `price_desc` | Ties broken by id (stable paging) |
 | `page` | int ≥ 1 | **1-based**, default 1 |
 | `size` | 1–50 | Default 20 (the frontend uses 9) |
@@ -90,6 +92,8 @@ Response:
 ```
 
 - `originalPrice` is omitted when not set (no demo listing has one).
+- `zoneId` / `province` were added in Stage 6.2 without any schema change (left joins on `PickupZoneId` and
+  `Campuses.ZoneId`; many-to-one, so no duplicate rows or counts). Tested in `V003IntegrationTest`.
 - `facets` count the public listings that match `q` only (not the other filters), like the frontend mock.
   Category and campus facets are keyed by **id** (as strings). Conditions with 0 are still listed.
 - Queries: one page query, one count query (skipped when everything fits on the page), one batch query for
@@ -175,14 +179,15 @@ Rules (the same as the frontend's `LISTING_LIMITS`):
 
 - The seller is **always the signed-in account**; any `sellerId`, `status` or `moderation` in the body is ignored.
 - New listings are `AVAILABLE` + **`PENDING` moderation** (pre-moderation, decision of 2026-11-01): they are not
-  public until an admin approves them. Admin approval endpoints are not part of Stage 3.
-  **Dependency:** nothing in the backend or the database sets `ModerationStatus = 'Approved'` today (no procedure,
-  no trigger; an admin's edit also returns the listing to `PENDING`). Until the Admin approval API exists, a new
-  listing becomes public only by a manual database update. The API must not rely on the SQL column default
+  public until an admin approves them. Since Stage 5 an admin approves with `POST /api/admin/listings/{id}/approve`
+  `{ "version" }` (see `ADMIN_API.md` §1; audited in `AdminActions`). Never approve by editing the column in SQL.
+  Historical note (Stage 3): nothing in the backend or the database set `ModerationStatus = 'Approved'` then (no procedure,
+  no trigger; an admin's edit also returns the listing to `PENDING`). The API must not rely on the SQL column default
   (`'Approved'`): it always writes `Pending` explicitly.
 - Response: **201** with the product page body (including `moderation: "PENDING"`).
 
-Photo errors: `IMAGE_REQUIRED` (no photo), `TOO_MANY_IMAGES` (> 8), `INVALID_IMAGE` (content is not JPG/PNG/WebP:
+Photo errors: `IMAGE_REQUIRED` (no photo; a request **without any** `photos` part is rejected earlier by Spring as
+400 `INVALID_PARAMETER`), `TOO_MANY_IMAGES` (> 8), `INVALID_IMAGE` (content is not JPG/PNG/WebP:
 the bytes are checked, the file name and `Content-Type` are ignored), **413 `IMAGE_TOO_LARGE`** (a file over 5 MB).
 
 ## PUT /api/products/{id}: edit

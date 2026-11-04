@@ -1,10 +1,16 @@
 package com.unimarket.service.product;
 
+import com.unimarket.entity.Campus;
+import com.unimarket.entity.LocationZone;
 import com.unimarket.entity.ModerationStatus;
 import com.unimarket.entity.Product;
 import com.unimarket.entity.ProductCondition;
 import com.unimarket.entity.ProductStatus;
 import com.unimarket.entity.UserStatus;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
@@ -52,6 +58,38 @@ public final class ProductSpecifications {
 
     public static Specification<Product> withConditions(Collection<ProductCondition> conditions) {
         return conditions == null || conditions.isEmpty() ? null : (root, query, cb) -> root.get("condition").in(conditions);
+    }
+
+    /**
+     * V003: listings whose effective pickup area is this zone: the explicit {@code Products.PickupZoneId}, else the
+     * zone of the listing's campus (same rule as {@link Product#getEffectivePickupZone()}).
+     */
+    public static Specification<Product> inPickupZone(Integer zoneId) {
+        return zoneId == null ? null : (root, query, cb) -> {
+            EffectiveZone zone = effectiveZone(root);
+            return cb.or(cb.equal(zone.explicit().get("id"), zoneId),
+                    cb.and(cb.isNull(zone.explicit().get("id")), cb.equal(zone.campus().get("id"), zoneId)));
+        };
+    }
+
+    /** V003: listings whose effective pickup area lies in this province / city ({@code LocationZones.Province}). */
+    public static Specification<Product> inProvince(String province) {
+        return province == null || province.isBlank() ? null : (root, query, cb) -> {
+            EffectiveZone zone = effectiveZone(root);
+            String value = province.trim();
+            return cb.or(cb.equal(zone.explicit().get("province"), value),
+                    cb.and(cb.isNull(zone.explicit().get("id")), cb.equal(zone.campus().get("province"), value)));
+        };
+    }
+
+    private record EffectiveZone(Path<LocationZone> explicit, Path<LocationZone> campus) {
+    }
+
+    /** Left joins: a listing may have no explicit zone, and (V003) no campus. Many-to-one joins never add rows. */
+    private static EffectiveZone effectiveZone(Root<Product> root) {
+        Join<Product, LocationZone> explicit = root.join("pickupZone", JoinType.LEFT);
+        Join<Product, Campus> campus = root.join("campus", JoinType.LEFT);
+        return new EffectiveZone(explicit, campus.join("zone", JoinType.LEFT));
     }
 
     public static Specification<Product> atCampus(Integer campusId) {
