@@ -52,6 +52,9 @@ export const PAYMENT_METHODS = [
   { value: 'CARD', label: 'Bank card (ATM / Visa)' },
 ]
 
+/** Labels of the (simulated) payment providers returned by the API (Payments.Provider / Orders.PaymentProvider). */
+export const PROVIDER_LABELS = { MOMO: 'MoMo (simulated)', ZALOPAY: 'ZaloPay (simulated)', BANK_QR: 'Bank QR (simulated)' }
+
 /**
  * Settlement `calculation` from the API. LEGACY = a V001 demo payout record (merchandise proceeds only, no delivery
  * fee), kept exactly as recorded by the approved V002 decision; current settlements always include the delivery fee.

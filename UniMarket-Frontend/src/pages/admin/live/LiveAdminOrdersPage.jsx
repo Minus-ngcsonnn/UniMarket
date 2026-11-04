@@ -8,7 +8,7 @@ import Button from '../../../components/ui/Button'
 import ErrorState from '../../../components/ui/ErrorState'
 import FilterTabs from '../../../components/ui/FilterTabs'
 import LoadingState from '../../../components/ui/LoadingState'
-import { ORDER_STATUSES } from '../../../constants/order'
+import { ORDER_STATUSES, PROVIDER_LABELS } from '../../../constants/order'
 import useAdminList from '../../../hooks/useAdminList'
 import useAsyncData from '../../../hooks/useAsyncData'
 import { adminBackendApi, adminErrorText } from '../../../services/admin/adminBackendApi'
@@ -60,7 +60,7 @@ function OrderDetail({ id, onClose }) {
               ['Buyer pays', money(order.amounts.total)],
               ['Commission (3 % of items)', money(order.amounts.commission)],
               ['Seller payout', money(order.amounts.sellerPayout)],
-              ['Payment provider', order.paymentProvider],
+              ['Payment provider', order.paymentProvider && t(PROVIDER_LABELS[order.paymentProvider] ?? order.paymentProvider)],
               ['Confirm by', order.deadlines?.confirmBy && formatDateTime(order.deadlines.confirmBy)],
               ['Pay by', order.deadlines?.paymentDueAt && formatDateTime(order.deadlines.paymentDueAt)],
               ['Settlement', order.settlement && `${t(order.settlement.status)} · ${money(order.settlement.amount)}`],
@@ -89,7 +89,7 @@ function OrderDetail({ id, onClose }) {
                 {order.payments.map((p) => (
                   <li key={p.id} className="flex justify-between gap-2">
                     <span>
-                      {p.provider} · {formatDateTime(p.createdAt)}
+                      {t(PROVIDER_LABELS[p.provider] ?? p.provider)} · {formatDateTime(p.createdAt)}
                     </span>
                     <span className="font-medium text-ink">
                       {t(p.status)} · {money(p.amount)} {p.sandbox && <SimulatedTag />}

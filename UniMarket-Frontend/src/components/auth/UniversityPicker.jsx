@@ -22,7 +22,7 @@ const TYPE_LABELS = {
  * @param {{ id: number, name: string, university: string }[]} campuses official campuses (may be empty)
  * @param {object[]} directory institutions from vnHigherEducationDirectory.json (may still be loading)
  * @param {{ kind: 'campus'|'directory', label: string }|null} selection current choice
- * @param {(choice: { kind: 'campus', campus: object } | { kind: 'directory', institution: object } | { kind: 'manual' } | null) => void} onSelect
+ * @param {(choice: { kind: 'campus', campus: object } | { kind: 'directory', institution: object } | { kind: 'manual', name?: string } | null) => void} onSelect
  */
 export default function UniversityPicker({ campuses, directory, isLoading, selection, onSelect, error }) {
   const { t } = useTranslation()
@@ -65,7 +65,8 @@ export default function UniversityPicker({ campuses, directory, isLoading, selec
     setQuery('')
     if (option.kind === 'campus') onSelect({ kind: 'campus', campus: option.entry.campus })
     else if (option.kind === 'directory') onSelect({ kind: 'directory', institution: option.entry })
-    else onSelect({ kind: 'manual' })
+    // Keep what the student already typed, so the free-text name field starts with it.
+    else onSelect({ kind: 'manual', name: query.trim() })
   }
 
   function handleKeyDown(event) {

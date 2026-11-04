@@ -41,7 +41,7 @@ export default function AffiliationFields({ form, campuses }) {
         choice?.kind === 'campus' ? AFFILIATION.CAMPUS : choice?.kind === 'directory' ? AFFILIATION.DIRECTORY : choice?.kind === 'manual' ? AFFILIATION.UNIVERSITY : '',
       campusId: choice?.kind === 'campus' ? String(choice.campus.id) : '',
       directoryId: choice?.kind === 'directory' ? choice.institution.id : '',
-      universityName: choice?.kind === 'directory' ? choice.institution.name : '',
+      universityName: choice?.kind === 'directory' ? choice.institution.name : choice?.kind === 'manual' ? (choice.name ?? '') : '',
     })
   }
 
