@@ -92,6 +92,7 @@ export default function App() {
             <Route path={PATHS.orders} element={page(OrdersPage)} />
             <Route path="/orders/:id" element={page(OrderDetailPage)} />
             <Route path={PATHS.messages} element={page(MessagesPage)} />
+            <Route path="/messages/:id" element={page(MessagesPage)} />
 
             {/* Profile */}
             <Route path={PATHS.profile} element={page(ProfilePage)} />

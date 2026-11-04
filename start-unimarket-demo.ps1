@@ -3,7 +3,7 @@
   One-command start of the OFFICIAL UniMarket demo:  http://localhost:5173  ->  backend 8080  ->  UniMarketJava.
 
 .DESCRIPTION
-  1. Checks SQL Server, the main database (ONLINE, migrations V001-V003) and that a verified backup of it exists
+  1. Checks SQL Server, the main database (ONLINE, migrations V001-V004) and that a verified backup of it exists
      (creates a new COPY_ONLY backup with a unique name when none is younger than -BackupMaxAgeHours).
   2. Checks the required configuration in UniMarket-Backend\.env (presence only, values are never printed).
   3. Stops every other UniMarket backend / frontend (stop-unimarket-demo.ps1) - nothing else is touched.
@@ -39,7 +39,7 @@ if (-not $svc) { throw 'No SQL Server instance is running. Start the service "SQ
 $state = (Sql "SELECT state_desc FROM sys.databases WHERE name = N'$Database'") | Select-Object -First 1
 if ($state -ne 'ONLINE') { throw "Database $Database is not ONLINE ('$state')." }
 $mig = (sqlcmd -S $SqlServer -E -C -b -h -1 -W -d $Database -Q 'SET NOCOUNT ON; SELECT STRING_AGG(Version, '','') WITHIN GROUP (ORDER BY Version) FROM dbo.SchemaMigrations') | Select-Object -First 1
-if ($mig -ne 'V001,V002,V003') { throw "Unexpected migration history in $Database ('$mig'); the backend expects V001,V002,V003." }
+if ($mig -ne 'V001,V002,V003,V004') { throw "Unexpected migration history in $Database ('$mig'); the backend expects V001,V002,V003,V004." }
 Write-Host "SQL Server $((Sql 'SELECT @@SERVERNAME') | Select-Object -First 1): $Database ONLINE, migrations $mig"
 $lastBackup = (Sql "SELECT ISNULL(DATEDIFF(MINUTE, MAX(backup_finish_date), GETDATE()), 999999) FROM msdb.dbo.backupset WHERE database_name = N'$Database' AND type = 'D'") | Select-Object -First 1
 if ([int]$lastBackup -gt $BackupMaxAgeHours * 60) {

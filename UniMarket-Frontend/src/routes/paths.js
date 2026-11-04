@@ -28,6 +28,7 @@ export const PATHS = {
   sales: '/orders?view=sales',
   order: (id) => `/orders/${id}`,
   messages: '/messages',
+  conversation: (id) => `/messages/${id}`,
 
   // Profiles and reviews
   profile: '/profile',

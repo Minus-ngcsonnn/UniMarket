@@ -8,7 +8,7 @@ It is a full-stack web application: a **Spring Boot** REST API, a **React (Vite)
 **Microsoft SQL Server** database.
 
 > **Status (November 2026): academic MVP, feature-complete for the demo.** All Business Plan flows below run end to end
-> against the real database (`UniMarketJava`, migrations V001–V003). Payments and delivery fees are **simulated**: no
+> against the real database (`UniMarketJava`, migrations V001–V004). Payments and delivery fees are **simulated**: no
 > real money moves and no carrier is contacted. FPT University Hoa Lac is the first demo community; registration is
 > open to students of any Vietnamese university or college. See [Known limitations](#9-known-limitations).
 
@@ -312,7 +312,8 @@ Tailwind CSS v4 runs through `@tailwindcss/vite`; there is no `tailwind.config.j
 - **Simulated money and delivery:** MoMo, ZaloPay and Bank QR are sandbox simulations; shipping fees come from a
   simulated distance formula between demo areas (zone centres), not from a carrier. Refunds and seller payouts are
   records of transfers made outside UniMarket.
-- **Profile editing** is not implemented (contact settings exist only in the API); **Messages / chat** is a placeholder.
+- **Profile editing** is not implemented (contact settings exist only in the API).
+- **Chat** (V004, `UniMarket-Backend/docs/CHAT_API.md`) is text only and refreshes by polling (about every 4 s), not push.
 - **Search is accent-sensitive** (`CI_AS` collation): search with Vietnamese accents.
 - A rejected listing is shown as "Blocked" (one database status for both); the seller still sees the reason.
 - Order expiry is OFF in the demo, so overdue demo orders stay until someone cancels them.

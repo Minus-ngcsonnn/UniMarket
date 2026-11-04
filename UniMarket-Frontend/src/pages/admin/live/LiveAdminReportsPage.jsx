@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import AdminPageHeader from '../../../components/admin/AdminPageHeader'
+import ReportedConversation from '../../../components/admin/ReportedConversation'
 import DataTable from '../../../components/admin/DataTable'
 import DetailDialog, { DetailList } from '../../../components/admin/DetailDialog'
 import { EyeIcon } from '../../../components/icons'
@@ -49,7 +50,11 @@ function ReportDetail({ id, onClose }) {
     }
   }
 
-  const targetLink = report && (report.target?.type === 'LISTING' ? PATHS.product(report.target.id) : PATHS.user(report.target?.id))
+  const isConversation = report?.target?.type === 'CONVERSATION'
+  // CONVERSATION: the target label is the listing the chat is about; owner = the reported participant.
+  const targetLink =
+    report &&
+    (report.target?.type === 'LISTING' ? PATHS.product(report.target.id) : isConversation ? PATHS.user(report.target.owner?.id) : PATHS.user(report.target?.id))
   return (
     <DetailDialog
       title={report ? t('Report {code}', { code: report.code }) : t('Report')}
@@ -110,9 +115,13 @@ function ReportDetail({ id, onClose }) {
           {actionError && <p className="text-sm text-danger">{t(actionError)}</p>}
           <DetailList
             items={[
-              ['Target', report.target ? <Link to={targetLink} className="text-primary hover:underline">{report.target.label}</Link> : '—'],
-              ['Target status', report.target?.status],
-              ['Owner', report.target?.owner?.name],
+              isConversation
+                ? ['Chat about', report.target.label]
+                : ['Target', report.target ? <Link to={targetLink} className="text-primary hover:underline">{report.target.label}</Link> : '—'],
+              isConversation
+                ? ['Reported person', <Link key="reported" to={targetLink} className="text-primary hover:underline">{report.target.owner?.name}</Link>]
+                : ['Owner', report.target?.owner?.name],
+              [isConversation ? 'Account status' : 'Target status', report.target?.status],
               ['Reason', t(reportReasonLabel(report.reasonCode))],
               ['Reported by', report.reporter?.name],
               ['Resolved', report.resolvedAt && formatDateTime(report.resolvedAt)],
@@ -124,6 +133,7 @@ function ReportDetail({ id, onClose }) {
               <p className="rounded-control bg-subtle px-3 py-2 text-sm whitespace-pre-line text-ink">{report.details}</p>
             </section>
           )}
+          {isConversation && <ReportedConversation conversationId={report.target.id} reportedUserId={report.target.owner?.id} />}
           {report.resolution && (
             <section>
               <h3 className="mb-1 text-sm font-semibold text-ink">{t('Decision')}</h3>
@@ -176,7 +186,7 @@ export default function LiveAdminReportsPage() {
   return (
     <>
       <title>{t('Violation reports · UniMarket Admin')}</title>
-      <AdminPageHeader title={t('Violation reports')} description={t('Reports from students about listings and accounts. Reporters are never shown to the reported person.')} />
+      <AdminPageHeader title={t('Violation reports')} description={t('Reports from students about listings, accounts and chats. Reporters are never shown to the reported person.')} />
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <FilterTabs
           label={t('Filter by report status')}
@@ -189,9 +199,10 @@ export default function LiveAdminReportsPage() {
           hideLabel
           name="targetType"
           options={[
-            { value: '', label: 'Listings and accounts' },
+            { value: '', label: 'All targets' },
             { value: 'LISTING', label: 'LISTING' },
             { value: 'USER', label: 'USER' },
+            { value: 'CONVERSATION', label: 'CONVERSATION' },
           ]}
           value={list.params.targetType}
           onChange={(value) => list.setFilter('targetType', value)}

@@ -13,7 +13,8 @@ import useTranslation from '../../i18n/useTranslation'
 
 /**
  * Report a listing or a student to the admins (Business Plan: admins handle violation reports).
- * @param {{ type: 'LISTING'|'USER', id: string|number, label: string }} target
+ * A CONVERSATION report lets the admin who handles it read that chat.
+ * @param {{ type: 'LISTING'|'USER'|'CONVERSATION', id: string|number, label: string }} target
  */
 export default function ReportDialog({ target, onClose }) {
   const { t } = useTranslation()
@@ -45,7 +46,7 @@ export default function ReportDialog({ target, onClose }) {
           </span>
           <div className="flex min-w-0 flex-col gap-1">
             <h2 id={titleId} className="text-lg font-semibold text-ink">
-              {target.type === 'LISTING' ? t('Report this listing') : t('Report this student')}
+              {target.type === 'LISTING' ? t('Report this listing') : target.type === 'CONVERSATION' ? t('Report this conversation') : t('Report this student')}
             </h2>
             <p className="truncate text-sm text-ink-muted">{target.label}</p>
           </div>

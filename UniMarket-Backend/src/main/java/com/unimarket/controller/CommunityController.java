@@ -154,7 +154,7 @@ public class CommunityController {
     }
 
     /**
-     * @param targetType LISTING or USER
+     * @param targetType LISTING, USER or CONVERSATION (targetId = conversation id; participants only)
      * @param reason     MISLEADING, PROHIBITED, OFF_PLATFORM_PAYMENT, FAKE, HARASSMENT, SPAM, OTHER
      * @param details    optional, at most 500 characters
      */
