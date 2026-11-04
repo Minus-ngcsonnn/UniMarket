@@ -13,7 +13,7 @@ const FITS = {
 
 /**
  * Shows an image, or a neutral placeholder while the real asset is not available
- * (no URL, or a URL that fails to load, e.g. demo photos whose files are not shipped yet).
+ * (no URL, or a URL that fails to load or is not an image, e.g. a deleted upload or a static-host HTML fallback page).
  *
  * @param {string} [src] image URL; when missing or broken a placeholder is rendered
  * @param {string} alt description; use '' for purely decorative images

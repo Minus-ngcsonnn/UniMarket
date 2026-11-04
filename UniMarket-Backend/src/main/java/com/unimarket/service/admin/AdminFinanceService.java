@@ -8,6 +8,7 @@ import com.unimarket.exception.ApiException;
 import com.unimarket.exception.ValidationException;
 import com.unimarket.security.AuthenticatedUser;
 import com.unimarket.service.order.OrderValues;
+import com.unimarket.service.order.SettlementCalculation;
 import com.unimarket.service.order.SqlErrors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -199,11 +200,12 @@ public class AdminFinanceService {
     private static final String SETTLEMENT_SQL = """
             SELECT s.OrderId, s.SellerId, u.FullName AS SellerName, s.Status, s.Amount, s.MerchandiseSubtotal, s.CommissionAmount,
                    s.ShippingFee, s.IsSandbox, s.CreatedAt, s.ReleasedAt, s.ReleasedBy, a.FullName AS ReleasedByName, s.PayoutReference,
-                   s.PayoutNote, %s AS OnHold
+                   s.PayoutNote, %s AS OnHold, %s AS LegacyCalculation, o.SellerPayoutTotal
             FROM dbo.SellerSettlements s
+            JOIN dbo.Orders o ON o.OrderId = s.OrderId
             JOIN dbo.Users u ON u.UserId = s.SellerId
             LEFT JOIN dbo.Users a ON a.UserId = s.ReleasedBy
-            """.formatted(HOLD);
+            """.formatted(HOLD, SettlementCalculation.LEGACY_SQL);
 
     private static final String DISPUTE_SQL = """
             SELECT d.DisputeId, d.OrderId, o.Status AS OrderStatus, o.BuyerId, b.FullName AS BuyerName, o.SellerId, s.FullName AS SellerName,
@@ -241,6 +243,7 @@ public class AdminFinanceService {
                 releasedBy == null ? null : new AdminDtos.Ref(releasedBy, rs.getString("ReleasedByName")),
                 rs.getString("PayoutReference"), rs.getString("PayoutNote"),
                 !"Released".equals(rs.getString("Status")) ? null
-                        : rs.getBoolean("IsSandbox") ? "SIMULATED_RECORD" : "EXTERNAL_TRANSFER_CONFIRMED");
+                        : rs.getBoolean("IsSandbox") ? "SIMULATED_RECORD" : "EXTERNAL_TRANSFER_CONFIRMED",
+                SettlementCalculation.of(rs.getBoolean("LegacyCalculation")), rs.getBigDecimal("SellerPayoutTotal").longValueExact());
     }
 }

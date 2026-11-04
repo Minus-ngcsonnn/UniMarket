@@ -244,9 +244,11 @@ Approved decision Q2: photos are stored on the server's disk behind the `ImageSt
 - `ProductImages.ImageUrl` stores `/media/products/<file>`. Deleting only touches files matching that pattern
   inside the folder.
 - Demo rows keep their stored values (`images/demo/products/…svg`, not rewritten). The API returns relative
-  references root-relative (`/images/demo/products/…svg`) so they resolve the same from every page. Those files do
-  not exist yet; the frontend shows its placeholder when a photo fails to load (`ImageSlot`). Real files can later
-  be added to `UniMarket-Frontend/public/images/demo/products/` without any data change.
+  references root-relative (`/images/demo/products/…svg`) so they resolve the same from every page. The 100 files are
+  **labelled demo illustrations** ("Ảnh minh họa demo — not a real photo"), generated from the V001 seed by
+  `UniMarket-Frontend/scripts/generate-demo-product-images.mjs` into `UniMarket-Frontend/public/images/demo/products/`
+  and served by the frontend as `image/svg+xml`; they are not photos of the items. No data change was needed. Any
+  photo that still fails to load (or a static host answering with its HTML page) shows the `ImageSlot` placeholder.
 - Limits: `spring.servlet.multipart.max-file-size=5MB` (also checked again in the service),
   `max-request-size=41MB`, `server.tomcat.max-swallow-size=42MB`, `unimarket.listing.max-photos=8`.
 

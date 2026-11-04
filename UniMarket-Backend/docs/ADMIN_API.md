@@ -138,6 +138,12 @@ Opening: `POST /api/orders/{id}/disputes` (Stage 4, buyer or seller of a PAID / 
 
 - Created once by `usp_CompleteOrder` (V002): `amount = merchandiseSubtotal − commission (3 %) + shippingFee`.
   Shown exactly as stored; V001 historical settlements (orders 1–4, `shippingFee = 0`) are never recalculated.
+- **`calculation`** (read-only, derived, nothing stored): `STANDARD` (current rule, `amount` = the order's
+  `sellerPayout`) or `LEGACY_V001_MERCHANDISE_ONLY` (V001 demo record: merchandise proceeds only, without the delivery
+  fee; kept unchanged by the approved V002 decision and protected by `trg_SellerSettlements_Guard`). It is legacy
+  exactly when `SellerSettlements.ShippingFee <> Orders.ShippingFee`, which the trigger makes impossible for new rows.
+  `orderSellerPayout` is the order's `SellerPayoutTotal` under the current rule, for comparison only. Legacy released
+  rows may have no `payoutReference` / `releasedBy` (V001 recorded neither).
 - `release` records that the seller was paid **outside UniMarket**, with the transfer reference; it moves no money.
   Once only (409 `SETTLEMENT_STATE_CONFLICT`), not while on hold (409 `SETTLEMENT_ON_HOLD`), admins only (also
   enforced by `trg_SellerSettlements_Guard`).

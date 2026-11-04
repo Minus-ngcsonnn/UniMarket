@@ -52,6 +52,14 @@ export const PAYMENT_METHODS = [
   { value: 'CARD', label: 'Bank card (ATM / Visa)' },
 ]
 
+/**
+ * Settlement `calculation` from the API. LEGACY = a V001 demo payout record (merchandise proceeds only, no delivery
+ * fee), kept exactly as recorded by the approved V002 decision; current settlements always include the delivery fee.
+ */
+export const LEGACY_SETTLEMENT = 'LEGACY_V001_MERCHANDISE_ONLY'
+export const LEGACY_SETTLEMENT_NOTE =
+  'Legacy demo record (V001): this payout was calculated before delivery fees were paid out to sellers and is kept exactly as recorded.'
+
 /** Human-readable order number, e.g. UO-3001. */
 export function orderCode(id) {
   return `UO-${id}`

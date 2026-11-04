@@ -3,6 +3,7 @@ import { LISTING_LIMITS } from '../../constants/product'
 import { checkPhotoFiles } from '../../utils/listingValidation'
 import { TrashIcon, UploadCloudIcon } from '../icons'
 import FieldError from '../ui/FieldError'
+import ImageSlot from '../ui/ImageSlot'
 import useTranslation from '../../i18n/useTranslation'
 
 let localPhotoCounter = 0
@@ -118,7 +119,8 @@ export default function ImageUploader({ photos, onChange, error, name = 'photos'
         <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4" aria-label={t("Selected photos")}>
           {photos.map((photo, index) => (
             <li key={photo.id} className="group relative aspect-square overflow-hidden rounded-control border border-line bg-subtle">
-              <img src={photo.url} alt={t('Photo {number}: {name}', { number: index + 1, name: photo.name })} className="h-full w-full object-cover" />
+              {/* ImageSlot: an existing photo whose file is missing shows a placeholder instead of a broken image. */}
+              <ImageSlot src={photo.url} alt={t('Photo {number}: {name}', { number: index + 1, name: photo.name })} />
               {index === 0 ? (
                 <span className="absolute bottom-1.5 left-1.5 rounded bg-primary px-1.5 py-0.5 text-[11px] font-medium text-white">{t("Cover")}</span>
               ) : (

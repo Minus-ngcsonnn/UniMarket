@@ -61,7 +61,9 @@ checkout → PENDING ──seller confirm (≤ 24 h after the order)──► AW
 
 Payment attempts: `PENDING`, `SUCCEEDED`, `FAILED`, `EXPIRED` (`Payments.Status`). Providers: `MOMO`, `ZALOPAY`
 (the database allows only these two). Settlement: `PENDING` (calculated, owed, not paid) / `RELEASED` (an admin
-confirmed a manual payout). Dispute: `OPEN` / `RESOLVED`, decision `NO_REFUND` / `REFUND_APPROVED`.
+confirmed a manual payout); `settlement.calculation` is `STANDARD` (amount = `amounts.sellerPayout`) or
+`LEGACY_V001_MERCHANDISE_ONLY` (V001 demo record without the delivery fee, kept as recorded; the seller page then shows
+the recorded amount and a legacy note). Dispute: `OPEN` / `RESOLVED`, decision `NO_REFUND` / `REFUND_APPROVED`.
 
 `actions` on every order lists what the viewer can do now: `CONFIRM`, `CANCEL`, `PAY`, `CONTINUE_PAYMENT`, `SHIP`,
 `CONFIRM_RECEIPT`, `OPEN_DISPUTE`. It is a hint for buttons; the server checks again.

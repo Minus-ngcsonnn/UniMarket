@@ -179,11 +179,13 @@ public class OrderQueries {
 
     public Optional<SettlementRow> settlement(long orderId) {
         return jdbc.query("""
-                SELECT Status, Amount, MerchandiseSubtotal, CommissionAmount, ShippingFee, IsSandbox, CreatedAt, ReleasedAt
-                FROM dbo.SellerSettlements WHERE OrderId = :id""", Map.of("id", orderId),
+                SELECT s.Status, s.Amount, s.MerchandiseSubtotal, s.CommissionAmount, s.ShippingFee, s.IsSandbox, s.CreatedAt, s.ReleasedAt,
+                       %s AS LegacyCalculation
+                FROM dbo.SellerSettlements AS s JOIN dbo.Orders AS o ON o.OrderId = s.OrderId
+                WHERE s.OrderId = :id""".formatted(SettlementCalculation.LEGACY_SQL), Map.of("id", orderId),
                 (rs, i) -> new SettlementRow(rs.getString("Status"), rs.getBigDecimal("Amount"), rs.getBigDecimal("MerchandiseSubtotal"),
                         rs.getBigDecimal("CommissionAmount"), rs.getBigDecimal("ShippingFee"), rs.getBoolean("IsSandbox"),
-                        utc(rs, "CreatedAt"), utc(rs, "ReleasedAt"))).stream().findFirst();
+                        utc(rs, "CreatedAt"), utc(rs, "ReleasedAt"), rs.getBoolean("LegacyCalculation"))).stream().findFirst();
     }
 
     // ------------------------------------------------------------------ listings and cart
@@ -326,7 +328,7 @@ public class OrderQueries {
     }
 
     public record SettlementRow(String status, BigDecimal amount, BigDecimal merchandiseSubtotal, BigDecimal commission,
-                                BigDecimal shippingFee, boolean sandbox, Instant createdAt, Instant releasedAt) {
+                                BigDecimal shippingFee, boolean sandbox, Instant createdAt, Instant releasedAt, boolean legacyCalculation) {
     }
 
     /**

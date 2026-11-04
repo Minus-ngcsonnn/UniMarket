@@ -128,10 +128,12 @@ public record OrderResponse(
      * Seller payout (D6). {@code PENDING} = calculated and owed, not paid; {@code RELEASED} = an admin confirmed a manual
      * transfer. UniMarket never moves money automatically.
      *
-     * @param sandbox true when the order was paid in the simulated (sandbox) payment flow: no real money exists
+     * @param sandbox     true when the order was paid in the simulated (sandbox) payment flow: no real money exists
+     * @param calculation {@code STANDARD} (amount = sellerPayout of the order) or {@code LEGACY_V001_MERCHANDISE_ONLY}
+     *                    (V001 demo record without the delivery fee, kept unchanged; see SettlementCalculation)
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record Settlement(String status, long amount, long merchandiseSubtotal, long commission, long shippingFee,
-                             boolean sandbox, Instant createdAt, Instant releasedAt) {
+                             boolean sandbox, Instant createdAt, Instant releasedAt, String calculation) {
     }
 }
