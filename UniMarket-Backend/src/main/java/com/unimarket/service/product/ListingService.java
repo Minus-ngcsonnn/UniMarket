@@ -293,8 +293,9 @@ public class ListingService {
     }
 
     /**
-     * Checks count, size and real file type (magic bytes). The multipart config already refuses larger files;
-     * the size is checked again here so the rule holds even if that config changes.
+     * Checks count, size and real file type (magic bytes), then strips privacy metadata (EXIF / GPS, XMP, IPTC). The
+     * multipart config already refuses larger files; the size is checked again here so the rule holds even if that config
+     * changes.
      */
     private List<ValidatedPhoto> validatePhotos(List<MultipartFile> photos, int existing) {
         List<MultipartFile> files = photos == null ? List.of() : photos.stream().filter(f -> f != null && !f.isEmpty()).toList();
@@ -309,7 +310,8 @@ public class ListingService {
             try {
                 byte[] bytes = file.getBytes();
                 ImageType type = ImageType.detect(bytes).orElseThrow(() -> new ApiException(ErrorCode.INVALID_IMAGE));
-                result.add(new ValidatedPhoto(bytes, type));
+                // Stage 6.4: remove EXIF (GPS location), XMP, IPTC and text metadata before the file is stored.
+                result.add(new ValidatedPhoto(com.unimarket.service.storage.ImageMetadataStripper.strip(bytes, type), type));
             } catch (IOException ex) {
                 throw new UncheckedIOException(ex);
             }

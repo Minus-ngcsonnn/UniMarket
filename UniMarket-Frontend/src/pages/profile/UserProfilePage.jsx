@@ -37,7 +37,7 @@ export default function UserProfilePage() {
   const { id } = useParams()
   const { data: profile, error, isLoading, reload } = useAsyncData(() => accountService.getUserProfile(id), `user-${id}`)
   const [isReporting, setIsReporting] = useState(false)
-  const isOwnProfile = id === productService.getCurrentUserId()
+  const isOwnProfile = String(id) === String(productService.getCurrentUserId())
 
   let content
   if (error) {

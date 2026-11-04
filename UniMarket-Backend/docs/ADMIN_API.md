@@ -202,6 +202,11 @@ real database values; `sandboxOrders` / `sandboxPaidInPeriod` show how many come
 sharing needs at least one. The sharing rule is unchanged: phone/Zalo appear on listings and the public profile only
 while `showContact` is true (whether to also require a signed-in viewer is a pending decision).
 
+## Frontend (Stage 6.4)
+
+All endpoints above are used by the live admin pages and the community features of the React app; see
+`FRONTEND_INTEGRATION.md` §3.11 for the page ↔ endpoint inventory and the documented gaps. No contract changed.
+
 ## Error codes added in Stage 5
 
 `LISTING_CHANGED`, `MODERATION_CONFLICT`, `ACCOUNT_STATE_CONFLICT`, `REVIEW_NOT_ALLOWED`, `ALREADY_REVIEWED`,

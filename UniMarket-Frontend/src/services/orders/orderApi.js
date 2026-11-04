@@ -95,6 +95,18 @@ async function completeSimulatedPayment(simulatorUrl, outcome) {
   return toOrder(data)
 }
 
+/** POST /api/orders/{id}/disputes (buyer or seller of a PAID / DELIVERING / COMPLETED order): asks an admin to review. */
+async function openDispute(id, reason) {
+  const { data } = await apiClient.post(`/orders/${id}/disputes`, { reason })
+  return toOrder(data)
+}
+
+/** GET /api/me/disputes: disputes of my orders (either side). */
+async function listMyDisputes() {
+  const { data } = await apiClient.get('/me/disputes')
+  return data
+}
+
 const unavailable = (feature) => () => Promise.reject(new BackendPendingError(feature))
 
 export default {
@@ -107,6 +119,8 @@ export default {
   checkout,
   startPayment,
   completeSimulatedPayment,
+  openDispute,
+  listMyDisputes,
   // Buyer
   cancelOrder: action('cancel', (reason) => (reason ? { reason } : {})),
   payOrder: unavailable('Paying without a payment attempt'),

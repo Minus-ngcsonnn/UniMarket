@@ -1,8 +1,11 @@
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Link, Outlet } from 'react-router'
 import useAsyncData from '../../hooks/useAsyncData'
 import { PATHS } from '../../routes/paths'
 import { adminService } from '../../services/admin/adminService'
+import { USE_MOCK_ADMIN } from '../../config/dataSource'
+import useSession from '../../hooks/useSession'
+import { adminBackendApi, onAdminChanged } from '../../services/admin/adminBackendApi'
 import { isSampleData } from '../../services/products/productService'
 import { InfoIcon, LockIcon } from '../icons'
 import { buttonClasses } from '../ui/buttonClasses'
@@ -45,9 +48,14 @@ export default function AdminLayout() {
   const { t } = useTranslation()
   const [campus, setCampus] = useState('')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { data } = useAsyncData(() => adminService.getBadgeCounts(), 'admin-badges')
+  const live = !USE_MOCK_ADMIN
+  const auth = useSession()
+  const { data: badges, reload: reloadBadges } = useAsyncData(() => (live ? adminBackendApi.badges() : adminService.getBadgeCounts()), 'admin-badges')
+  useEffect(() => (live ? onAdminChanged(reloadBadges) : undefined), [live, reloadBadges])
+  // Real API: the signed-in admin comes from GET /api/auth/me (RequireAuth role="ADMIN" already checked the role).
+  const data = live && badges ? { ...badges, admin: { name: auth.user?.fullName, title: 'Admin' } } : badges
 
-  if (!isSampleData) return <AdminUnavailable />
+  if (!live && !isSampleData) return <AdminUnavailable />
 
   return (
     <div className="min-h-screen bg-canvas lg:grid lg:grid-cols-[16.5rem_minmax(0,1fr)]">
@@ -73,16 +81,26 @@ export default function AdminLayout() {
 
       <div className="flex min-w-0 flex-col">
         <header className="sticky top-0 z-20">
-          <AdminTopbar campus={campus} onCampusChange={setCampus} counts={data} admin={data?.admin} onOpenMenu={() => setIsMenuOpen(true)} />
+          <AdminTopbar campus={campus} onCampusChange={setCampus} counts={data} admin={data?.admin} onOpenMenu={() => setIsMenuOpen(true)} live={live} />
         </header>
         <main id="main" className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <p role="note" className="mb-6 flex items-start gap-2 rounded-control border border-warning/40 bg-warning-soft px-3 py-2 text-xs text-ink">
-            <InfoIcon className="mt-px size-4 shrink-0 text-warning" />
-            <span>
-              <span className="font-semibold">{t("Admin demo with sample data.")}</span>{' '}
-              {t('Actions are previews: they are checked but nothing is changed, blocked or suspended. Admin access will be enforced by the backend.')}
-            </span>
-          </p>
+          {live ? (
+            <p role="note" className="mb-6 flex items-start gap-2 rounded-control border border-primary/30 bg-primary-soft px-3 py-2 text-xs text-ink">
+              <InfoIcon className="mt-px size-4 shrink-0 text-primary" />
+              <span>
+                <span className="font-semibold">{t('Live admin data.')}</span>{' '}
+                {t('Actions change real records and are written to the admin audit log. Payments, refunds and payouts are simulated: no money is moved.')}
+              </span>
+            </p>
+          ) : (
+            <p role="note" className="mb-6 flex items-start gap-2 rounded-control border border-warning/40 bg-warning-soft px-3 py-2 text-xs text-ink">
+              <InfoIcon className="mt-px size-4 shrink-0 text-warning" />
+              <span>
+                <span className="font-semibold">{t("Admin demo with sample data.")}</span>{' '}
+                {t('Actions are previews: they are checked but nothing is changed, blocked or suspended. Admin access will be enforced by the backend.')}
+              </span>
+            </p>
+          )}
           <Suspense fallback={<LoadingState className="min-h-[40vh]" />}>
             <Outlet context={{ campus, admin: data?.admin, counts: data }} />
           </Suspense>

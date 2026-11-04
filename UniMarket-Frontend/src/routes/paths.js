@@ -35,13 +35,16 @@ export const PATHS = {
   settings: '/settings',
   user: (id) => `/users/${id}`,
 
-  // Admin workspace (sample data only until the backend enforces admin access)
+  // Admin workspace (ADMIN accounts only; the backend enforces it on every /api/admin call)
   admin: '/admin',
   adminProducts: '/admin/products',
   adminUsers: '/admin/users',
   adminOrders: '/admin/orders',
   adminCategories: '/admin/categories',
   adminReports: '/admin/reports',
+  /** Stage 6.4 (real API only): order disputes and seller settlements. */
+  adminDisputes: '/admin/disputes',
+  adminSettlements: '/admin/settlements',
 
   // Information pages
   howItWorks: '/how-it-works',

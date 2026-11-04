@@ -18,7 +18,7 @@ const SEARCHABLE = [PATHS.adminUsers, PATHS.adminProducts, PATHS.adminOrders, PA
  * @param {{ name, title }} [admin] signed-in admin (sample admin in development)
  * @param {() => void} onOpenMenu opens the sidebar drawer on small screens
  */
-export default function AdminTopbar({ campus, onCampusChange, counts = {}, admin, onOpenMenu }) {
+export default function AdminTopbar({ campus, onCampusChange, counts = {}, admin, onOpenMenu, live = false }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
@@ -47,8 +47,9 @@ export default function AdminTopbar({ campus, onCampusChange, counts = {}, admin
   const notifications = [
     ...(counts.pendingListings > 0 ? [{ label: t(counts.pendingListings > 1 ? '{count} listings awaiting review' : '{count} listing awaiting review', { count: counts.pendingListings }), Icon: TagIcon, to: `${PATHS.adminProducts}?moderation=PENDING` }] : []),
     ...(counts.openReports > 0 ? [{ label: t(counts.openReports > 1 ? '{count} open violation reports' : '{count} open violation report', { count: counts.openReports }), Icon: FlagIcon, to: `${PATHS.adminReports}?status=OPEN` }] : []),
+    ...(counts.openDisputes > 0 ? [{ label: t('{count} open disputes', { count: counts.openDisputes }), Icon: FlagIcon, to: PATHS.adminDisputes }] : []),
   ]
-  const notificationCount = (counts.pendingListings ?? 0) + (counts.openReports ?? 0)
+  const notificationCount = (counts.pendingListings ?? 0) + (counts.openReports ?? 0) + (counts.openDisputes ?? 0)
 
   return (
     <div className="flex h-16 items-center gap-2 border-b border-line bg-surface px-4 sm:gap-3 sm:px-6">
@@ -74,15 +75,18 @@ export default function AdminTopbar({ campus, onCampusChange, counts = {}, admin
       </form>
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
-        <Select
-          label={t("Campus")}
-          hideLabel
-          name="campus"
-          options={CAMPUS_OPTIONS}
-          value={campus}
-          onChange={onCampusChange}
-          className="hidden w-48 md:block"
-        />
+        {/* The sample campus filter has no backend equivalent: hidden with the real API. */}
+        {!live && (
+          <Select
+            label={t("Campus")}
+            hideLabel
+            name="campus"
+            options={CAMPUS_OPTIONS}
+            value={campus}
+            onChange={onCampusChange}
+            className="hidden w-48 md:block"
+          />
+        )}
         <div className="relative">
           <ActionMenu
             label={notificationCount > 0 ? t('Notifications, {count} need attention', { count: notificationCount }) : t('Notifications')}

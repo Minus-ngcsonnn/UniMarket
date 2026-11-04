@@ -28,6 +28,30 @@ import Avatar from '../../components/ui/Avatar'
 import { OTHER_PARTY_TURN, nextStep } from '../../utils/orderFlow'
 import useTranslation from '../../i18n/useTranslation'
 
+const DECISIONS = { NO_REFUND: 'Closed without refund', REFUND_APPROVED: 'Refund approved (recorded by an admin; simulated payments have no real money)' }
+
+/** Disputes of this order (both sides see them; the opener's text is plain text). */
+function OrderDisputes({ disputes }) {
+  const { t } = useTranslation()
+  return (
+    <Card title="Disputes">
+      <ul className="flex flex-col gap-3 text-sm">
+        {disputes.map((d) => (
+          <li key={d.id} className="rounded-control bg-subtle px-3 py-2">
+            <p className="font-medium text-ink">
+              {t(d.status === 'OPEN' ? 'Under review by an admin' : 'Resolved')} · {t('opened by the {side}', { side: t((d.openedBy ?? '').toLowerCase()) })} ·{' '}
+              {formatDateTime(d.createdAt)}
+            </p>
+            <p className="mt-1 whitespace-pre-line text-ink-muted">{d.reason}</p>
+            {d.decision && <p className="mt-1 text-ink">{t(DECISIONS[d.decision] ?? d.decision)}</p>}
+            {d.resolution && <p className="mt-0.5 whitespace-pre-line text-ink-muted">{d.resolution}</p>}
+          </li>
+        ))}
+      </ul>
+    </Card>
+  )
+}
+
 const PROVIDER_LABELS = { MOMO: 'MoMo (simulated)', ZALOPAY: 'ZaloPay (simulated)', BANK_QR: 'Bank QR (simulated)' }
 const PAYMENT_STATUS = { PENDING: 'In progress', SUCCEEDED: 'Succeeded', FAILED: 'Failed', EXPIRED: 'Expired' }
 
@@ -223,7 +247,8 @@ export default function OrderDetailPage() {
                 <OrderProgress status={order.status} />
               </Card>
             )}
-            {order.status === 'COMPLETED' && !order.isBackend && <OrderReviews order={order} onWriteReview={() => handleAction(order, 'review')} />}
+            {order.status === 'COMPLETED' && <OrderReviews order={order} onWriteReview={() => handleAction(order, 'review')} />}
+            {order.isBackend && order.disputes?.length > 0 && <OrderDisputes disputes={order.disputes} />}
             <Card title={t("Status history")}>
               <OrderTimeline order={order} />
             </Card>

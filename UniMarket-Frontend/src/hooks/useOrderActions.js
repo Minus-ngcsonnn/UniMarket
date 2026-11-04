@@ -43,6 +43,7 @@ export default function useOrderActions() {
     setFeedback(null)
     if (action === 'pay') setDialog({ type: 'pay', order })
     else if (action === 'review') setDialog({ type: 'review', order })
+    else if (action === 'dispute') setDialog({ type: 'dispute', order })
     else if (ORDER_ACTIONS[action].confirm) setDialog({ type: 'confirm', order, action })
     else run(order, action)
   }

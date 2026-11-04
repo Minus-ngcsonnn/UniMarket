@@ -25,11 +25,14 @@ export default defineConfig(({ command, mode }) => {
   // Stage 6.3: cart, checkout, simulated shipping / payments and orders follow the product data source unless
   // VITE_USE_MOCK_ORDERS says otherwise (a real listing can only be ordered through the real API).
   const useMockOrders = env.VITE_USE_MOCK_ORDERS ? env.VITE_USE_MOCK_ORDERS === 'true' : useMockProducts
+  // Stage 6.4: admin workspace, reviews, reports, disputes and promotions follow the order data source unless
+  // VITE_USE_MOCK_ADMIN says otherwise (they act on real orders and listings).
+  const useMockAdmin = env.VITE_USE_MOCK_ADMIN ? env.VITE_USE_MOCK_ADMIN === 'true' : useMockOrders
 
   if (command === 'serve') {
     // Make it obvious which backend (and therefore which database) this dev server talks to.
     console.info(
-      `[unimarket] /api -> ${backendUrl} | auth mode: ${env.VITE_AUTH_MODE || (useMockData ? 'demo' : 'backend')} | products: ${useMockProducts ? 'sample data' : 'backend'} | orders: ${useMockOrders ? 'sample data' : 'backend'}`,
+      `[unimarket] /api -> ${backendUrl} | auth mode: ${env.VITE_AUTH_MODE || (useMockData ? 'demo' : 'backend')} | products: ${useMockProducts ? 'sample data' : 'backend'} | orders: ${useMockOrders ? 'sample data' : 'backend'} | admin & community: ${useMockAdmin ? 'sample data' : 'backend'}`,
     )
   }
 
@@ -51,13 +54,14 @@ export default defineConfig(({ command, mode }) => {
       'import.meta.env.VITE_USE_MOCK_DATA': JSON.stringify(String(useMockData)),
       'import.meta.env.VITE_USE_MOCK_PRODUCTS': JSON.stringify(String(useMockProducts)),
       'import.meta.env.VITE_USE_MOCK_ORDERS': JSON.stringify(String(useMockOrders)),
+      'import.meta.env.VITE_USE_MOCK_ADMIN': JSON.stringify(String(useMockAdmin)),
     },
     resolve: {
       alias: {
         '@product-api-impl': apiImpl('./src/mocks/mockProductApi.js', './src/services/products/productApi.js', useMockProducts),
         '@order-api-impl': apiImpl('./src/mocks/mockOrderApi.js', './src/services/orders/orderApi.js', useMockOrders),
-        '@account-api-impl': apiImpl('./src/mocks/mockAccountApi.js', './src/services/account/accountApi.js'),
-        '@admin-api-impl': apiImpl('./src/mocks/mockAdminApi.js', './src/services/admin/adminApi.js'),
+        '@account-api-impl': apiImpl('./src/mocks/mockAccountApi.js', './src/services/account/accountApi.js', useMockAdmin),
+        '@admin-api-impl': apiImpl('./src/mocks/mockAdminApi.js', './src/services/admin/adminApi.js', useMockAdmin),
       },
     },
     server: {

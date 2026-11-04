@@ -18,7 +18,9 @@ const MAX_REASON = 300
  * the student will see. Shows the result in the dialog; when the service answers saved=false it says
  * clearly that it was a preview and nothing changed.
  *
- * @param {{ label: string, placeholder?: string, hint?: string }} [reason] asks for a reason when set
+ * @param {{ label: string, placeholder?: string, hint?: string, min?: number, max?: number, optional?: boolean }} [reason]
+ *   asks for a reason when set; min / max (trimmed length, default 10–300) and optional follow the backend rule of
+ *   the action (e.g. moderation reasons 10–1000, resolutions 10–2000, references 1–100)
  * @param {(reason: string) => Promise<{ saved: boolean }>} onConfirm
  * @param {string} doneText message when the action was really applied
  */
@@ -32,7 +34,17 @@ export default function AdminActionDialog({ title, message, confirmLabel, tone =
   const { Icon, iconBox, button } = TONES[tone]
   const isDone = Boolean(result && !result.error)
 
-  const reasonError = reason && text.trim().length < MIN_REASON ? t('Write at least {count} characters.', { count: MIN_REASON }) : undefined
+  const min = reason?.min ?? MIN_REASON
+  const max = reason?.max ?? MAX_REASON
+  const length = text.trim().length
+  const reasonError =
+    !reason || (reason.optional && length === 0)
+      ? undefined
+      : length < min
+        ? t('Write at least {count} characters.', { count: min })
+        : length > max
+          ? t('Use at most {count} characters.', { count: max })
+          : undefined
 
   async function confirm(event) {
     event.preventDefault()
@@ -67,7 +79,7 @@ export default function AdminActionDialog({ title, message, confirmLabel, tone =
           <Textarea
             label={t(reason.label)}
             rows={3}
-            maxLength={MAX_REASON}
+            maxLength={max}
             placeholder={t(reason.placeholder)}
             hint={t(reason.hint)}
             value={text}

@@ -21,3 +21,9 @@ export const USE_MOCK_PRODUCTS = import.meta.env.VITE_USE_MOCK_PRODUCTS === 'tru
  * by default it follows the product data source.
  */
 export const USE_MOCK_ORDERS = import.meta.env.VITE_USE_MOCK_ORDERS === 'true'
+
+/**
+ * Admin workspace, reviews and ratings, reports, disputes and promotions (Stage 6.4). Real API unless
+ * VITE_USE_MOCK_ADMIN=true; by default it follows the order data source.
+ */
+export const USE_MOCK_ADMIN = import.meta.env.VITE_USE_MOCK_ADMIN === 'true'
