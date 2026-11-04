@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router'
 import { PATHS } from '../../routes/paths'
-import { ExternalLinkIcon, FlagIcon, GraduationCapIcon, HelpCircleIcon, LayersIcon, LayoutDashboardIcon, PackageIcon, ShoppingCartIcon, UsersIcon } from '../icons'
+import { USE_MOCK_ADMIN } from '../../config/dataSource'
+import { ExternalLinkIcon, FlagIcon, ScaleIcon, WalletIcon, GraduationCapIcon, HelpCircleIcon, LayersIcon, LayoutDashboardIcon, PackageIcon, ShoppingCartIcon, UsersIcon } from '../icons'
 import Logo from '../layout/Logo'
 import useTranslation from '../../i18n/useTranslation'
 
@@ -11,7 +12,10 @@ const NAV = [
   { label: 'Orders', to: PATHS.adminOrders, Icon: ShoppingCartIcon },
   { label: 'Categories', to: PATHS.adminCategories, Icon: LayersIcon },
   { label: 'Violation reports', to: PATHS.adminReports, Icon: FlagIcon, countKey: 'openReports', countLabel: 'open' },
-]
+  // Real API only (no sample data for them).
+  { label: 'Disputes', to: PATHS.adminDisputes, Icon: ScaleIcon, countKey: 'openDisputes', countLabel: 'open', live: true },
+  { label: 'Settlements', to: PATHS.adminSettlements, Icon: WalletIcon, countKey: 'pendingSettlements', countLabel: 'pending', live: true },
+].filter((item) => !item.live || !USE_MOCK_ADMIN)
 
 /**
  * Admin sidebar (Figma): logo, "Admin workspace", sections with counts, campus community card and

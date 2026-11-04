@@ -488,7 +488,7 @@ forwards `/media` (uploaded photos) to the backend as well as `/api`.
 |---|---|
 | The rejection / block reason is not part of the product responses | the frontend reads it from `GET /api/me/products/{id}/moderation` (Stage 5) for the seller's blocked listings |
 | `campusId` filter accepts one campus | the campus filter is single-select |
-| Photos are not re-encoded | EXIF metadata (e.g. GPS) of uploaded photos is kept (see PRODUCTS_API.md storage audit) |
+| Photo metadata | stripped from new uploads since Stage 6.4 (older photos unchanged, see PRODUCTS_API.md storage audit) |
 | Demo photos `/images/demo/products/*.svg` do not exist | demo listings show the placeholder |
 | Cart / checkout / orders | connected in Stage 6.3 (§3.10) |
 
@@ -558,7 +558,7 @@ real cart / orders). `vite.config.js` resolves `@order-api-impl` with it; sample
 - **Payments**: available after seller confirmation. `POST /api/orders/{id}/payments` (start / resume) never marks the
   order paid; the sandbox outcome goes through the backend simulator (HMAC-signed notification, server verification).
   The simulator choice is shown only when `simulatorUrl` is present. Bank QR shows the simulated text payload only.
-- Reviews, reports and disputes are not offered with the real API yet (later stage).
+- Reviews, reports and disputes: connected in Stage 6.4 (§3.11).
 
 ### Gaps (unchanged backend)
 
@@ -571,6 +571,47 @@ real cart / orders). `vite.config.js` resolves `@order-api-impl` with it; sample
 
 Manual test: `docs/STAGE_6_3_MANUAL_TEST.md` — **pending verification**, deferred to Stage 7 (not performed in Stage 6.3;
 only automated backend tests and API checks through the Vite proxy were run).
+
+## 3.11 Stage 6.4 — admin workspace, reviews, reports, disputes and promotions (frontend)
+
+Uses the Stage 5 contracts in `ADMIN_API.md` unchanged. The only backend change is a security fix: metadata (EXIF /
+GPS, XMP, IPTC, text) is stripped from newly uploaded photos (`PRODUCTS_API.md`, storage audit).
+
+### Data source switch
+
+`VITE_USE_MOCK_ADMIN` (default: follows `VITE_USE_MOCK_ORDERS`). It selects `@admin-api-impl` / `@account-api-impl`
+and, in `App.jsx`, the live admin pages (`src/pages/admin/live/`) instead of the sample-data previews, which stay
+available for demos. With the real API the admin layout shows "Live admin data", hides the sample campus filter and
+adds **Disputes** and **Settlements**.
+
+### API inventory (frontend ↔ backend)
+
+| Area | Endpoints used | Frontend | Gaps (documented, not invented) |
+|---|---|---|---|
+| Access | every `/api/admin/**` (ADMIN only, 401 / 403) | `RequireAuth role="ADMIN"` + server checks | — |
+| Dashboard | `GET /api/admin/dashboard?from&to`, `GET /api/admin/badges` | `LiveAdminOverviewPage`, sidebar / top-bar badges (refreshed after actions) | no history series → no trend lines or growth % |
+| Moderation | `GET /api/admin/listings`, `/counts`, `/{id}`; `POST …/approve {version, note?}`, `…/reject {version, reason}`, `…/block {reason}`, `…/remove {reason}` | `LiveAdminProductsPage` (review dialog with photos, description, history; acts on the loaded `version`; 409 `LISTING_CHANGED` reloads) | no category / date / sort filters, no bulk actions (each listing is reviewed) |
+| Users | `GET /api/admin/users`, `/{id}`; `POST …/suspend {reason}`, `…/reactivate {reason?}` | `LiveAdminUsersPage` (students only, not yourself) | no role changes (by design); private-contact access (`contact-access`) not exposed in the UI |
+| Orders | `GET /api/admin/orders?status`, `/{id}` | `LiveAdminOrdersPage` (read only: amounts, commission, payout, payments, delivery, history, disputes, LEGACY) | no text search on admin orders |
+| Settlements | `GET /api/admin/settlements?status&onHold`, `/{orderId}`; `POST …/release {payoutReference, acknowledgeSimulated}` | `LiveAdminSettlementsPage` (sandbox → explicit simulated acknowledgement) | — |
+| Reports | `POST /api/reports`, `GET /api/me/reports`, `GET /api/admin/reports`, `/{id}`, `POST …/review`, `…/resolve`, `…/dismiss` | `ReportDialog` (listing / student), `LiveAdminReportsPage` | reviews can't be reported (targets: LISTING, USER) |
+| Disputes | `POST /api/orders/{id}/disputes`, `GET /api/me/disputes`, `GET /api/admin/disputes`, `/{id}`, `POST …/resolve {decision, resolution}`, `…/confirm-refund {refundReference}` | `DisputeDialog` (order page, when `actions` has `OPEN_DISPUTE`), dispute list on the order page, `LiveAdminDisputesPage` | no evidence upload (text reason only) |
+| Reviews | `POST/GET /api/orders/{id}/reviews`, `GET /api/users/{id}`, `/ratings`, `/reviews` | `OrderReviews` + `ReviewDialog` on completed orders, public profiles, seller card | no edit / delete / hide endpoints |
+| Promotions | `GET /api/promotion-packages`, `POST /api/products/{id}/promotions`, `GET /api/me/products/{id}/promotions`, sandbox `…/promotions/{id}/complete` | `PromoteDialog` from My listings (approved + available) | no admin promotion list (dashboard counts only) |
+| Categories | `GET /api/categories` | `LiveAdminCategoriesPage` (read only) | no category management API |
+
+### Rules kept
+
+- The backend is the authority: admin buttons are hidden for non-admins, but every call is checked on the server; a
+  401 ends the session (Stage 6.1 handler), 403 / 409 are shown as readable messages (`adminErrorText`).
+- Admin actions use `AdminActionDialog` (confirmation + reason where the API requires one, 10–300 characters) and are
+  audited by the backend (`AdminActions`). Nothing is changed through SQL or local state.
+- Money is shown as stored: commission = 3 % of items only, delivery fee passed to the seller, payout = items − commission
+  + delivery fee. Sandbox payments, refunds and payouts are labelled "Simulated"; no money is moved.
+- User text (review comments, report details, dispute reasons) is plain text rendered by React (no `dangerouslySetInnerHTML`
+  anywhere). Reporters are visible to admins only.
+
+Manual test: `docs/STAGE_6_4_MANUAL_TEST.md` — **pending**, planned for Stage 7.
 
 ## 4. Conventions already in place (Stage 1)
 

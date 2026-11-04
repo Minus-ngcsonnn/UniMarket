@@ -56,12 +56,15 @@ export const OTHER_PARTY_TURN = { buyer: ['PENDING', 'PAID'], seller: ['AWAITING
 export function nextStep(order, role) {
   const step = baseNextStep(order, role)
   if (!order.isBackend) return step
-  return { ...step, text: backendText(order, role) ?? step.text, actions: allowedActions(order, role, step.actions) }
+  const actions = allowedActions(order, role, step.actions)
+  // Stage 6.4: a paid / delivering / completed order can be sent to an admin when the server allows it.
+  if (order.actions.includes('OPEN_DISPUTE')) actions.push({ key: 'dispute', label: 'Report a problem', variant: 'ghost' })
+  return { ...step, text: backendText(order, role) ?? step.text, actions }
 }
 
 /**
- * Real API: buttons only for what the server lists in `order.actions` (it checks again on every call). Reviews are not
- * connected to the real API yet (later stage), so no review button.
+ * Real API: buttons only for what the server lists in `order.actions` (it checks again on every call). Reviews are
+ * written in the Reviews section of the order page (it knows whether this side may still review).
  */
 const BACKEND_ACTION = { confirm: 'CONFIRM', decline: 'CANCEL', cancel: 'CANCEL', pay: ['PAY', 'CONTINUE_PAYMENT'], ship: 'SHIP', received: 'CONFIRM_RECEIPT' }
 function allowedActions(order, role, actions) {
@@ -82,8 +85,11 @@ function backendText(order, role) {
   if (order.status === 'PAID' && role === 'seller') {
     return `${buyer} has paid (simulated). Hand the order to delivery, then mark it as delivering.`
   }
+  if (order.disputes?.some((d) => d.status === 'OPEN')) {
+    return 'A problem was reported on this order. An admin is reviewing it; completion and the seller payout wait until it is resolved.'
+  }
   if (order.status === 'COMPLETED') {
-    return role === 'buyer' ? 'Completed. Thanks for buying on UniMarket!' : 'Completed. These listings are now marked as sold.'
+    return role === 'buyer' ? 'Completed. Thanks for buying on UniMarket! You can review the seller below.' : 'Completed. These listings are now marked as sold. You can review the buyer below.'
   }
   if (order.status === 'CANCELLED') {
     return order.cancellationReason ? `This order was cancelled: ${order.cancellationReason}` : 'This order was cancelled. The items are available again.'

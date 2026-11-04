@@ -536,6 +536,34 @@ class ProductIntegrationTest {
     // ================================================================== favorites
 
     @Nested
+    class PhotoPrivacy {
+
+        /** A small JPEG whose APP1 segment carries EXIF GPS coordinates (as phones write them). */
+        private byte[] jpegWithGps() {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            out.writeBytes(new byte[]{(byte) 0xFF, (byte) 0xD8});
+            byte[] exif = "Exif\0\0GPSLatitude=21.0285;GPSLongitude=105.8542".getBytes(StandardCharsets.ISO_8859_1);
+            out.writeBytes(new byte[]{(byte) 0xFF, (byte) 0xE1, (byte) ((exif.length + 2) >> 8), (byte) (exif.length + 2)});
+            out.writeBytes(exif);
+            out.writeBytes(new byte[]{(byte) 0xFF, (byte) 0xDA, 0, 5, 1, 2, 3, 0x11, 0x22, (byte) 0xFF, (byte) 0xD9});
+            return out.toByteArray();
+        }
+
+        @Test
+        void uploadedPhotosAreStoredWithoutGpsMetadata() throws Exception {
+            JsonNode created = readJson(mvc.perform(createRequest(listing("Photo privacy lamp", 90_000), photo("phone.jpg", jpegWithGps()))
+                    .header("Authorization", "Bearer " + seller)).andExpect(status().isCreated()));
+            String url = created.get("images").get(0).get("url").asText();
+            Path stored = uploadDir.resolve("products").resolve(url.substring("/media/products/".length()));
+            byte[] bytes = Files.readAllBytes(stored);
+            assertThat(new String(bytes, StandardCharsets.ISO_8859_1)).doesNotContain("GPSLatitude").doesNotContain("Exif");
+            assertThat(bytes[0] & 0xFF).isEqualTo(0xFF);
+            assertThat(bytes[1] & 0xFF).isEqualTo(0xD8);
+            assertThat(url).endsWith(".jpg");
+        }
+    }
+
+    @Nested
     class Favorites {
 
         @Test

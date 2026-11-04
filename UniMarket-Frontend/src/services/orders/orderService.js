@@ -44,6 +44,9 @@ export const orderService = {
   /** Real API, sandbox only: finish a simulated payment; the server verifies and records the result. */
   completeSimulatedPayment: mutation((simulatorUrl, outcome) => orderApiImpl.completeSimulatedPayment(simulatorUrl, outcome)),
 
+  /** Real API: ask an admin to review a paid order (no refund is executed; an admin decides). */
+  openDispute: mutation((id, reason) => orderApiImpl.openDispute(id, reason)),
+
   // Buyer
   cancelOrder: mutation((id) => orderApiImpl.cancelOrder(id)),
   payOrder: mutation((id, method) => orderApiImpl.payOrder(id, method)),

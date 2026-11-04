@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import { USE_MOCK_ADMIN } from './config/dataSource'
 import { Route, Routes } from 'react-router'
 import AuthLayout from './components/auth/AuthLayout'
 import RequireAuth from './components/auth/RequireAuth'
@@ -33,12 +34,16 @@ const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'))
 const UserProfilePage = lazy(() => import('./pages/profile/UserProfilePage'))
 const ShopDashboardPage = lazy(() => import('./pages/profile/ShopDashboardPage'))
 const SettingsPage = lazy(() => import('./pages/profile/SettingsPage'))
-const AdminOverviewPage = lazy(() => import('./pages/admin/AdminOverviewPage'))
-const AdminProductsPage = lazy(() => import('./pages/admin/AdminProductsPage'))
-const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
-const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'))
-const AdminCategoriesPage = lazy(() => import('./pages/admin/AdminCategoriesPage'))
-const AdminReportsPage = lazy(() => import('./pages/admin/AdminReportsPage'))
+// Admin pages: sample-data previews, or (Stage 6.4, VITE_USE_MOCK_ADMIN=false) the live pages on the real Admin API.
+const adminPage = (sample, live) => lazy(USE_MOCK_ADMIN ? sample : live)
+const AdminOverviewPage = adminPage(() => import('./pages/admin/AdminOverviewPage'), () => import('./pages/admin/live/LiveAdminOverviewPage'))
+const AdminProductsPage = adminPage(() => import('./pages/admin/AdminProductsPage'), () => import('./pages/admin/live/LiveAdminProductsPage'))
+const AdminUsersPage = adminPage(() => import('./pages/admin/AdminUsersPage'), () => import('./pages/admin/live/LiveAdminUsersPage'))
+const AdminOrdersPage = adminPage(() => import('./pages/admin/AdminOrdersPage'), () => import('./pages/admin/live/LiveAdminOrdersPage'))
+const AdminCategoriesPage = adminPage(() => import('./pages/admin/AdminCategoriesPage'), () => import('./pages/admin/live/LiveAdminCategoriesPage'))
+const AdminReportsPage = adminPage(() => import('./pages/admin/AdminReportsPage'), () => import('./pages/admin/live/LiveAdminReportsPage'))
+const AdminDisputesPage = lazy(() => import('./pages/admin/live/LiveAdminDisputesPage'))
+const AdminSettlementsPage = lazy(() => import('./pages/admin/live/LiveAdminSettlementsPage'))
 const HowItWorksPage = lazy(() => import('./pages/info/HowItWorksPage'))
 const SafetyPage = lazy(() => import('./pages/info/SafetyPage'))
 const HelpCenterPage = lazy(() => import('./pages/info/HelpCenterPage'))
@@ -125,6 +130,8 @@ export default function App() {
             <Route path={PATHS.adminOrders} element={<AdminOrdersPage />} />
             <Route path={PATHS.adminCategories} element={<AdminCategoriesPage />} />
             <Route path={PATHS.adminReports} element={<AdminReportsPage />} />
+            {!USE_MOCK_ADMIN && <Route path={PATHS.adminDisputes} element={<AdminDisputesPage />} />}
+            {!USE_MOCK_ADMIN && <Route path={PATHS.adminSettlements} element={<AdminSettlementsPage />} />}
             <Route path="*" element={<NotAvailablePage />} />
           </Route>
         </Route>

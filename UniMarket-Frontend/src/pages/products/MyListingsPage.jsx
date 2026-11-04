@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router'
-import { PackageIcon, PencilIcon, PlusIcon, TrashIcon } from '../../components/icons'
+import { PackageIcon, PencilIcon, PlusIcon, SparklesIcon, TrashIcon } from '../../components/icons'
+import PromoteDialog from '../../components/listing/PromoteDialog'
+import { USE_MOCK_ADMIN } from '../../config/dataSource'
 import Breadcrumbs from '../../components/layout/Breadcrumbs'
 import PageContainer from '../../components/layout/PageContainer'
 import { ModerationBadge, ProductStatusBadge } from '../../components/product/ProductBadges'
@@ -27,10 +29,13 @@ const TABS = [{ key: 'ALL', label: 'All' }, ...STATUS_KEYS.map((key) => ({ key, 
  * Row actions for one listing: view, edit, delete. Real API: only while the backend says the listing is `editable`
  * (DRAFT / AVAILABLE and not in an open order); sample data: not for sold items.
  */
-function actionsFor(listing, onDelete) {
+function actionsFor(listing, onDelete, onPromote) {
   const canChange = listing.editable ?? listing.status !== 'SOLD'
+  // Stage 6.4 (real API): approved, available listings can be featured (simulated payment).
+  const canPromote = !USE_MOCK_ADMIN && listing.isOwnerView && listing.moderation === 'APPROVED' && listing.status === 'AVAILABLE'
   return [
     { label: 'View listing', Icon: PackageIcon, to: PATHS.product(listing.id) },
+    ...(canPromote ? [{ label: listing.featured ? 'Featured — details' : 'Feature this listing', Icon: SparklesIcon, onSelect: () => onPromote(listing) }] : []),
     ...(canChange ? [{ label: 'Edit', Icon: PencilIcon, to: PATHS.editListing(listing.id) }] : []),
     ...(canChange || listing.editable == null ? [{ label: 'Delete', Icon: TrashIcon, danger: true, onSelect: () => onDelete(listing) }] : []),
   ]
@@ -88,6 +93,7 @@ export default function MyListingsPage() {
   const created = useLocation().state?.created
   const [tab, setTab] = useState('ALL')
   const [deleting, setDeleting] = useState(null) // { listing, isWorking, result }
+  const [promoting, setPromoting] = useState(null)
 
   const counts = Object.fromEntries(TABS.map(({ key }) => [key, key === 'ALL' ? (listings?.length ?? 0) : (listings ?? []).filter((l) => l.status === key).length]))
   const visible = (listings ?? []).filter((listing) => tab === 'ALL' || listing.status === tab)
@@ -185,7 +191,7 @@ export default function MyListingsPage() {
                     <p className="text-xs text-ink-muted">{formatTime(listing.createdAt)}</p>
                   </td>
                   <td className="px-5 py-3 text-right">
-                    <ActionMenu label={t('Actions for {title}', { title: listing.title })} heading={t('Listing {code}', { code: listingCode(listing.id) })} items={actionsFor(listing, openDelete)} />
+                    <ActionMenu label={t('Actions for {title}', { title: listing.title })} heading={t('Listing {code}', { code: listingCode(listing.id) })} items={actionsFor(listing, openDelete, setPromoting)} />
                   </td>
                 </tr>
               ))}
@@ -203,7 +209,7 @@ export default function MyListingsPage() {
                   <Link to={PATHS.product(listing.id)} className="line-clamp-2 text-sm font-medium text-ink hover:text-primary">
                     {listing.title}
                   </Link>
-                  <ActionMenu label={t('Actions for {title}', { title: listing.title })} heading={t('Listing {code}', { code: listingCode(listing.id) })} items={actionsFor(listing, openDelete)} />
+                  <ActionMenu label={t('Actions for {title}', { title: listing.title })} heading={t('Listing {code}', { code: listingCode(listing.id) })} items={actionsFor(listing, openDelete, setPromoting)} />
                 </div>
                 <p className="font-semibold text-ink">{formatPrice(listing.price)}</p>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-ink-muted">
@@ -267,6 +273,15 @@ export default function MyListingsPage() {
 
       <section aria-label={t('{status} listings', { status: t(TABS.find((item) => item.key === tab).label) })}>{content}</section>
 
+      {promoting && (
+        <PromoteDialog
+          listing={promoting}
+          onClose={() => {
+            setPromoting(null)
+            reload()
+          }}
+        />
+      )}
       {deleting && (
         <ConfirmDialog
           title={t("Delete this listing?")}
