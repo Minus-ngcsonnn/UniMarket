@@ -23,7 +23,8 @@ param(
   [string]$SqlHost = 'localhost',
   [int]$SqlPort = 1433,
   [string]$SqlServer = 'localhost\MSSQLSERVER09',
-  [ValidateSet('log', 'smtp')][string]$MailMode = 'log',
+  # Default: 'smtp' (real Gmail) in -OfficialDemo mode, 'log' (codes in the console) for clones / automated tests.
+  [ValidateSet('', 'log', 'smtp')][string]$MailMode = '',
   [string]$UploadDir = '',
   [switch]$OfficialDemo
 )
@@ -35,9 +36,27 @@ if ($Database -eq 'UniMarketJava' -and -not $OfficialDemo) {
 }
 if ($Database -ne 'UniMarketJava' -and $OfficialDemo) { throw '-OfficialDemo is only meant for UniMarketJava.' }
 
+if (-not $MailMode) { $MailMode = if ($OfficialDemo) { 'smtp' } else { 'log' } }
+if ($OfficialDemo -and $MailMode -ne 'smtp') { Write-Warning 'Official demo with MAIL_MODE=log: OTP e-mails are NOT sent, codes only appear in the backend console.' }
+
 $backendDir = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 if (-not (Test-Path (Join-Path $backendDir 'mvnw.cmd'))) { throw "mvnw.cmd not found in $backendDir" }
-if (-not (Test-Path (Join-Path $backendDir '.env'))) { Write-Warning 'UniMarket-Backend\.env not found: DB credentials and JWT_SECRET must come from the environment.' }
+$envFile = Join-Path $backendDir '.env'
+if (-not (Test-Path $envFile)) { Write-Warning 'UniMarket-Backend\.env not found: DB credentials and secrets must come from the environment.' }
+
+# Required configuration, checked for presence only (values are never printed). OS environment wins over .env.
+$dotenv = @{}
+if (Test-Path $envFile) { foreach ($line in Get-Content $envFile -Encoding UTF8) { if ($line -match '^\s*([A-Z0-9_]+)\s*=\s*(.*)$') { $dotenv[$matches[1]] = $matches[2].Trim() } } }
+function Test-Setting([string]$name) { [bool]([Environment]::GetEnvironmentVariable($name) -or $dotenv[$name]) }
+$required = @('DB_USERNAME', 'DB_PASSWORD')
+if ($MailMode -eq 'smtp') { $required += @('MAIL_USERNAME', 'MAIL_PASSWORD', 'MAIL_FROM') }
+$missing = @($required | Where-Object { -not (Test-Setting $_) })
+if ($missing.Count) { throw "Missing configuration in UniMarket-Backend\.env or the environment: $($missing -join ', ') (values are not shown)." }
+
+# One backend per port, and only one backend on the main database.
+if (Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue) { throw "Port $Port is already in use. Stop that process first (stop-unimarket-demo.ps1) - no second backend is started." }
+$users = sqlcmd -S $SqlServer -E -C -h -1 -W -d master -Q "SET NOCOUNT ON; SELECT DISTINCT host_process_id FROM sys.dm_exec_sessions WHERE database_id = DB_ID(N'$Database') AND program_name LIKE 'Microsoft JDBC%'" 2>$null | Where-Object { $_ -match '^\d+$' }
+if ($users) { throw "Another Java/JDBC process (PID $($users -join ', ')) is already connected to $Database. Stop it first - no duplicate backend is started." }
 
 # The database must exist and be ONLINE before the backend validates the schema against it.
 $state = sqlcmd -S $SqlServer -E -C -h -1 -W -d master -Q "SET NOCOUNT ON; SELECT state_desc FROM sys.databases WHERE name = N'$Database'" 2>$null
@@ -62,4 +81,22 @@ $env:UPLOAD_DIR = $UploadDir
 Write-Host "UniMarket backend -> database [$Database] on ${SqlHost}:${SqlPort} | http://localhost:$Port | CORS http://localhost:$FrontendPort | mail=$MailMode | expiry OFF | payments SIMULATED | uploads $UploadDir"
 if ($OfficialDemo) { Write-Warning 'OFFICIAL DEMO MODE: every action changes the main database UniMarketJava.' }
 Set-Location $backendDir
-& .\mvnw.cmd spring-boot:run
+
+# Run an immutable copy of the application, NOT `mvnw spring-boot:run`: spring-boot:run loads classes lazily from
+# target/classes, and any later build or test run (mvnw test / package / compile) rewrites that folder while the server
+# is running. A class that is first needed at that moment (e.g. AttemptLimiter$Counter, used only on a failed sign-in)
+# then fails to load, the JVM remembers the failure, and every wrong-password sign-in answers HTTP 500 until restart.
+& .\mvnw.cmd -q -DskipTests package
+if ($LASTEXITCODE -ne 0) { throw 'Build failed (mvnw package).' }
+$jar = Get-ChildItem (Join-Path $backendDir 'target') -Filter 'unimarket-backend-*.jar' | Where-Object { $_.Name -notlike '*.original' } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if (-not $jar) { throw 'No unimarket-backend-*.jar found in target/.' }
+$runDir = Join-Path $env:LOCALAPPDATA 'UniMarket\run'
+New-Item -ItemType Directory -Force $runDir | Out-Null
+# Old copies are removed only when no process holds them open (a running JAR is locked by Windows and kept).
+Get-ChildItem $runDir -Filter "unimarket-backend-$Port*.jar" -ErrorAction SilentlyContinue | ForEach-Object { try { Remove-Item $_.FullName -Force -ErrorAction Stop } catch { } }
+# A new, unique file per start: a running JAR is never overwritten by a later start or build.
+$runJar = Join-Path $runDir ("unimarket-backend-$Port-{0}.jar" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
+Copy-Item $jar.FullName $runJar
+Write-Host "Running $runJar (copy of $($jar.Name), built $($jar.LastWriteTime)); later builds do not affect this process."
+# Working directory stays UniMarket-Backend so spring.config.import=optional:file:.env still finds the git-ignored .env.
+& (Join-Path $env:JAVA_HOME 'bin\java.exe') -jar $runJar
