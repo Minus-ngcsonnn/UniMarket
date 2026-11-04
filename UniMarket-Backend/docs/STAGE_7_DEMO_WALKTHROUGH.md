@@ -53,8 +53,9 @@ reuse a real personal password.
 * **Accent-insensitive search is incomplete**: the database collation is accent-sensitive (`CI_AS`), so `sach` does
   not find `sách`. Search with Vietnamese accents.
 * **Mobile order progress labels may truncate** (e.g. "Confir…") on narrow screens; the status badge stays complete.
-* **Not browser-tested**: real SMTP delivery (all tests used `MAIL_MODE=log`) and real-time JWT expiry (only an invalid
-  token was tested; expiry itself is covered by backend tests).
+* **Real SMTP** was verified manually on 2026-11-04 (official demo, Gmail): the registration OTP and the
+  forgot-password code both arrived; automated tests use `MAIL_MODE=log`. **Not browser-tested:** real-time JWT expiry
+  (only an invalid token was tested; expiry itself is covered by backend tests).
 * A rejected listing is shown to the seller as "Blocked by an admin": the database has one status for both a
   rejection and a block. The seller still sees the admin's reason and can edit and resend the listing.
 * 12 seeded listings have no reference photo yet and show a neutral placeholder (see `photos/CREDITS.md`).
