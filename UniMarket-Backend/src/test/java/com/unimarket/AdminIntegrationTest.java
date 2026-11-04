@@ -470,6 +470,28 @@ class AdminIntegrationTest {
             assertThat(historical.get("amount").asLong()).isEqualTo(((BigDecimal) row.get("Amount")).longValue());
             assertThat(historical.get("shippingFee").asLong()).isEqualTo(((BigDecimal) row.get("ShippingFee")).longValue());
             assertThat(historical.get("commission").asLong()).isEqualTo(((BigDecimal) row.get("CommissionAmount")).longValue());
+            // V001 paid out merchandise only (no delivery fee); V002 kept the amount. It is labelled, never "corrected".
+            long orderPayout = jdbc.queryForObject("SELECT SellerPayoutTotal FROM dbo.Orders WHERE OrderId = 4", Long.class);
+            long orderFee = jdbc.queryForObject("SELECT ShippingFee FROM dbo.Orders WHERE OrderId = 4", Long.class);
+            assertThat(historical.get("calculation").asText()).isEqualTo(orderFee > 0 ? "LEGACY_V001_MERCHANDISE_ONLY" : "STANDARD");
+            assertThat(historical.get("orderSellerPayout").asLong()).isEqualTo(orderPayout);
+            assertThat(orderPayout - historical.get("amount").asLong()).isEqualTo(orderFee - historical.get("shippingFee").asLong());
+        }
+
+        @Test
+        void everySettlementIsLabelledLegacyOnlyWhenItLacksTheOrderDeliveryFee() throws Exception {
+            long orderId = completedOrder("Standard settlement", 120_000);
+            JsonNode current = getJson("/api/admin/settlements/" + orderId, admin);
+            assertThat(current.get("calculation").asText()).isEqualTo("STANDARD");
+            assertThat(current.get("amount").asLong()).isEqualTo(current.get("orderSellerPayout").asLong());
+            JsonNode sellerView = getJson("/api/orders/" + orderId, seller).get("settlement");
+            assertThat(sellerView.get("calculation").asText()).isEqualTo("STANDARD");
+            assertThat(sellerView.get("amount").asLong()).isEqualTo(getJson("/api/orders/" + orderId, seller).get("amounts").get("sellerPayout").asLong());
+            assertThat(getJson("/api/orders/" + orderId, buyer).get("settlement")).as("buyers never see the payout").isNull();
+            int legacyRows = jdbc.queryForObject("""
+                    SELECT COUNT(*) FROM dbo.SellerSettlements s JOIN dbo.Orders o ON o.OrderId = s.OrderId
+                    WHERE s.ShippingFee <> o.ShippingFee AND s.OrderId > 4""", Integer.class);
+            assertThat(legacyRows).as("only the four V001 demo settlements can differ from their order").isZero();
         }
     }
 

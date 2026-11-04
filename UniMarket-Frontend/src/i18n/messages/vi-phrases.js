@@ -1041,6 +1041,17 @@ export const viPhrases = {
   "USER": "Tài khoản",
   "SIMULATED_RECORD": "Bản ghi mô phỏng",
   "EXTERNAL_TRANSFER_CONFIRMED": "Chuyển khoản ngoài đã xác nhận",
+  "Calculation": "Cách tính",
+  "Legacy V001": "Dữ liệu cũ V001",
+  "Legacy settlement": "Khoản quyết toán dữ liệu cũ",
+  "Legacy V001 (items only)": "Dữ liệu cũ V001 (chỉ tiền hàng)",
+  "Current rules (items − commission + delivery fee)": "Quy tắc hiện hành (tiền hàng − phí sàn + phí giao hàng)",
+  "Order payout under current rules": "Số tiền của đơn theo quy tắc hiện hành",
+  "Delivery fee (not paid out in this legacy record)": "Phí giao hàng (không được chi trong bản ghi cũ này)",
+  "Legacy demo record (V001): this payout was calculated before delivery fees were paid out to sellers and is kept exactly as recorded.":
+    "Bản ghi demo cũ (V001): khoản chi trả này được tính trước khi phí giao hàng được chuyển cho người bán và được giữ nguyên như đã ghi nhận.",
+  "It differs from the order payout by the delivery fee on purpose; settlement amounts can never be edited.":
+    "Khoản này chênh lệch với số tiền của đơn đúng bằng phí giao hàng, theo chủ đích; số tiền quyết toán không bao giờ được chỉnh sửa.",
   "BUYER": "Người mua",
   "SELLER": "Người bán",
   "buyer": "người mua",

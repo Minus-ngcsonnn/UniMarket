@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg font-family="Inter, 'Segoe UI', Roboto, Arial, sans-serif" xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" role="img" aria-label="Ảnh minh họa demo: Bộ thước hình học">
+  <title>Ảnh minh họa demo (không phải ảnh chụp thật): Bộ thước hình học</title>
+  <rect width="800" height="600" fill="#f3f0fd"/>
+  <circle cx="477" cy="80" r="103" fill="#d9cdf7" opacity="0.45"/>
+  <rect x="236" y="28" width="328" height="40" rx="20" fill="#fff" stroke="#d9cdf7" stroke-width="2"/>
+  <text x="400" y="55" text-anchor="middle" font-size="19" font-weight="600" fill="#6d28d9">Ảnh minh họa demo</text>
+  <g transform="translate(300 92) rotate(6 100 100)"><path d="M50 150l86-86 22 22-86 86H50z" fill="#d9cdf7" stroke="#6d28d9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M124 76l22 22M50 150l22 22" fill="none" stroke="#6d28d9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="34" y="28" width="132" height="26" rx="5" fill="#fff" stroke="#6d28d9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M56 28v12M78 28v8M100 28v12M122 28v8M144 28v12" fill="none" stroke="#6d28d9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <text x="400" y="358" text-anchor="middle" font-size="38" font-weight="700" fill="#18243b">Bộ thước hình học</text>
+  <text x="400" y="412" text-anchor="middle" font-size="22" fill="#5d6879">Dụng cụ học tập · Đã qua sử dụng</text>
+  <text x="400" y="578" text-anchor="middle" font-size="16" fill="#5d6879">Không phải ảnh chụp thật của sản phẩm · Demo illustration, not a real photo</text>
+</svg>

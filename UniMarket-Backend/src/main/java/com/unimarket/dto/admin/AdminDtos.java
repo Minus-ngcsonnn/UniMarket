@@ -136,7 +136,8 @@ public final class AdminDtos {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record Settlement(long orderId, Ref seller, String status, long amount, long merchandiseSubtotal, long commission,
                              long shippingFee, boolean sandbox, boolean onHold, Instant createdAt, Instant releasedAt, Ref releasedBy,
-                             String payoutReference, String payoutNote, String payoutRecordType) {
+                             String payoutReference, String payoutNote, String payoutRecordType, String calculation,
+                             long orderSellerPayout) {
     }
 
     /**

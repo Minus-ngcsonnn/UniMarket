@@ -15,7 +15,7 @@ import { buttonClasses } from '../../components/ui/buttonClasses'
 import EmptyState from '../../components/ui/EmptyState'
 import ErrorState from '../../components/ui/ErrorState'
 import LoadingState from '../../components/ui/LoadingState'
-import { PAYMENT_METHODS, orderCode } from '../../constants/order'
+import { LEGACY_SETTLEMENT, LEGACY_SETTLEMENT_NOTE, PAYMENT_METHODS, orderCode } from '../../constants/order'
 import { CAMPUSES, UNIVERSITY_NAME } from '../../constants/product'
 import useLiveOrders from '../../hooks/useLiveOrders'
 import useOrderActions from '../../hooks/useOrderActions'
@@ -59,6 +59,7 @@ const PAYMENT_STATUS = { PENDING: 'In progress', SUCCEEDED: 'Succeeded', FAILED:
 function BackendSummary({ order }) {
   const { t } = useTranslation()
   const { amounts, shipping } = order
+  const legacySettlement = order.settlement?.calculation === LEGACY_SETTLEMENT
   const shippingLabel =
     shipping?.source === 'LEGACY'
       ? t('Delivery (earlier order)')
@@ -84,14 +85,16 @@ function BackendSummary({ order }) {
         {amounts.commission != null && (
           <div className="mt-2 flex flex-col gap-2 border-t border-line pt-3">
             {row(t('UniMarket fee ({percent}% of items)', { percent: Math.round(Number(amounts.commissionRate ?? 0.03) * 100) }), `−${formatPrice(amounts.commission)}`)}
-            {row(t('Delivery fee (passed to you)'), formatPrice(amounts.shippingFee))}
-            {row(t('Your payout'), formatPrice(amounts.sellerPayout), true)}
+            {row(legacySettlement ? t('Delivery fee (not paid out in this legacy record)') : t('Delivery fee (passed to you)'), formatPrice(amounts.shippingFee))}
+            {/* A legacy V001 settlement is kept exactly as recorded (merchandise only): show what was really recorded. */}
+            {row(t('Your payout'), formatPrice(legacySettlement ? order.settlement.amount : amounts.sellerPayout), true)}
             {order.settlement && (
               <p className="text-xs text-ink-muted">
                 {t(order.settlement.status === 'RELEASED' ? 'Payout recorded by an admin.' : 'Payout pending: an admin records it after completion.')}{' '}
                 {order.settlement.sandbox && t('Simulated: no real money is paid out.')}
               </p>
             )}
+            {legacySettlement && <p className="text-xs text-ink-muted">{t(LEGACY_SETTLEMENT_NOTE)}</p>}
           </div>
         )}
       </dl>

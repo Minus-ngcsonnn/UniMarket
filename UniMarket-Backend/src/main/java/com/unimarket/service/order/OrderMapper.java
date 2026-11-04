@@ -67,7 +67,8 @@ final class OrderMapper {
             if (seesSellerMoney && details.settlement() != null) {
                 OrderQueries.SettlementRow s = details.settlement();
                 settlement = new OrderResponse.Settlement(OrderValues.upper(s.status()), vnd(s.amount()), vnd(s.merchandiseSubtotal()),
-                        vnd(s.commission()), vnd(s.shippingFee()), s.sandbox(), s.createdAt(), s.releasedAt());
+                        vnd(s.commission()), vnd(s.shippingFee()), s.sandbox(), s.createdAt(), s.releasedAt(),
+                        SettlementCalculation.of(s.legacyCalculation()));
             }
         }
 

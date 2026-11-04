@@ -11,6 +11,7 @@ import LoadingState from '../../../components/ui/LoadingState'
 import StatusPill from '../../../components/ui/StatusPill'
 import useAdminList from '../../../hooks/useAdminList'
 import useAsyncData from '../../../hooks/useAsyncData'
+import { LEGACY_SETTLEMENT, LEGACY_SETTLEMENT_NOTE } from '../../../constants/order'
 import { adminBackendApi, adminErrorText, onAdminChanged } from '../../../services/admin/adminBackendApi'
 import { formatDateTime } from '../../../utils/format'
 import useTranslation from '../../../i18n/useTranslation'
@@ -24,7 +25,8 @@ const loadSettlements = (params) =>
     .then(toAdminPage)
 
 /**
- * One seller settlement (docs/ADMIN_API.md §7), shown exactly as stored: items − 3 % commission + full delivery fee.
+ * One seller settlement (docs/ADMIN_API.md §7), shown exactly as stored: items − 3 % commission + full delivery fee
+ * (legacy V001 demo records: items − commission only, kept as recorded and labelled as such).
  * "Release" records a payout made outside UniMarket (once; not while on hold). For sandbox settlements it is a
  * simulated record — confirming the dialog is the explicit acknowledgement (acknowledgeSimulated) — and no money moves.
  */
@@ -33,6 +35,7 @@ function SettlementDetail({ orderId, onClose }) {
   const { data: s, error, isLoading, reload } = useAsyncData(() => adminBackendApi.settlement(orderId), `admin-settlement-${orderId}`)
   const { open, dialog } = useLiveAction()
   const canRelease = s && s.status === 'PENDING' && !s.onHold
+  const legacy = s?.calculation === LEGACY_SETTLEMENT
 
   return (
     <DetailDialog
@@ -80,8 +83,10 @@ function SettlementDetail({ orderId, onClose }) {
             items={[
               ['Items subtotal', money(s.merchandiseSubtotal)],
               ['UniMarket commission (3 % of items)', `−${money(s.commission)}`],
-              ['Delivery fee (passed to the seller)', money(s.shippingFee)],
+              [legacy ? 'Delivery fee (not paid out in this legacy record)' : 'Delivery fee (passed to the seller)', money(s.shippingFee)],
               ['Seller payout', money(s.amount)],
+              ['Calculation', t(legacy ? 'Legacy V001 (items only)' : 'Current rules (items − commission + delivery fee)')],
+              ['Order payout under current rules', legacy ? money(s.orderSellerPayout) : null],
               ['Created', formatDateTime(s.createdAt)],
               ['Released', s.releasedAt && formatDateTime(s.releasedAt)],
               ['Released by', s.releasedBy?.name],
@@ -90,6 +95,12 @@ function SettlementDetail({ orderId, onClose }) {
             ]}
           />
           {s.payoutNote && <p className="text-xs whitespace-pre-line text-ink-muted">{s.payoutNote}</p>}
+          {legacy && (
+            <Alert variant="info" title={t('Legacy settlement')}>
+              {t(LEGACY_SETTLEMENT_NOTE)}{' '}
+              {t('It differs from the order payout by the delivery fee on purpose; settlement amounts can never be edited.')}
+            </Alert>
+          )}
           {s.onHold && (
             <Alert variant="warning" title={t('On hold')}>
               {t('The order has an open dispute or an approved refund, so the payout can’t be released.')}
@@ -124,6 +135,7 @@ export default function LiveAdminSettlementsPage() {
           <StatusPill tone={row.status === 'RELEASED' ? 'success' : 'warning'}>{t(row.status)}</StatusPill>
           {row.onHold && <StatusPill tone="danger">{t('On hold')}</StatusPill>}
           <SimulatedTag show={row.sandbox} />
+          {row.calculation === LEGACY_SETTLEMENT && <StatusPill tone="neutral">{t('Legacy V001')}</StatusPill>}
         </div>
       ),
     },
