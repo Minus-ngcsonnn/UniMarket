@@ -10,6 +10,25 @@ import Button from '../ui/Button'
 import useTranslation from '../../i18n/useTranslation'
 
 
+/** Rating included in the real product page (seller.ratingAverage / ratingCount). */
+function IncludedRating({ seller }) {
+  const { t } = useTranslation()
+  if (!seller.ratingCount) return <p className="text-xs text-ink-muted">{t("No reviews yet")}</p>
+  return (
+    <p className="flex items-center gap-1.5 text-xs text-ink-muted">
+      <RatingStars value={seller.ratingAverage ?? 0} size="sm" />
+      <span className="font-medium text-ink">{(seller.ratingAverage ?? 0).toFixed(1)}</span>({seller.ratingCount} {seller.ratingCount === 1 ? 'review' : 'reviews'})
+    </p>
+  )
+}
+
+/** Real API: "University · Campus", or "University (self-declared)" (V003). Never a student-verification claim. */
+function affiliationText(t, seller) {
+  if (!seller.university) return null
+  if (seller.affiliationSource === 'SELF_DECLARED') return t('{name} (self-declared)', { name: seller.university })
+  return seller.campusName ? `${seller.university} · ${seller.campusName}` : seller.university
+}
+
 /** "4.7 (3 reviews)" from the seller's reviews; nothing while loading or if it can't be loaded. */
 function SellerRating({ sellerId }) {
   const { t } = useTranslation()
@@ -52,10 +71,16 @@ export default function SellerCard({ seller, onMessage }) {
               </span>
             )}
           </p>
-          <SellerRating sellerId={seller.id} />
-          <p className="truncate text-sm text-ink-muted">{seller.programme}</p>
+          {seller.ratingCount !== undefined ? <IncludedRating seller={seller} /> : <SellerRating sellerId={seller.id} />}
+          {seller.programme && <p className="truncate text-sm text-ink-muted">{seller.programme}</p>}
           <p className="text-xs text-ink-muted">
-            {t(UNIVERSITY_NAME)} · {t(CAMPUSES[seller.campus]?.label)} · {t('Member since {date}', { date: new Intl.DateTimeFormat(lang === 'vi' ? 'vi-VN' : 'en-GB', { month: 'short', year: 'numeric' }).format(new Date(seller.memberSince)) })}
+            {[
+              seller.ratingCount !== undefined ? affiliationText(t, seller) : `${t(UNIVERSITY_NAME)} · ${t(CAMPUSES[seller.campus]?.label)}`,
+              seller.memberSince &&
+                t('Member since {date}', { date: new Intl.DateTimeFormat(lang === 'vi' ? 'vi-VN' : 'en-GB', { month: 'short', year: 'numeric' }).format(new Date(seller.memberSince)) }),
+            ]
+              .filter(Boolean)
+              .join(' · ')}
           </p>
         </div>
       </div>

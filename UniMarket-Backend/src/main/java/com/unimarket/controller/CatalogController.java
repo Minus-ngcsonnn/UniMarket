@@ -43,7 +43,8 @@ public class CatalogController {
     /**
      * Catalog: public available listings only.
      * Query: {@code q, categoryId, condition (repeatable or comma separated), campusId, universityId, sellerId,
-     * minPrice, maxPrice, featured, deals, sort (newest|price_asc|price_desc), page (1-based), size (1-50)}.
+     * minPrice, maxPrice, featured, deals, sort (newest|price_asc|price_desc), page (1-based), size (1-50), zoneId, province}.
+     * {@code zoneId} / {@code province} (V003) filter by the listing's effective demo pickup area.
      */
     @GetMapping("/api/products")
     public PageResponse<ProductSummaryResponse> list(
@@ -59,9 +60,13 @@ public class CatalogController {
             @RequestParam(defaultValue = "false") boolean deals,
             @RequestParam(required = false) String sort,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE) int size) {
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE) int size,
+            @RequestParam(required = false) Integer zoneId,
+            @RequestParam(required = false) String province) {
         List<ApiErrorResponse.FieldError> errors = new ArrayList<>();
         if (q != null && q.length() > 100) errors.add(new ApiErrorResponse.FieldError("q", "must be at most 100 characters"));
+        if (province != null && province.length() > 100) errors.add(new ApiErrorResponse.FieldError("province", "must be at most 100 characters"));
+        if (zoneId != null && zoneId < 1) errors.add(new ApiErrorResponse.FieldError("zoneId", "must be 1 or more"));
         if (page < 1) errors.add(new ApiErrorResponse.FieldError("page", "must be 1 or more"));
         if (size < 1 || size > MAX_PAGE_SIZE) errors.add(new ApiErrorResponse.FieldError("size", "must be between 1 and " + MAX_PAGE_SIZE));
         if (minPrice != null && minPrice < 0) errors.add(new ApiErrorResponse.FieldError("minPrice", "must be 0 or more"));
@@ -83,7 +88,7 @@ public class CatalogController {
             throw new ValidationException(errors);
         }
         return catalog.list(new CatalogQuery(q, categoryId, conditions, campusId, universityId, sellerId, minPrice, maxPrice,
-                featured, deals, sortOrder, page, size));
+                featured, deals, sortOrder, page, size, zoneId, province == null || province.isBlank() ? null : province.trim()));
     }
 
     /** Several public listings by id, in the requested order (cart, checkout); unknown or hidden ids are left out. */

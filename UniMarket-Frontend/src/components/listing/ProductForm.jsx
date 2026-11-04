@@ -1,8 +1,10 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { CATEGORIES } from '../../constants/categories'
-import { CAMPUSES, CAMPUS_KEYS, LISTING_LIMITS, UNIVERSITY_NAME } from '../../constants/product'
+import { LISTING_LIMITS, UNIVERSITY_NAME } from '../../constants/product'
+import useCatalogReference from '../../hooks/useCatalogReference'
 import useForm from '../../hooks/useForm'
+import useSession from '../../hooks/useSession'
+import { locationLabelOf } from '../../services/products/productMapper'
 import { formatNumber, parseDigits } from '../../utils/format'
 import { validateListing } from '../../utils/listingValidation'
 import { ArrowRightIcon, CheckCircleIcon, ShieldCheckIcon } from '../icons'
@@ -17,8 +19,38 @@ import DescriptionGuide from './DescriptionGuide'
 import ImageUploader from './ImageUploader'
 import useTranslation from '../../i18n/useTranslation'
 
-const CATEGORY_OPTIONS = CATEGORIES.map((c) => ({ value: c.slug, label: c.name }))
-const CAMPUS_OPTIONS = CAMPUS_KEYS.map((key) => ({ value: key, label: `${UNIVERSITY_NAME} · ${CAMPUSES[key].label}` }))
+/**
+ * Where the item is (V003). Sample data: one of the FPT campuses. Real API, from the signed-in account (GET /api/auth/me):
+ * - official campus: a campus of the seller's university (default: their campus) + optional pickup area;
+ * - self-declared university (no campus): a pickup area is required and no campus can be sent.
+ */
+function useListingLocation() {
+  const { reference } = useCatalogReference()
+  const auth = useSession()
+  if (reference.source === 'sample') {
+    return {
+      mode: 'campus',
+      campusOptions: reference.campuses.map((c) => ({ value: c.key, label: `${UNIVERSITY_NAME} · ${c.label}` })),
+      zoneOptions: [],
+      reference,
+    }
+  }
+  const user = auth.user
+  const campusId = user?.affiliation?.campusId ?? user?.campusId ?? null
+  const ownCampus = reference.campuses.find((c) => String(c.id) === String(campusId))
+  const zoneOptions = reference.zones.map((zone) => ({ value: String(zone.id), label: `${zone.name} — ${zone.province}` }))
+  if (campusId == null) {
+    return { mode: 'zone', campusOptions: [], zoneOptions, university: user?.affiliation?.universityName ?? user?.university ?? null, reference }
+  }
+  return {
+    mode: 'campus',
+    campusOptions: reference.campuses
+      .filter((c) => !ownCampus || c.universityId === ownCampus.universityId)
+      .map((c) => ({ value: c.key, label: `${c.university} · ${c.label}` })),
+    zoneOptions: [{ value: '', label: 'Campus area (default)' }, ...zoneOptions],
+    reference,
+  }
+}
 
 const TIPS = [
   'Use bright, clear photos. The first photo is the cover.',
@@ -60,10 +92,21 @@ function priceFieldProps(form, name) {
  * @param {string} submitLabel e.g. "Publish listing" / "Save changes"
  * @param {string} cancelTo where "Cancel" goes
  * @param {React.ReactNode} [notice] result message shown under the actions
+ * @param {object} [serverErrors] field errors returned by the backend ({ field: message })
+ * @param {number|null} [uploadProgress] 0–100 while photos are uploading
  */
-export default function ProductForm({ initialValues, onSubmit, submitLabel, cancelTo, notice }) {
+export default function ProductForm({ initialValues, onSubmit, submitLabel, cancelTo, notice, serverErrors, uploadProgress = null }) {
   const { t } = useTranslation()
-  const form = useForm({ initialValues, validate: validateListing, onSubmit })
+  const location = useListingLocation()
+  const form = useForm({ initialValues, validate: (values) => validateListing(values, { location: location.mode }), onSubmit })
+  const categoryOptions = location.reference.categories.map((c) => ({ value: c.slug, label: t(c.name) }))
+  const { setServerErrors } = form
+
+  // Show the backend's field errors next to their fields (each one disappears when its field changes).
+  useEffect(() => {
+    if (serverErrors) setServerErrors(serverErrors)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-apply only when a new set of errors arrives
+  }, [serverErrors])
   const [previewTime] = useState(() => new Date().toISOString())
   const descriptionRef = useRef(null)
   const { values } = form
@@ -86,6 +129,13 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
     originalPrice: values.originalPrice,
     condition: values.condition || 'LIKE_NEW',
     campus: values.campus,
+    locationLabel:
+      location.reference.source === 'sample'
+        ? undefined
+        : locationLabelOf(
+            location.reference.campuses.find((c) => c.key === values.campus) && { name: location.reference.campuses.find((c) => c.key === values.campus).label },
+            location.reference.zones.find((z) => String(z.id) === values.pickupZone),
+          ),
     images: values.photos.map((photo) => photo.url),
     createdAt: previewTime,
   }
@@ -98,7 +148,7 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
             label={t("Item photos")}
             photos={values.photos}
             onChange={(photos) => form.setFieldValue('photos', photos)}
-            error={form.touched.photos ? form.errors.photos : undefined}
+            error={form.getError('photos')}
           />
         </FormSection>
 
@@ -114,16 +164,16 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
             label={t("Category")}
             name="categorySlug"
             placeholder={t("Choose a category")}
-            options={CATEGORY_OPTIONS}
+            options={categoryOptions}
             value={values.categorySlug}
             onChange={(slug) => form.setFieldValue('categorySlug', slug)}
             onBlur={form.getFieldProps('categorySlug').onBlur}
-            error={form.touched.categorySlug ? form.errors.categorySlug : undefined}
+            error={form.getError('categorySlug')}
           />
           <ConditionPicker
             value={values.condition}
             onChange={(condition) => form.setFieldValue('condition', condition)}
-            error={form.touched.condition ? form.errors.condition : undefined}
+            error={form.getError('condition')}
           />
           <div className="flex flex-col gap-3">
             <Textarea
@@ -154,27 +204,61 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
           </p>
         </FormSection>
 
-        <FormSection title={t("Campus")} description={t("Where the item is. Buyers can filter by campus.")}>
-          <Select
-            label={t("Campus")}
-            name="campus"
-            options={CAMPUS_OPTIONS}
-            value={values.campus}
-            onChange={(campus) => form.setFieldValue('campus', campus)}
-            error={form.touched.campus ? form.errors.campus : undefined}
-          />
-        </FormSection>
+        {location.mode === 'zone' ? (
+          <FormSection title={t('Pickup area')} description={t('Where buyers can pick up the item. Areas are approximate and used for shipping estimates.')}>
+            {location.university && (
+              <p className="text-sm text-ink-muted">{t('Your university: {name} (self-declared)', { name: location.university })}</p>
+            )}
+            <Select
+              label={t('Pickup area')}
+              name="pickupZone"
+              placeholder={t('Choose an area')}
+              options={location.zoneOptions}
+              value={values.pickupZone}
+              onChange={(zone) => form.setFieldValue('pickupZone', zone)}
+              onBlur={form.getFieldProps('pickupZone').onBlur}
+              error={form.getError('pickupZone')}
+            />
+          </FormSection>
+        ) : (
+          <FormSection title={t("Campus")} description={t("Where the item is. Buyers can filter by campus.")}>
+            <Select
+              label={t("Campus")}
+              name="campus"
+              options={location.campusOptions}
+              value={values.campus}
+              onChange={(campus) => form.setFieldValue('campus', campus)}
+              error={form.getError('campus')}
+            />
+            {location.zoneOptions.length > 0 && (
+              <Select
+                label={t('Pickup area (optional)')}
+                name="pickupZone"
+                options={location.zoneOptions.map((option) => ({ ...option, label: t(option.label) }))}
+                value={values.pickupZone}
+                onChange={(zone) => form.setFieldValue('pickupZone', zone)}
+                hint={t('Only if you hand over the item somewhere other than your campus.')}
+                error={form.getError('pickupZone')}
+              />
+            )}
+          </FormSection>
+        )}
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Link to={cancelTo} className={buttonClasses({ variant: 'secondary', size: 'lg' })}>
               {t("Cancel")}
             </Link>
-            <Button type="submit" size="lg" loading={form.isSubmitting}>
+            <Button type="submit" size="lg" loading={form.isSubmitting} disabled={form.isSubmitting}>
               {submitLabel}
               <ArrowRightIcon className="size-4.5" />
             </Button>
           </div>
+          {uploadProgress != null && (
+            <p className="text-right text-sm text-ink-muted" role="status" aria-live="polite">
+              {uploadProgress < 100 ? t('Uploading photos… {percent}%', { percent: uploadProgress }) : t('Photos uploaded. Saving…')}
+            </p>
+          )}
           {notice}
         </div>
       </div>

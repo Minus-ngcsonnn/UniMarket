@@ -65,20 +65,38 @@ export const EMPTY_LISTING = {
   description: '',
   price: null,
   originalPrice: null,
-  campus: 'HANOI', // pilot campus (Hoa Lac); the student can change it
+  campus: 'HANOI', // pilot campus (Hoa Lac); the student can change it. Real API: the seller's campus id, or ''
+  pickupZone: '', // real API (V003): demo pickup area id; required for sellers without a campus
+}
+
+/**
+ * Empty Create Listing values for a real account (GET /api/auth/me): the seller's own campus, else no campus and the
+ * seller's home area (if any) as pickup area. Nothing is assigned from the email address.
+ */
+export function emptyListingFor(user) {
+  const campusId = user?.affiliation?.campusId ?? user?.campusId ?? null
+  return {
+    ...EMPTY_LISTING,
+    campus: campusId != null ? String(campusId) : '',
+    pickupZone: campusId == null && user?.homeZone?.id != null ? String(user.homeZone.id) : '',
+  }
 }
 
 /** Turns an existing product into Edit Listing form values. */
 export function listingToFormValues(product) {
   return {
-    photos: product.images.map((url, index) => ({ id: `existing-${index}`, url, name: `Photo ${index + 1}`, isLocal: false })),
+    // Real API photos carry their ProductImages id (needed to delete / reorder); sample photos are URLs only.
+    photos: product.imageItems
+      ? product.imageItems.map((image, index) => ({ id: `existing-${image.id ?? index}`, imageId: image.id, url: image.url, name: `Photo ${index + 1}`, isLocal: false }))
+      : product.images.map((url, index) => ({ id: `existing-${index}`, url, name: `Photo ${index + 1}`, isLocal: false })),
     title: product.title,
     categorySlug: product.categorySlug,
     condition: product.condition,
     description: product.description,
     price: product.price,
     originalPrice: product.originalPrice ?? null,
-    campus: product.campus,
+    campus: product.campus ?? '',
+    pickupZone: product.pickupZone?.id != null ? String(product.pickupZone.id) : '',
   }
 }
 

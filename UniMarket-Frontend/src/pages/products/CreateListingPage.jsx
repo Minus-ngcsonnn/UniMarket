@@ -1,11 +1,13 @@
+import { useNavigate } from 'react-router'
 import Breadcrumbs from '../../components/layout/Breadcrumbs'
 import PageContainer from '../../components/layout/PageContainer'
 import ProductForm from '../../components/listing/ProductForm'
 import Alert from '../../components/ui/Alert'
-import { EMPTY_LISTING } from '../../constants/product'
+import { EMPTY_LISTING, emptyListingFor } from '../../constants/product'
 import useListingSubmit from '../../hooks/useListingSubmit'
+import useSession from '../../hooks/useSession'
 import { PATHS } from '../../routes/paths'
-import { productService } from '../../services/products/productService'
+import { isSampleData, productService } from '../../services/products/productService'
 import useTranslation from '../../i18n/useTranslation'
 
 const MESSAGES = {
@@ -16,10 +18,18 @@ const MESSAGES = {
   },
 }
 
-/** Create Listing ("Sell an item"), approved layout: form + live preview. */
+/**
+ * Create Listing ("Sell an item"), approved layout: form + live preview.
+ * Real API: POST /api/products (multipart). The new listing waits for admin approval (PENDING) and is not public until
+ * then; after saving, the seller goes to My listings, which shows it as "Pending review" (and the form can't be sent twice).
+ */
 export default function CreateListingPage() {
   const { t } = useTranslation()
-  const { result, submit } = useListingSubmit(productService.createListing, MESSAGES)
+  const navigate = useNavigate()
+  const auth = useSession()
+  const { result, submit, serverErrors, uploadProgress } = useListingSubmit(productService.createListing, MESSAGES, {
+    onSaved: (response) => navigate(PATHS.myListings, { state: { created: { id: response.product?.id, title: response.product?.title } } }),
+  })
 
   return (
     <PageContainer className="py-6 sm:py-8">
@@ -31,12 +41,16 @@ export default function CreateListingPage() {
         <p className="mt-1.5 text-ink-muted">{t("Give your things a second campus life. Listing is always free, and an admin checks each new listing before it goes live.")}</p>
       </header>
 
-      <Alert variant="info" title={t("Publishing isn’t connected yet")} className="mb-6">
-        {t("You can fill in and check the form, but listings can’t be saved until the UniMarket backend is ready.")}
-      </Alert>
+      {isSampleData && (
+        <Alert variant="info" title={t("Publishing isn’t connected yet")} className="mb-6">
+          {t("You can fill in and check the form, but listings can’t be saved until the UniMarket backend is ready.")}
+        </Alert>
+      )}
 
       <ProductForm
-        initialValues={EMPTY_LISTING}
+        initialValues={isSampleData ? EMPTY_LISTING : emptyListingFor(auth.user)}
+        serverErrors={serverErrors}
+        uploadProgress={uploadProgress}
         onSubmit={submit}
         submitLabel={t("Publish listing")}
         cancelTo={PATHS.myListings}

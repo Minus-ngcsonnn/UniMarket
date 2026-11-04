@@ -182,6 +182,31 @@ class V003IntegrationTest {
         }
 
         @Test
+        void theCatalogFiltersByTheEffectivePickupAreaAndProvince() throws Exception {
+            String tag = "Zonefilter" + UUID.randomUUID().toString().substring(0, 8);
+            int atCampus = listing(sellerA, tag + " campus item", 50_000);                         // campus 1 -> HN-HOA-LAC
+            int atCauGiay = listingAtZone(sellerC, tag + " cau giay item", 50_000, cauGiay);       // explicit zone, no campus
+            int inHcm = listingAtZone(sellerC, tag + " hcm item", 50_000, benThanh);
+            int campusButHcm = listing(sellerA, tag + " moved item", 50_000);
+            jdbc.update("UPDATE dbo.Products SET PickupZoneId = ? WHERE ProductId = ?", benThanh, campusButHcm); // explicit zone wins
+            String hanoi = jdbc.queryForObject("SELECT Province FROM dbo.LocationZones WHERE ZoneId = ?", String.class, hoaLac);
+            String hcm = jdbc.queryForObject("SELECT Province FROM dbo.LocationZones WHERE ZoneId = ?", String.class, benThanh);
+
+            assertThat(catalogIds("q=" + tag)).containsExactlyInAnyOrder(atCampus, atCauGiay, inHcm, campusButHcm);
+            assertThat(catalogIds("q=" + tag + "&zoneId=" + hoaLac)).containsExactly(atCampus);
+            assertThat(catalogIds("q=" + tag + "&zoneId=" + cauGiay)).containsExactly(atCauGiay);
+            assertThat(catalogIds("q=" + tag + "&zoneId=" + benThanh)).containsExactlyInAnyOrder(inHcm, campusButHcm);
+            assertThat(provinceIds(tag, hanoi)).containsExactlyInAnyOrder(atCampus, atCauGiay);
+            assertThat(provinceIds(tag, hcm)).containsExactlyInAnyOrder(inHcm, campusButHcm);
+            assertThat(catalogIds("q=" + tag + "&province=Nowhere")).isEmpty();
+            JsonNode page = publicJson("/api/products?q=" + tag + "&zoneId=" + benThanh + "&size=1");
+            assertThat(page.get("totalItems").asInt()).isEqualTo(2);   // count query uses the same joins: no duplicates
+            assertThat(page.get("totalPages").asInt()).isEqualTo(2);
+            mvc.perform(get("/api/products?zoneId=0")).andExpect(status().isBadRequest()).andExpect(jsonPath("$.fieldErrors[0].field").value("zoneId"));
+            mvc.perform(get("/api/products?province=" + "x".repeat(101))).andExpect(status().isBadRequest());
+        }
+
+        @Test
         void catalogAndProfilesWorkForCampuslessAccounts() throws Exception {
             listingAtZone(sellerC, "Campusless catalog item", 33_000, cauGiay);
             JsonNode page = readJson(mvc.perform(get("/api/products").param("q", "Campusless catalog item")).andExpect(status().isOk()));
@@ -499,6 +524,25 @@ class V003IntegrationTest {
     }
 
     // ================================================================== helpers
+
+    private List<Integer> catalogIds(String query) throws Exception {
+        List<Integer> ids = new java.util.ArrayList<>();
+        publicJson("/api/products?size=50&" + query).get("items").forEach(item -> ids.add(item.get("id").asInt()));
+        return ids;
+    }
+
+    /** A public GET without any Authorization header. */
+    private JsonNode publicJson(String url) throws Exception {
+        return readJson(mvc.perform(get(url)).andExpect(status().isOk()));
+    }
+
+    /** Province names have accents: sent as a request parameter (encoded by MockMvc), not inside the URL template. */
+    private List<Integer> provinceIds(String keyword, String province) throws Exception {
+        List<Integer> ids = new java.util.ArrayList<>();
+        readJson(mvc.perform(get("/api/products").param("q", keyword).param("province", province).param("size", "50"))
+                .andExpect(status().isOk())).get("items").forEach(item -> ids.add(item.get("id").asInt()));
+        return ids;
+    }
 
     private int zone(String code) {
         return jdbc.queryForObject("SELECT ZoneId FROM dbo.LocationZones WHERE Code = ?", Integer.class, code);

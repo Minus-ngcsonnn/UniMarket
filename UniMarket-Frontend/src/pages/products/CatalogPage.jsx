@@ -17,7 +17,8 @@ import { CATALOG_PAGE_SIZE, SORT_OPTIONS } from '../../constants/product'
 import useAsyncData from '../../hooks/useAsyncData'
 import useCatalogParams from '../../hooks/useCatalogParams'
 import { PATHS } from '../../routes/paths'
-import { productService } from '../../services/products/productService'
+import { isSampleData, productService } from '../../services/products/productService'
+import { describeApiError } from '../../utils/apiErrorMessage'
 import useTranslation from '../../i18n/useTranslation'
 
 /**
@@ -41,7 +42,12 @@ export default function CatalogPage() {
   const facets = result?.facets
   const total = result?.total ?? 0
   const activeFilterCount =
-    (filters.category ? 1 : 0) + filters.conditions.length + filters.campuses.length + (filters.minPrice != null || filters.maxPrice != null ? 1 : 0)
+    (filters.category ? 1 : 0) +
+    filters.conditions.length +
+    filters.campuses.length +
+    (filters.province ? 1 : 0) +
+    (filters.zone ? 1 : 0) +
+    (filters.minPrice != null || filters.maxPrice != null ? 1 : 0)
 
   function changePage(page) {
     update({ page })
@@ -50,7 +56,7 @@ export default function CatalogPage() {
 
   let content
   if (error) {
-    content = <ErrorState title={t("Couldn’t load listings")} message={error.message} onRetry={reload} />
+    content = <ErrorState title={t("Couldn’t load listings")} message={describeApiError(error).message} onRetry={reload} />
   } else if (!result) {
     content = <ProductGrid isLoading layout={isSidebarHidden ? 'wide' : 'catalog'} skeletonCount={6} />
   } else if (result.items.length === 0) {
@@ -107,7 +113,7 @@ export default function CatalogPage() {
               <span className="text-xl font-bold text-ink">
                 {result ? t(total === 1 ? '{count} item' : '{count} items', { count: total }) : t('Loading…')}
               </span>
-              {result && <span className="text-sm text-ink-muted">{filters.q ? t('for “{query}”', { query: filters.q }) : t('on your campus')}</span>}
+              {result && <span className="text-sm text-ink-muted">{filters.q ? t('for “{query}”', { query: filters.q }) : isSampleData ? t('on your campus') : t('across UniMarket')}</span>}
             </h2>
 
             <div className="flex items-center gap-2">
