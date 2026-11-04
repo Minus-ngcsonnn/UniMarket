@@ -15,7 +15,7 @@ import { buttonClasses } from '../../components/ui/buttonClasses'
 import EmptyState from '../../components/ui/EmptyState'
 import ErrorState from '../../components/ui/ErrorState'
 import LoadingState from '../../components/ui/LoadingState'
-import { LEGACY_SETTLEMENT, LEGACY_SETTLEMENT_NOTE, PAYMENT_METHODS, orderCode } from '../../constants/order'
+import { LEGACY_SETTLEMENT, LEGACY_SETTLEMENT_NOTE, PAYMENT_METHODS, PROVIDER_LABELS, orderCode } from '../../constants/order'
 import { CAMPUSES, UNIVERSITY_NAME } from '../../constants/product'
 import useLiveOrders from '../../hooks/useLiveOrders'
 import useOrderActions from '../../hooks/useOrderActions'
@@ -52,7 +52,6 @@ function OrderDisputes({ disputes }) {
   )
 }
 
-const PROVIDER_LABELS = { MOMO: 'MoMo (simulated)', ZALOPAY: 'ZaloPay (simulated)', BANK_QR: 'Bank QR (simulated)' }
 const PAYMENT_STATUS = { PENDING: 'In progress', SUCCEEDED: 'Succeeded', FAILED: 'Failed', EXPIRED: 'Expired' }
 
 /** Real API: amounts from the server (snapshots); the seller also sees commission and payout (3 % of items only). */

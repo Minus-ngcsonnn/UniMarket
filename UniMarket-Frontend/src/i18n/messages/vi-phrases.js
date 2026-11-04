@@ -1041,6 +1041,7 @@ export const viPhrases = {
   "USER": "Tài khoản",
   "SIMULATED_RECORD": "Bản ghi mô phỏng",
   "EXTERNAL_TRANSFER_CONFIRMED": "Chuyển khoản ngoài đã xác nhận",
+  "Digit {number} of {count}": "Chữ số {number}/{count}",
   "Reference photo": "Ảnh tham khảo",
   "Reference photo of this product, not a photo of the item the seller is selling.":
     "Ảnh tham khảo của sản phẩm này, không phải ảnh chụp món đồ người bán đang bán.",

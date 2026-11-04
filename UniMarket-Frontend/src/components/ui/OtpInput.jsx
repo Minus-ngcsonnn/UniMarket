@@ -1,5 +1,6 @@
 import { useId, useRef } from 'react'
 import FieldError from './FieldError'
+import useTranslation from '../../i18n/useTranslation'
 
 /**
  * One-time code input: one box per digit.
@@ -10,6 +11,7 @@ import FieldError from './FieldError'
  * @param {number} [length] number of digits
  */
 export default function OtpInput({ label, value, onChange, error, length = 6, id }) {
+  const { t } = useTranslation()
   const inputRefs = useRef([])
   const generatedId = useId()
   const groupId = id ?? generatedId
@@ -78,7 +80,7 @@ export default function OtpInput({ label, value, onChange, error, length = 6, id
             inputMode="numeric"
             autoComplete={index === 0 ? 'one-time-code' : 'off'}
             maxLength={length}
-            aria-label={`Digit ${index + 1} of ${length}`}
+            aria-label={t('Digit {number} of {count}', { number: index + 1, count: length })}
             aria-invalid={error ? true : undefined}
             onChange={(event) => handleChange(index, event)}
             onKeyDown={(event) => handleKeyDown(index, event)}
