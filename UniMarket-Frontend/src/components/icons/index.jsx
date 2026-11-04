@@ -615,6 +615,27 @@ export function GlobeIcon(props) {
   )
 }
 
+export function LogInIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+      <path d="m10 17 5-5-5-5" />
+      <path d="M15 12H3" />
+    </Icon>
+  )
+}
+
+export function UserPlusIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M19 8v6" />
+      <path d="M22 11h-6" />
+    </Icon>
+  )
+}
+
 export function LogOutIcon(props) {
   return (
     <Icon {...props}>

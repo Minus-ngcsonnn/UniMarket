@@ -68,6 +68,10 @@ export const vi = {
     pointVerified: 'Sinh viên các trường trên khắp Việt Nam',
     pointPayment: 'Chỉ thanh toán online qua UniMarket',
     pointDelivery: 'Người bán giao hàng trong trường',
+    eyebrow: 'Chợ sinh viên Việt Nam',
+    title: 'Mua & bán ngay trong cộng đồng trường bạn',
+    text: 'Khu chợ đáng tin cậy cho sinh viên các trường đại học trên khắp Việt Nam.',
+    imageAlt: 'Đồ dùng học tập: đèn bàn, túi vải UniMarket, sổ tay, máy tính bảng và chậu cây nhỏ',
   },
   hero: {
     eyebrow: 'Cộng đồng Đại học FPT',
