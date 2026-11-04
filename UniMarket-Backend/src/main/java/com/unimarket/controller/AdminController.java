@@ -9,6 +9,8 @@ import com.unimarket.service.admin.AdminUserService;
 import com.unimarket.service.admin.DashboardService;
 import com.unimarket.service.admin.ModerationService;
 import com.unimarket.service.admin.ReportService;
+import com.unimarket.dto.chat.ChatDtos;
+import com.unimarket.service.chat.ChatService;
 import com.unimarket.service.order.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.context.annotation.Profile;
@@ -43,15 +45,17 @@ public class AdminController {
     private final ReportService reports;
     private final AdminFinanceService finance;
     private final OrderService orders;
+    private final ChatService chat;
 
     public AdminController(DashboardService dashboard, ModerationService moderation, AdminUserService users, ReportService reports,
-                           AdminFinanceService finance, OrderService orders) {
+                           AdminFinanceService finance, OrderService orders, ChatService chat) {
         this.dashboard = dashboard;
         this.moderation = moderation;
         this.users = users;
         this.reports = reports;
         this.finance = finance;
         this.orders = orders;
+        this.chat = chat;
     }
 
     // ------------------------------------------------------------------ dashboard
@@ -190,6 +194,12 @@ public class AdminController {
     public AdminDtos.Report dismiss(@PathVariable long id, @RequestBody AdminDtos.ResolutionRequest request,
                                     @AuthenticationPrincipal AuthenticatedUser admin) {
         return reports.decide(id, false, request.resolution(), admin);
+    }
+
+    /** A reported conversation with all messages (404 when it was never reported). Each read is audited. */
+    @GetMapping("/conversations/{id}")
+    public ChatDtos.AdminConversation conversation(@PathVariable int id, @AuthenticationPrincipal AuthenticatedUser admin) {
+        return chat.adminView(id, admin);
     }
 
     // ------------------------------------------------------------------ disputes (D3)

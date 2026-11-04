@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router'
 import useCart from '../../hooks/useCart'
+import useUnreadMessages from '../../hooks/useUnreadMessages'
 import useViewer from '../../hooks/useViewer'
 import { LANGUAGES } from '../../i18n/languageContext'
 import useTranslation from '../../i18n/useTranslation'
@@ -98,6 +99,7 @@ export default function Header() {
   const location = useLocation()
   const navigate = useNavigate()
   const { count: cartCount } = useCart()
+  const unreadMessages = useUnreadMessages()
   const viewer = useViewer()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   // On the catalog, the search field shows the current ?q=. The key remounts it when the URL changes.
@@ -133,8 +135,18 @@ export default function Header() {
 
         <div className="ml-auto flex items-center gap-0.5 sm:gap-1.5">
           <LanguageMenu className="hidden sm:block" />
-          <NavLink to={PATHS.messages} aria-label={t('header.messages')} title={t('header.messages')} className={`${iconButton} hidden sm:flex`}>
+          <NavLink
+            to={PATHS.messages}
+            aria-label={unreadMessages ? `${t('header.messages')} (${t('{count} unread', { count: unreadMessages })})` : t('header.messages')}
+            title={t('header.messages')}
+            className={`${iconButton} hidden sm:flex`}
+          >
             <MessageCircleIcon className="size-5.5" />
+            {unreadMessages > 0 && (
+              <span className="absolute top-0.5 right-0 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-primary px-1 text-[10px] leading-none font-semibold text-white ring-2 ring-canvas">
+                {unreadMessages > 99 ? '99+' : unreadMessages}
+              </span>
+            )}
           </NavLink>
           <NavLink
             to={PATHS.cart}

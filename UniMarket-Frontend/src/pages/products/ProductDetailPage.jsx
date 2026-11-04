@@ -24,6 +24,8 @@ import { findCategory } from '../../services/products/catalogReference'
 import { describeApiError } from '../../utils/apiErrorMessage'
 import useCart from '../../hooks/useCart'
 import { PATHS, loginUrl, marketplaceUrl } from '../../routes/paths'
+import { USES_BACKEND_AUTH } from '../../config/apiConfig'
+import { chatApi } from '../../services/chat/chatApi'
 import { productService } from '../../services/products/productService'
 import { formatDate, formatPrice, formatRelativeTime } from '../../utils/format'
 import useTranslation from '../../i18n/useTranslation'
@@ -33,6 +35,7 @@ const NOTICES = {
   added: { variant: 'success', title: 'Added to your cart', text: 'You can keep browsing or check out when you’re ready.', cartLink: true },
   already: { variant: 'info', title: 'Already in your cart', text: 'Each listing is a single item, so it can only be added once.', cartLink: true },
   message: { variant: 'info', title: 'Messaging isn’t available yet', text: 'You’ll be able to message sellers in a later version. Order updates appear in My orders.' },
+  chatFailed: { variant: 'warning', title: 'Couldn’t open the chat', text: 'The seller may no longer accept messages, or the listing is sold. Please try again later.' },
   own: { variant: 'warning', title: 'This is your own listing', text: 'You can’t buy your own listing.' },
   unavailable: { variant: 'warning', title: 'No longer available', text: 'Another student is buying this item, or it was removed. Have a look at similar items below.' },
   full: { variant: 'warning', title: 'Your cart is full', text: 'Remove some items from your cart first (up to 50 listings).' },
@@ -100,6 +103,18 @@ export default function ProductDetailPage() {
     } catch (cartError) {
       showNotice(cartErrorNotice(cartError))
       if (cartError?.code === 'LISTING_UNAVAILABLE' || cartError?.status === 404) reload()
+    }
+  }
+
+  /** Message seller: opens (or reuses) the conversation about this listing. Guests sign in first. Real backend only. */
+  async function messageSeller() {
+    if (!USES_BACKEND_AUTH) return showNotice('message')
+    if (cart.status === 'anonymous') return navigate(loginUrl(PATHS.product(product.id)))
+    try {
+      const conversation = await chatApi.start(product.id)
+      navigate(PATHS.conversation(conversation.id))
+    } catch {
+      showNotice('chatFailed')
     }
   }
 
@@ -264,7 +279,7 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          <SellerCard seller={product.seller} onMessage={isOwnListing ? undefined : () => showNotice('message')} />
+          <SellerCard seller={product.seller} onMessage={isOwnListing ? undefined : messageSeller} />
 
           {!isOwnListing && (
             <button

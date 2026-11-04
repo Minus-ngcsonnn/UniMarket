@@ -1,6 +1,7 @@
 import { viPhrases } from './vi-phrases'
 import { viPhrasesAccount } from './vi-phrases-account'
 import { viPhrasesInfo } from './vi-phrases-info'
+import { viPhrasesChat } from './vi-phrases-chat'
 
 /** Giao diện tiếng Việt. Cùng cấu trúc với en.js; khoá thiếu sẽ dùng bản tiếng Anh. */
 export const vi = {
@@ -161,5 +162,5 @@ export const vi = {
     terms: 'Điều khoản dịch vụ',
     legal: 'Pháp lý',
   },
-  phrases: { ...viPhrasesInfo, ...viPhrases, ...viPhrasesAccount },
+  phrases: { ...viPhrasesInfo, ...viPhrases, ...viPhrasesAccount, ...viPhrasesChat },
 }

@@ -7,6 +7,7 @@ import com.unimarket.dto.product.PageResponse;
 import com.unimarket.exception.ApiException;
 import com.unimarket.exception.ValidationException;
 import com.unimarket.security.AuthenticatedUser;
+import com.unimarket.service.chat.ChatService;
 import com.unimarket.service.order.OrderValues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,19 +48,23 @@ public class ReportService {
     private final NamedParameterJdbcTemplate jdbc;
     private final TransactionTemplate transaction;
     private final AdminSupport support;
+    private final ChatService chat;
 
-    public ReportService(NamedParameterJdbcTemplate jdbc, PlatformTransactionManager transactionManager, AdminSupport support) {
+    public ReportService(NamedParameterJdbcTemplate jdbc, PlatformTransactionManager transactionManager, AdminSupport support, ChatService chat) {
         this.jdbc = jdbc;
         this.transaction = new TransactionTemplate(transactionManager);
         this.support = support;
+        this.chat = chat;
     }
 
     // ------------------------------------------------------------------ students
 
     /**
-     * Reports a public listing or a student account. The reporter comes from the token.
+     * Reports a public listing, a student account or a conversation (V004). The reporter comes from the token.
+     * A CONVERSATION report can only be made by a participant; it names the other participant as the reported account
+     * and lets the admin handling it read that conversation.
      *
-     * @param targetType LISTING or USER
+     * @param targetType LISTING, USER or CONVERSATION
      * @param reasonCode one of {@link #REASON_CODES}
      * @param details    optional, at most 500 characters
      */
@@ -67,8 +72,8 @@ public class ReportService {
         String type = targetType == null ? "" : targetType.trim().toUpperCase(Locale.ROOT);
         String code = reasonCode == null ? "" : reasonCode.trim().toUpperCase(Locale.ROOT);
         String text = details == null ? "" : details.trim();
-        if (!type.equals("LISTING") && !type.equals("USER")) {
-            throw invalid("targetType", "must be LISTING or USER");
+        if (!type.equals("LISTING") && !type.equals("USER") && !type.equals("CONVERSATION")) {
+            throw invalid("targetType", "must be LISTING, USER or CONVERSATION");
         }
         if (!REASON_CODES.contains(code)) {
             throw invalid("reason", "must be one of " + String.join(", ", REASON_CODES.stream().sorted().toList()));
@@ -78,7 +83,17 @@ public class ReportService {
         }
         Integer productId = null;
         Integer userId = null;
-        if (type.equals("LISTING")) {
+        Integer conversationId = null;
+        if (type.equals("CONVERSATION")) {
+            int[] participants = chat.participants(targetId, reporter); // 404 unless the reporter takes part
+            Integer messages = jdbc.queryForObject("SELECT COUNT(*) FROM dbo.ConversationMessages WHERE ConversationId = :id AND SenderId <> :me",
+                    Map.of("id", targetId, "me", reporter.id()), Integer.class);
+            if (messages == null || messages == 0) {
+                throw invalid("targetId", "there is no message from the other person to report");
+            }
+            userId = participants[0] == reporter.id() ? participants[1] : participants[0];
+            conversationId = targetId;
+        } else if (type.equals("LISTING")) {
             Map<String, Object> listing = jdbc.queryForList("SELECT SellerId FROM dbo.Products WHERE ProductId = :id AND ModerationStatus = 'Approved' "
                     + "AND Status IN ('Available', 'Reserved', 'Sold')", Map.of("id", targetId)).stream().findFirst()
                     .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "Listing not found."));
@@ -98,17 +113,21 @@ public class ReportService {
             userId = targetId;
         }
         MapSqlParameterSource params = new MapSqlParameterSource("reporter", reporter.id()).addValue("product", productId, Types.INTEGER)
-                .addValue("user", userId, Types.INTEGER).addValue("reason", text.isEmpty() ? code : code + ": " + text);
+                .addValue("user", userId, Types.INTEGER).addValue("conversation", conversationId, Types.INTEGER)
+                .addValue("reason", text.isEmpty() ? code : code + ": " + text);
         Long id = transaction.execute(status -> {
+            // One unhandled report per reporter and target. Account reports and conversation reports are separate targets.
             Integer open = jdbc.queryForObject("""
                     SELECT COUNT(*) FROM dbo.Reports WITH (UPDLOCK, HOLDLOCK)
                     WHERE ReporterId = :reporter AND Status IN ('Open', 'Reviewing')
-                      AND ((:product IS NOT NULL AND ProductId = :product) OR (:user IS NOT NULL AND ReportedUserId = :user))""", params, Integer.class);
+                      AND ((:conversation IS NOT NULL AND ConversationId = :conversation)
+                        OR (:conversation IS NULL AND :product IS NOT NULL AND ProductId = :product)
+                        OR (:conversation IS NULL AND :user IS NOT NULL AND ReportedUserId = :user AND ConversationId IS NULL))""", params, Integer.class);
             if (open != null && open > 0) {
                 throw new ApiException(ErrorCode.REPORT_ALREADY_OPEN);
             }
-            return jdbc.queryForObject("INSERT dbo.Reports (ReporterId, ProductId, ReportedUserId, Reason) OUTPUT inserted.ReportId "
-                    + "VALUES (:reporter, :product, :user, :reason)", params, Long.class);
+            return jdbc.queryForObject("INSERT dbo.Reports (ReporterId, ProductId, ReportedUserId, ConversationId, Reason) OUTPUT inserted.ReportId "
+                    + "VALUES (:reporter, :product, :user, :conversation, :reason)", params, Long.class);
         });
         log.info("Report {} on {} {} by user {}", id, type, targetId, reporter.id());
         return one(id, false);
@@ -139,13 +158,14 @@ public class ReportService {
             default -> throw invalid("status", "must be ACTIVE, OPEN, REVIEWING, RESOLVED, DISMISSED or ALL");
         };
         String type = targetType == null || targetType.isBlank() ? null : targetType.trim().toUpperCase(Locale.ROOT);
-        if (type != null && !type.equals("LISTING") && !type.equals("USER")) {
-            throw invalid("targetType", "must be LISTING or USER");
+        if (type != null && !type.equals("LISTING") && !type.equals("USER") && !type.equals("CONVERSATION")) {
+            throw invalid("targetType", "must be LISTING, USER or CONVERSATION");
         }
         MapSqlParameterSource params = new MapSqlParameterSource("statuses", statuses).addValue("type", type, Types.VARCHAR)
                 .addValue("offset", (page - 1) * size).addValue("limit", size);
         String where = " WHERE r.Status IN (:statuses) AND (:type IS NULL OR (:type = 'LISTING' AND r.ProductId IS NOT NULL)"
-                + " OR (:type = 'USER' AND r.ReportedUserId IS NOT NULL))";
+                + " OR (:type = 'USER' AND r.ReportedUserId IS NOT NULL AND r.ConversationId IS NULL)"
+                + " OR (:type = 'CONVERSATION' AND r.ConversationId IS NOT NULL))";
         Long total = jdbc.queryForObject("SELECT COUNT(*) FROM dbo.Reports r" + where, params, Long.class);
         List<AdminDtos.Report> items = jdbc.query(REPORT_SQL + where + " ORDER BY r.CreatedAt, r.ReportId OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY",
                 params, (rs, i) -> report(rs, true));
@@ -204,17 +224,25 @@ public class ReportService {
     private static final String REPORT_SQL = """
             SELECT r.ReportId, r.ReporterId, rep.FullName AS ReporterName, r.ProductId, p.Title, p.ModerationStatus, p.SellerId,
                    owner.FullName AS OwnerName, r.ReportedUserId, ru.FullName AS ReportedName, ru.Status AS ReportedStatus,
-                   r.Reason, r.Status, r.Resolution, r.CreatedAt, r.ResolvedAt
+                   r.Reason, r.Status, r.Resolution, r.CreatedAt, r.ResolvedAt, r.ConversationId, cp.Title AS ConversationTitle
             FROM dbo.Reports r
             JOIN dbo.Users rep ON rep.UserId = r.ReporterId
             LEFT JOIN dbo.Products p ON p.ProductId = r.ProductId
             LEFT JOIN dbo.Users owner ON owner.UserId = p.SellerId
             LEFT JOIN dbo.Users ru ON ru.UserId = r.ReportedUserId
+            LEFT JOIN dbo.Conversations conv ON conv.ConversationId = r.ConversationId
+            LEFT JOIN dbo.Products cp ON cp.ProductId = conv.ProductId
             """;
 
     private static AdminDtos.Report report(ResultSet rs, boolean adminView) throws SQLException {
         boolean listing = rs.getObject("ProductId") != null;
-        AdminDtos.Target target = listing
+        boolean conversation = rs.getObject("ConversationId") != null;
+        // CONVERSATION: label = the listing the chat is about; owner / status = the reported participant (admins only).
+        AdminDtos.Target target = conversation
+                ? new AdminDtos.Target("CONVERSATION", rs.getInt("ConversationId"), rs.getString("ConversationTitle"),
+                        adminView ? OrderValues.upper(rs.getString("ReportedStatus")) : null,
+                        adminView ? new AdminDtos.Ref(rs.getInt("ReportedUserId"), rs.getString("ReportedName")) : null)
+                : listing
                 ? new AdminDtos.Target("LISTING", rs.getInt("ProductId"), rs.getString("Title"),
                         adminView ? ModerationService.moderationApi(rs.getString("ModerationStatus")) : null,
                         adminView ? new AdminDtos.Ref(rs.getInt("SellerId"), rs.getString("OwnerName")) : null)

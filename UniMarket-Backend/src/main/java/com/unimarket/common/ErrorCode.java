@@ -68,6 +68,9 @@ public enum ErrorCode {
     SHIPPING_QUOTE_INVALID(HttpStatus.BAD_REQUEST, "The shipping quote is not valid for this checkout. Get a new quote."),
     SHIPPING_QUOTE_CHANGED(HttpStatus.CONFLICT, "The shipping estimate has expired or changed. Review the new estimate."),
     SHIPPING_UNAVAILABLE(HttpStatus.CONFLICT, "Simulated delivery is not available for one or more items to this area."),
+    // Buyer / seller chat (V004)
+    CHAT_NOT_ALLOWED(HttpStatus.CONFLICT, "You cannot start a chat about this listing."),
+    CHAT_UNAVAILABLE(HttpStatus.CONFLICT, "This person can no longer receive messages."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "This HTTP method is not supported here."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "This content type is not supported."),
     CONFLICT(HttpStatus.CONFLICT, "The request conflicts with the current state of the data."),

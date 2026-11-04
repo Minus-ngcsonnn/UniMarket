@@ -43,6 +43,8 @@ export const adminBackendApi = {
   reviewReport: (id) => post(`/admin/reports/${id}/review`),
   resolveReport: (id, resolution) => post(`/admin/reports/${id}/resolve`, { resolution }),
   dismissReport: (id, resolution) => post(`/admin/reports/${id}/dismiss`, { resolution }),
+  /** A REPORTED conversation with every message (404 otherwise). Each read is written to the admin audit log. */
+  conversation: (id) => get(`/admin/conversations/${id}`),
 
   // Order disputes (no refund is ever executed by UniMarket)
   disputes: ({ status = 'OPEN', page: p = 1, size = 20 } = {}) => get('/admin/disputes', { status, page: p, size }),
