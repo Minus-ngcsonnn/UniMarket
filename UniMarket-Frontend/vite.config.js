@@ -22,11 +22,14 @@ export default defineConfig(({ command, mode }) => {
     : env.VITE_AUTH_MODE === 'backend'
       ? false
       : useMockData
+  // Stage 6.3: cart, checkout, simulated shipping / payments and orders follow the product data source unless
+  // VITE_USE_MOCK_ORDERS says otherwise (a real listing can only be ordered through the real API).
+  const useMockOrders = env.VITE_USE_MOCK_ORDERS ? env.VITE_USE_MOCK_ORDERS === 'true' : useMockProducts
 
   if (command === 'serve') {
     // Make it obvious which backend (and therefore which database) this dev server talks to.
     console.info(
-      `[unimarket] /api -> ${backendUrl} | auth mode: ${env.VITE_AUTH_MODE || (useMockData ? 'demo' : 'backend')} | products: ${useMockProducts ? 'sample data' : 'backend'}`,
+      `[unimarket] /api -> ${backendUrl} | auth mode: ${env.VITE_AUTH_MODE || (useMockData ? 'demo' : 'backend')} | products: ${useMockProducts ? 'sample data' : 'backend'} | orders: ${useMockOrders ? 'sample data' : 'backend'}`,
     )
   }
 
@@ -47,11 +50,12 @@ export default defineConfig(({ command, mode }) => {
     define: {
       'import.meta.env.VITE_USE_MOCK_DATA': JSON.stringify(String(useMockData)),
       'import.meta.env.VITE_USE_MOCK_PRODUCTS': JSON.stringify(String(useMockProducts)),
+      'import.meta.env.VITE_USE_MOCK_ORDERS': JSON.stringify(String(useMockOrders)),
     },
     resolve: {
       alias: {
         '@product-api-impl': apiImpl('./src/mocks/mockProductApi.js', './src/services/products/productApi.js', useMockProducts),
-        '@order-api-impl': apiImpl('./src/mocks/mockOrderApi.js', './src/services/orders/orderApi.js'),
+        '@order-api-impl': apiImpl('./src/mocks/mockOrderApi.js', './src/services/orders/orderApi.js', useMockOrders),
         '@account-api-impl': apiImpl('./src/mocks/mockAccountApi.js', './src/services/account/accountApi.js'),
         '@admin-api-impl': apiImpl('./src/mocks/mockAdminApi.js', './src/services/admin/adminApi.js'),
       },

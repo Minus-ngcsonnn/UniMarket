@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { orderCode } from '../../constants/order'
 import { PATHS } from '../../routes/paths'
-import { isSampleData } from '../../services/products/productService'
+import { isSampleOrders } from '../../services/orders/orderService'
 import { formatDateTime, formatPrice } from '../../utils/format'
 import { OTHER_PARTY_TURN, nextStep } from '../../utils/orderFlow'
 import { ArrowRightIcon } from '../icons'
@@ -27,7 +27,7 @@ export default function OrderCard({ order, role, onAction, busyAction }) {
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3 sm:px-5">
         <p className="text-sm text-ink-muted">
           <span id={`order-${order.id}`} className="font-semibold text-ink">
-            {t('Order {code}', { code: orderCode(order.id) })}
+            {t('Order {code}', { code: order.code ?? orderCode(order.id) })}
           </span>{' '}
           · {formatDateTime(order.createdAt)} · {role === 'buyer' ? t('Seller') : t('Buyer')}: {counterpart?.name}
         </p>
@@ -47,7 +47,7 @@ export default function OrderCard({ order, role, onAction, busyAction }) {
 
         <OrderNextStep
           step={nextStep(order, role)}
-          canSimulate={isSampleData && OTHER_PARTY_TURN[role].includes(order.status)}
+          canSimulate={isSampleOrders && OTHER_PARTY_TURN[role].includes(order.status)}
           otherParty={role === 'buyer' ? 'seller' : 'buyer'}
           busyAction={busyAction}
           onAction={(action) => onAction(order, action)}

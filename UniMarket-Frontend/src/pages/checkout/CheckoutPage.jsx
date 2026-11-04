@@ -22,7 +22,8 @@ import useAsyncData from '../../hooks/useAsyncData'
 import useCart from '../../hooks/useCart'
 import useForm from '../../hooks/useForm'
 import { PATHS } from '../../routes/paths'
-import { orderService } from '../../services/orders/orderService'
+import { isSampleOrders, orderService } from '../../services/orders/orderService'
+import BackendCheckout from './BackendCheckout'
 import { productService } from '../../services/products/productService'
 import { NOTE_MAX_LENGTH, validateDelivery } from '../../utils/checkoutValidation'
 import { formatPrice } from '../../utils/format'
@@ -64,6 +65,42 @@ function Section({ title, icon: Icon, children }) {
  * Items come from ?items=<ids> (selected cart lines, or one listing for "Buy now").
  */
 export default function CheckoutPage() {
+  const [searchParams] = useSearchParams()
+  if (!isSampleOrders) {
+    const ids = [...new Set((searchParams.get('items') ?? '').split(',').map(Number).filter((id) => Number.isInteger(id) && id > 0))].slice(0, 50)
+    return (
+      <CheckoutShell>
+        <BackendCheckout ids={ids} />
+      </CheckoutShell>
+    )
+  }
+  return <SampleCheckout />
+}
+
+/** Page frame shared by both checkouts. */
+function CheckoutShell({ children, sample = false }) {
+  const { t } = useTranslation()
+  return (
+    <PageContainer className="py-6 sm:py-8">
+      <title>{t("Checkout · UniMarket")}</title>
+      <Breadcrumbs items={[{ label: 'Marketplace', to: PATHS.marketplace }, { label: 'Shopping cart', to: PATHS.cart }, { label: 'Checkout' }]} />
+      <header className="mt-4 mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight text-ink sm:text-[2rem]">{t("Checkout")}</h1>
+          <p className="mt-1.5 text-ink-muted">
+            {sample ? t("Tell the seller where to deliver. You’ll pay online once they confirm.") : t('Choose where to deliver and a simulated carrier per seller. You’ll pay online once each seller confirms.')}
+          </p>
+        </div>
+        <CheckoutSteps current="Checkout" />
+      </header>
+      {sample && <SampleDataNotice className="mb-5">{t("Sample orders placed here are saved in this browser only. No payment is taken.")}</SampleDataNotice>}
+      {children}
+    </PageContainer>
+  )
+}
+
+/** Checkout with sample data (no backend): unchanged Stage 4 preview. */
+function SampleCheckout() {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -244,19 +281,5 @@ export default function CheckoutPage() {
     )
   }
 
-  return (
-    <PageContainer className="py-6 sm:py-8">
-      <title>{t("Checkout · UniMarket")}</title>
-      <Breadcrumbs items={[{ label: 'Marketplace', to: PATHS.marketplace }, { label: 'Shopping cart', to: PATHS.cart }, { label: 'Checkout' }]} />
-      <header className="mt-4 mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight text-ink sm:text-[2rem]">{t("Checkout")}</h1>
-          <p className="mt-1.5 text-ink-muted">{t("Tell the seller where to deliver. You’ll pay online once they confirm.")}</p>
-        </div>
-        <CheckoutSteps current="Checkout" />
-      </header>
-      <SampleDataNotice className="mb-5">{t("Sample orders placed here are saved in this browser only. No payment is taken.")}</SampleDataNotice>
-      {content}
-    </PageContainer>
-  )
+  return <CheckoutShell sample>{content}</CheckoutShell>
 }

@@ -15,3 +15,9 @@ export const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true'
  * it follows real sign-in (VITE_AUTH_MODE=backend), so cart, orders and admin may still show sample data meanwhile.
  */
 export const USE_MOCK_PRODUCTS = import.meta.env.VITE_USE_MOCK_PRODUCTS === 'true'
+
+/**
+ * Cart, checkout, simulated shipping and payments, and orders (Stage 6.3). Real API unless VITE_USE_MOCK_ORDERS=true;
+ * by default it follows the product data source.
+ */
+export const USE_MOCK_ORDERS = import.meta.env.VITE_USE_MOCK_ORDERS === 'true'

@@ -23,7 +23,7 @@ import useCatalogReference from '../../hooks/useCatalogReference'
 import { findCategory } from '../../services/products/catalogReference'
 import { describeApiError } from '../../utils/apiErrorMessage'
 import useCart from '../../hooks/useCart'
-import { PATHS, marketplaceUrl } from '../../routes/paths'
+import { PATHS, loginUrl, marketplaceUrl } from '../../routes/paths'
 import { productService } from '../../services/products/productService'
 import { formatDate, formatPrice, formatRelativeTime } from '../../utils/format'
 import useTranslation from '../../i18n/useTranslation'
@@ -33,6 +33,18 @@ const NOTICES = {
   added: { variant: 'success', title: 'Added to your cart', text: 'You can keep browsing or check out when you’re ready.', cartLink: true },
   already: { variant: 'info', title: 'Already in your cart', text: 'Each listing is a single item, so it can only be added once.', cartLink: true },
   message: { variant: 'info', title: 'Messaging isn’t available yet', text: 'You’ll be able to message sellers in a later version. Order updates appear in My orders.' },
+  own: { variant: 'warning', title: 'This is your own listing', text: 'You can’t buy your own listing.' },
+  unavailable: { variant: 'warning', title: 'No longer available', text: 'Another student is buying this item, or it was removed. Have a look at similar items below.' },
+  full: { variant: 'warning', title: 'Your cart is full', text: 'Remove some items from your cart first (up to 50 listings).' },
+  failed: { variant: 'danger', title: 'Couldn’t add it to your cart', text: 'Please try again in a moment.' },
+}
+
+/** Server refusal of PUT /api/cart/items/{id} → notice key. */
+function cartErrorNotice(error) {
+  if (error?.code === 'OWN_LISTING') return 'own'
+  if (error?.code === 'LISTING_UNAVAILABLE' || error?.status === 404) return 'unavailable'
+  if (error?.code === 'CART_FULL') return 'full'
+  return 'failed'
 }
 
 const STATUS_MESSAGES = {
@@ -80,8 +92,21 @@ export default function ProductDetailPage() {
     setTimeout(() => noticeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0)
   }
 
-  function addToCart() {
-    showNotice(cart.add(product.id) ? 'added' : 'already')
+  async function addToCart() {
+    try {
+      const result = await cart.add(product.id)
+      if (result.needsLogin) navigate(loginUrl(PATHS.product(product.id)))
+      else showNotice(result.added ? 'added' : 'already')
+    } catch (cartError) {
+      showNotice(cartErrorNotice(cartError))
+      if (cartError?.code === 'LISTING_UNAVAILABLE' || cartError?.status === 404) reload()
+    }
+  }
+
+  /** Buy now = checkout with this listing only (the cart is not used or changed). Sign-in first with the real API. */
+  function buyNow() {
+    if (cart.isBackend && cart.status === 'anonymous') navigate(loginUrl(PATHS.checkout(product.id)))
+    else navigate(PATHS.checkout(product.id))
   }
 
   if (error) {
@@ -219,7 +244,7 @@ export default function ProductDetailPage() {
                 <ShoppingCartIcon className="size-5" />
                 {cart.has(product.id) ? t('In your cart') : t('Add to cart')}
               </Button>
-              <Button variant="secondary" size="lg" className="flex-1" disabled={!canBuy} onClick={() => navigate(PATHS.checkout(product.id))}>
+              <Button variant="secondary" size="lg" className="flex-1" disabled={!canBuy} onClick={buyNow}>
                 {t("Buy now")}
               </Button>
               <SaveItemButton productId={product.id} title={product.title} variant="detail" className="relative shrink-0" />
@@ -295,7 +320,7 @@ export default function ProductDetailPage() {
             <Button variant="secondary" onClick={addToCart} aria-label={cart.has(product.id) ? t('In your cart') : t('Add to cart')}>
               <ShoppingCartIcon className="size-4" />
             </Button>
-            <Button onClick={() => navigate(PATHS.checkout(product.id))}>{t("Buy now")}</Button>
+            <Button onClick={buyNow}>{t("Buy now")}</Button>
           </div>
         </div>
       )}

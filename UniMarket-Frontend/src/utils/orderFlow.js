@@ -40,7 +40,8 @@ export const ORDER_ACTIONS = {
     },
   },
   confirm: { run: orderService.confirmOrder, done: 'Order confirmed. The buyer can now pay online.' },
-  ship: { run: orderService.markDelivering, done: 'Marked as delivering. The buyer will confirm when they receive it.' },
+  // Real API: the chosen simulated carrier is recorded with the shipment (no real carrier is booked).
+  ship: { run: (id, order) => orderService.markDelivering(id, { carrier: order?.shipping?.label }), done: 'Marked as delivering. The buyer will confirm when they receive it.' },
   simulate: { run: orderService.simulateOtherParty, done: 'Simulated the other person’s next step (sample data).' },
 }
 
@@ -53,6 +54,44 @@ export const OTHER_PARTY_TURN = { buyer: ['PENDING', 'PAID'], seller: ['AWAITING
  * @returns {{ text: string, actions: { key, label, variant }[] }}
  */
 export function nextStep(order, role) {
+  const step = baseNextStep(order, role)
+  if (!order.isBackend) return step
+  return { ...step, text: backendText(order, role) ?? step.text, actions: allowedActions(order, role, step.actions) }
+}
+
+/**
+ * Real API: buttons only for what the server lists in `order.actions` (it checks again on every call). Reviews are not
+ * connected to the real API yet (later stage), so no review button.
+ */
+const BACKEND_ACTION = { confirm: 'CONFIRM', decline: 'CANCEL', cancel: 'CANCEL', pay: ['PAY', 'CONTINUE_PAYMENT'], ship: 'SHIP', received: 'CONFIRM_RECEIPT' }
+function allowedActions(order, role, actions) {
+  return actions
+    .filter((action) => [].concat(BACKEND_ACTION[action.key] ?? []).some((code) => order.actions.includes(code)))
+    .map((action) => (action.key === 'pay' && order.actions.includes('CONTINUE_PAYMENT') ? { ...action, label: 'Continue payment' } : action))
+}
+
+/** Real API: deadlines and reasons from the server. */
+function backendText(order, role) {
+  const seller = order.seller?.name ?? 'The seller'
+  const buyer = order.buyer?.name ?? 'The buyer'
+  if (order.status === 'AWAITING_PAYMENT' && order.paymentDueAt) {
+    return role === 'buyer'
+      ? `${seller} confirmed your order. Pay online (simulated) by ${formatDateTime(order.paymentDueAt)}, or it is cancelled automatically.`
+      : `Waiting for ${buyer} to pay online by ${formatDateTime(order.paymentDueAt)}. Don’t accept payment outside UniMarket.`
+  }
+  if (order.status === 'PAID' && role === 'seller') {
+    return `${buyer} has paid (simulated). Hand the order to delivery, then mark it as delivering.`
+  }
+  if (order.status === 'COMPLETED') {
+    return role === 'buyer' ? 'Completed. Thanks for buying on UniMarket!' : 'Completed. These listings are now marked as sold.'
+  }
+  if (order.status === 'CANCELLED') {
+    return order.cancellationReason ? `This order was cancelled: ${order.cancellationReason}` : 'This order was cancelled. The items are available again.'
+  }
+  return null
+}
+
+function baseNextStep(order, role) {
   const seller = order.seller?.name ?? 'The seller'
   const buyer = order.buyer?.name ?? 'The buyer'
   const deadline = formatDateTime(order.confirmBy)
