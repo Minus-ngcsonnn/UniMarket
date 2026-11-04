@@ -45,7 +45,7 @@ function countBy(products, key, values) {
  * @param {string[]} [params.campuses] campus keys
  * @param {number} [params.minPrice]
  * @param {number} [params.maxPrice]
- * @param {'newest'|'price_asc'} [params.sort]
+ * @param {'recommended'|'newest'|'price_asc'} [params.sort] recommended = featured first, then newest
  * @param {boolean} [params.featured]
  * @param {number} [params.page] 1-based
  * @param {number} [params.pageSize]
@@ -53,7 +53,7 @@ function countBy(products, key, values) {
  */
 async function listProducts(params = {}) {
   await ready()
-  const { q, category, conditions = [], campuses = [], minPrice, maxPrice, sort = 'newest', featured, deals, page = 1 } = params
+  const { q, category, conditions = [], campuses = [], minPrice, maxPrice, sort = 'recommended', featured, deals, page = 1 } = params
   const pageSize = params.pageSize ?? CATALOG_PAGE_SIZE
 
   // Only available listings approved by an admin (pre-moderation) are shown in the marketplace.
@@ -72,7 +72,9 @@ async function listProducts(params = {}) {
 
   const sorted = [...filtered].sort((a, b) => {
     if (deals) return savingsPercent(b) - savingsPercent(a)
-    return sort === 'price_asc' ? a.price - b.price : new Date(b.createdAt) - new Date(a.createdAt)
+    if (sort === 'price_asc') return a.price - b.price
+    if (sort === 'recommended' && Boolean(a.featured) !== Boolean(b.featured)) return a.featured ? -1 : 1
+    return new Date(b.createdAt) - new Date(a.createdAt)
   })
 
   const start = (page - 1) * pageSize

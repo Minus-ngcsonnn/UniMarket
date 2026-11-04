@@ -17,7 +17,8 @@ import java.util.List;
  * @param maxPrice     maximum price (VND)
  * @param featured     only listings with a running paid promotion
  * @param deals        only "student deals" (at least 40 % below the original price)
- * @param sort         newest, price_asc or price_desc
+ * @param sort         recommended (default: listings with a running paid promotion first, then newest), newest, price_asc
+ *                     or price_desc
  * @param page         1-based page
  * @param size         page size (1–50)
  * @param zoneId       V003 demo pickup area: listings whose effective pickup zone (explicit zone, else campus zone) is it
@@ -35,11 +36,11 @@ public record CatalogQuery(String q, Integer categoryId, List<ProductCondition> 
 
     /** Whitelisted sort orders; anything else is rejected with 400. */
     public enum CatalogSort {
-        NEWEST, PRICE_ASC, PRICE_DESC;
+        RECOMMENDED, NEWEST, PRICE_ASC, PRICE_DESC;
 
         /** @return the sort for a request value such as {@code price_asc} */
         public static CatalogSort fromParameter(String value) {
-            return value == null || value.isBlank() ? NEWEST : valueOf(value.trim().toUpperCase(java.util.Locale.ROOT));
+            return value == null || value.isBlank() ? RECOMMENDED : valueOf(value.trim().toUpperCase(java.util.Locale.ROOT));
         }
     }
 }

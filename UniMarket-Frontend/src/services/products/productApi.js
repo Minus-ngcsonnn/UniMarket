@@ -49,7 +49,8 @@ async function listProducts(params = {}) {
   if (params.province) query.province = params.province
   if (params.minPrice != null) query.minPrice = params.minPrice
   if (params.maxPrice != null) query.maxPrice = params.maxPrice
-  if (params.sort && params.sort !== 'newest') query.sort = params.sort
+  // The backend default is 'recommended' (featured first); every other sort is sent explicitly.
+  if (params.sort && params.sort !== 'recommended') query.sort = params.sort
   if (params.featured) query.featured = true
   if (params.deals) query.deals = true
   if (params.sellerId != null) query.sellerId = params.sellerId

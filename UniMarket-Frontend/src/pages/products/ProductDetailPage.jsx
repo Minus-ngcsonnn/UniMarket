@@ -5,7 +5,8 @@ import SaveItemButton from '../../components/product/SaveItemButton'
 import Breadcrumbs from '../../components/layout/Breadcrumbs'
 import PageContainer from '../../components/layout/PageContainer'
 import ReportDialog from '../../components/moderation/ReportDialog'
-import { ConditionBadge, ModerationBadge, ProductStatusBadge } from '../../components/product/ProductBadges'
+import { ConditionBadge, FeaturedBadge, ModerationBadge, ProductStatusBadge } from '../../components/product/ProductBadges'
+import { isShownAsFeatured } from '../../utils/featured'
 import ProductGrid from '../../components/product/ProductGrid'
 import ProductImageGallery from '../../components/product/ProductImageGallery'
 import SafetyNote from '../../components/product/SafetyNote'
@@ -203,6 +204,7 @@ export default function ProductDetailPage() {
 
         <div className="flex flex-col gap-5 lg:sticky lg:top-36 lg:self-start lg:[grid-area:info]">
           <div className="flex flex-wrap items-center gap-2">
+            {isShownAsFeatured(product) && <FeaturedBadge className="text-xs" />}
             <ConditionBadge condition={product.condition} className="text-xs" />
             <ProductStatusBadge status={product.status} />
             <ModerationBadge moderation={product.moderation} />

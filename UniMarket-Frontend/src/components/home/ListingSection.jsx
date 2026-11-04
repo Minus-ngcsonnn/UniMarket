@@ -42,12 +42,16 @@ function PlaceholderGrid({ icon, title, description, action }) {
  * While the product API is not connected (production without sample data) it shows the empty state.
  *
  * @param {object} query parameters for productService.listProducts
+ * @param {boolean} [hideWhenEmpty] render nothing when the section has no listings (e.g. no running promotions)
+ * @param {number} [pageSize] listings to show (default one row of 4)
  */
-export default function ListingSection({ id, title, description, badge, icon, viewAll, query, emptyTitle, emptyDescription, emptyAction }) {
+export default function ListingSection({
+  id, title, description, badge, icon, viewAll, query, emptyTitle, emptyDescription, emptyAction, hideWhenEmpty = false, pageSize = PLACEHOLDER_CARDS,
+}) {
   const { t } = useTranslation()
   const { data, error, isLoading, reload } = useAsyncData(
-    () => productService.listProducts({ pageSize: PLACEHOLDER_CARDS, ...query }),
-    `${id}-${JSON.stringify(query)}`,
+    () => productService.listProducts({ pageSize, ...query }),
+    `${id}-${pageSize}-${JSON.stringify(query)}`,
   )
 
   const iconClass = 'flex size-11 items-center justify-center rounded-full'
@@ -73,6 +77,8 @@ export default function ListingSection({ id, title, description, badge, icon, vi
     )
   } else if (data?.items.length) {
     content = <ProductGrid products={data.items} layout="wide" label={title} />
+  } else if (hideWhenEmpty) {
+    return null
   } else {
     content = (
       <PlaceholderGrid

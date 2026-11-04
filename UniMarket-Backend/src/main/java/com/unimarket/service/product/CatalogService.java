@@ -60,6 +60,9 @@ public class CatalogService {
     @Transactional(readOnly = true)
     public PageResponse<ProductSummaryResponse> list(CatalogQuery query) {
         String pattern = ProductSpecifications.likePattern(query.q());
+        boolean recommended = query.sort() == CatalogQuery.CatalogSort.RECOMMENDED;
+        // Running promotions, loaded once per request: the filter and the recommended order use the same set.
+        Set<Integer> featured = query.featured() || recommended ? featuredIds() : Set.of();
         Specification<Product> spec = Specification.allOf(
                 ProductSpecifications.publicAvailable(),
                 ProductSpecifications.titleContains(pattern),
@@ -72,8 +75,10 @@ public class CatalogService {
                 ProductSpecifications.bySeller(query.sellerId()),
                 ProductSpecifications.priceAtLeast(query.minPrice()),
                 ProductSpecifications.priceAtMost(query.maxPrice()),
-                query.featured() ? ProductSpecifications.idIn(featuredIds()) : null,
-                query.deals() ? ProductSpecifications.dealsOf(DEAL_MIN_SAVINGS_PERCENT) : null);
+                query.featured() ? ProductSpecifications.idIn(featured) : null,
+                query.deals() ? ProductSpecifications.dealsOf(DEAL_MIN_SAVINGS_PERCENT) : null,
+                // Recommended order is part of the SQL query, so promotion priority applies before pagination.
+                recommended ? ProductSpecifications.featuredFirst(featured) : null);
         Page<Product> page = products.findAll(spec, PageRequest.of(query.page() - 1, query.size(), sortOf(query.sort())));
         ProductInsightsRepository.Facets facets = insights.facets(pattern);
         return new PageResponse<>(mapper.toSummaries(page.getContent(), false), query.page(), query.size(),
@@ -118,8 +123,10 @@ public class CatalogService {
         return new HashSet<>(jdbc.queryForList(ProductInsightsRepository.featuredProductIdsSql(), Integer.class));
     }
 
+
     private static Sort sortOf(CatalogQuery.CatalogSort sort) {
         return switch (sort) {
+            case RECOMMENDED -> Sort.unsorted(); // ordered by ProductSpecifications.featuredFirst
             case NEWEST -> Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"));
             case PRICE_ASC -> Sort.by(Sort.Order.asc("price"), Sort.Order.desc("id"));
             case PRICE_DESC -> Sort.by(Sort.Order.desc("price"), Sort.Order.desc("id"));

@@ -29,12 +29,16 @@ export const CAMPUSES = {
 export const CAMPUS_KEYS = Object.keys(CAMPUSES)
 export const UNIVERSITY_NAME = 'FPT University'
 
-/** Sort options (Figma catalog: Newest, Price: Low to High). */
+/**
+ * Sort options (Figma catalog: Newest, Price: Low to High). "Recommended" is the default: listings with a running paid
+ * promotion first, then newest, ordered by the backend before pagination. Explicit sorts ignore promotions.
+ */
 export const SORT_OPTIONS = [
+  { value: 'recommended', label: 'Recommended' },
   { value: 'newest', label: 'Newest' },
   { value: 'price_asc', label: 'Price: Low to High' },
 ]
-export const DEFAULT_SORT = 'newest'
+export const DEFAULT_SORT = 'recommended'
 
 /** Catalog paging and price filter bounds (VND). */
 export const CATALOG_PAGE_SIZE = 9

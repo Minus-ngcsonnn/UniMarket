@@ -5,7 +5,8 @@ import { PATHS } from '../../routes/paths'
 import { formatPrice, formatTimeAgo, savingsPercent } from '../../utils/format'
 import { MapPinIcon } from '../icons'
 import ImageSlot from '../ui/ImageSlot'
-import { ConditionBadge, ProductStatusBadge } from './ProductBadges'
+import { isShownAsFeatured } from '../../utils/featured'
+import { ConditionBadge, FeaturedBadge, ProductStatusBadge } from './ProductBadges'
 import SaveItemButton from './SaveItemButton'
 
 /**
@@ -24,20 +25,30 @@ export default function ProductCard({ product, preview = false }) {
   const campusLabel = locationLabel ?? CAMPUSES[campus]?.label
   const savings = savingsPercent(price, originalPrice)
   const isUnavailable = status && status !== 'AVAILABLE'
+  const isFeatured = isShownAsFeatured(product)
 
   return (
-    <article className="group relative flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card transition-[border-color,box-shadow] duration-200 hover:border-ink/15 hover:shadow-pop">
+    <article
+      className={`group relative flex h-full flex-col overflow-hidden rounded-card border bg-surface shadow-card transition-[border-color,box-shadow] duration-200 hover:shadow-pop ${
+        isFeatured ? 'border-primary/45 ring-1 ring-primary/15 hover:border-primary/70' : 'border-line hover:border-ink/15'
+      }`}
+    >
       <div className="relative aspect-[4/3] overflow-hidden bg-subtle">
         <ImageSlot src={images[0]} alt="" demoLabel className={`transition-transform duration-300 group-hover:scale-[1.02] ${isUnavailable ? 'opacity-70' : ''}`} />
 
         {isUnavailable ? (
           <ProductStatusBadge status={status} className="absolute top-2.5 left-2.5" />
         ) : (
-          savings > 0 && (
-            <span className="absolute top-2.5 left-2.5 rounded-md bg-danger px-1.5 py-0.5 text-xs font-semibold text-white">
-              <span aria-hidden="true">{t('product.off', { percent: savings })}</span>
-              <span className="sr-only">{t('product.offLabel', { percent: savings })}</span>
-            </span>
+          (isFeatured || savings > 0) && (
+            <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1">
+              {isFeatured && <FeaturedBadge />}
+              {savings > 0 && (
+                <span className="rounded-md bg-danger px-1.5 py-0.5 text-xs font-semibold text-white">
+                  <span aria-hidden="true">{t('product.off', { percent: savings })}</span>
+                  <span className="sr-only">{t('product.offLabel', { percent: savings })}</span>
+                </span>
+              )}
+            </div>
           )
         )}
 

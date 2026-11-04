@@ -147,7 +147,7 @@ class ProductIntegrationTest {
             List<Long> desc = prices(getJson("/api/products?size=50&sort=price_desc", null));
             assertThat(desc).isSortedAccordingTo((a, b) -> Long.compare(b, a));
             List<String> created = new ArrayList<>();
-            getJson("/api/products?size=50", null).get("items").forEach(i -> created.add(i.get("createdAt").asText()));
+            getJson("/api/products?size=50&sort=newest", null).get("items").forEach(i -> created.add(i.get("createdAt").asText()));
             assertThat(created).isSortedAccordingTo((a, b) -> b.compareTo(a));
         }
 
@@ -191,8 +191,13 @@ class ProductIntegrationTest {
             JsonNode page = getJson("/api/products?size=50&featured=true", null);
             assertThat(page.get("totalItems").asInt()).isEqualTo(featured);
             page.get("items").forEach(i -> assertThat(i.get("featured").asBoolean()).isTrue());
-            // No demo listing has an original price, so there are no "student deals" and no invented discounts.
-            assertThat(getJson("/api/products?deals=true", null).get("totalItems").asInt()).isZero();
+            // Deals come only from a real original price at least 40 % above the price (no invented discounts). The demo
+            // database may contain seller-created listings with an original price, so the count comes from SQL.
+            int deals = jdbc.queryForObject("SELECT COUNT(*) FROM dbo.vw_ProductCatalog c JOIN dbo.Products p ON p.ProductId = c.ProductId "
+                    + "WHERE p.OriginalPrice IS NOT NULL AND p.Price * 100 <= p.OriginalPrice * 60", Integer.class);
+            JsonNode dealPage = getJson("/api/products?deals=true&size=50", null);
+            assertThat(dealPage.get("totalItems").asInt()).isEqualTo(deals);
+            dealPage.get("items").forEach(i -> assertThat(i.get("price").asLong() * 100).isLessThanOrEqualTo(i.get("originalPrice").asLong() * 60));
         }
 
         @Test

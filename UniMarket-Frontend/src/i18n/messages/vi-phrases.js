@@ -1089,4 +1089,16 @@ export const viPhrases = {
   "Reason (optional, recorded in the audit log)": "Lý do (không bắt buộc, ghi vào nhật ký quản trị)",
   "Refund reference (up to 100 characters)": "Mã hoàn tiền (tối đa 100 ký tự)",
   "Payout reference (up to 100 characters)": "Mã chi trả (tối đa 100 ký tự)",
+  // Promoted listings (Featured badge, recommended sort, My listings status)
+  Featured: "Nổi bật",
+  Recommended: "Đề xuất",
+  Promoted: "Đang quảng bá",
+  "Promoted until {time}": "Đang quảng bá đến {time}",
+  "Promotion payment pending": "Đang chờ thanh toán gói quảng bá",
+  "Promotion ended {time}": "Đã hết hạn quảng bá ({time})",
+  "Promoted listings": "Tin đang được quảng bá",
+  "View now": "Xem ngay",
+  "Previous promotion": "Tin quảng bá trước",
+  "Next promotion": "Tin quảng bá tiếp theo",
+  "Show promotion {number} of {count}": "Xem tin quảng bá {number}/{count}",
 }

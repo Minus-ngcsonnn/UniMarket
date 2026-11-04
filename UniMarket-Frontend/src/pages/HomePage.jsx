@@ -1,9 +1,10 @@
 import { Link } from 'react-router'
 import CategoryGrid from '../components/home/CategoryGrid'
 import HeroSection from '../components/home/HeroSection'
+import HomePromotionBanner from '../components/home/HomePromotionBanner'
 import HowItWorksSection from '../components/home/HowItWorksSection'
 import ListingSection from '../components/home/ListingSection'
-import { TagIcon } from '../components/icons'
+import { SparklesIcon, TagIcon } from '../components/icons'
 import { buttonClasses } from '../components/ui/buttonClasses'
 import { DEAL_MIN_SAVINGS } from '../constants/product'
 import useViewer from '../hooks/useViewer'
@@ -13,10 +14,14 @@ import { PATHS } from '../routes/paths'
 // Student Deals use the existing deal rule: at least DEAL_MIN_SAVINGS % below the seller's original price.
 const DEALS_QUERY = { deals: true }
 const RECENT_QUERY = { sort: 'newest' }
+// Listings whose paid promotion is running now (backend `featured`), only public available ones; up to two rows.
+const FEATURED_QUERY = { featured: true }
+const FEATURED_COUNT = 8
 
 /**
  * Marketplace homepage ("Warm Minimal" redesign), in the approved order:
- * Hero → Explore Categories → Student Deals → Recently Listed → How UniMarket Works (footer in the layout).
+ * Hero → Explore Categories → Featured Products (only while promotions run) → Student Deals → Recently Listed →
+ * How UniMarket Works (footer in the layout).
  */
 export default function HomePage() {
   const { t } = useTranslation()
@@ -33,9 +38,21 @@ export default function HomePage() {
   return (
     <>
       <title>UniMarket · Buy & sell within your campus</title>
+      {/* Top promotional banner (running paid promotions only); renders nothing when none run. */}
+      <HomePromotionBanner />
       <div className="flex flex-col gap-12 pb-14 sm:gap-16 sm:pb-16">
         <HeroSection sellTo={sellTo} />
         <CategoryGrid />
+        <ListingSection
+          id="featured-title"
+          icon={SparklesIcon}
+          title={t('featuredHome.title')}
+          description={t('featuredHome.description')}
+          viewAll={{ label: t('common.viewAll'), to: PATHS.marketplace }}
+          query={FEATURED_QUERY}
+          pageSize={FEATURED_COUNT}
+          hideWhenEmpty
+        />
         <ListingSection
           id="deals-title"
           icon={TagIcon}

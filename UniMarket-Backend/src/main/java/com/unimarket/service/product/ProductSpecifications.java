@@ -9,12 +9,15 @@ import com.unimarket.entity.ProductStatus;
 import com.unimarket.entity.UserStatus;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Catalog filters built with the JPA Criteria API: every user value is a bound parameter, never
@@ -114,6 +117,28 @@ public final class ProductSpecifications {
 
     public static Specification<Product> idIn(Collection<Integer> ids) {
         return (root, query, cb) -> ids.isEmpty() ? cb.disjunction() : root.get("id").in(ids);
+    }
+
+    /**
+     * Recommended catalog order (Business Plan 4.1.2 promotions): listings with a running paid promotion first, then
+     * newest. Adds no condition; it sets the ORDER BY of the page query, so the priority is applied by SQL Server before
+     * OFFSET / FETCH. Count queries (result type Long) are left unordered.
+     *
+     * @param featuredIds ids of listings whose promotion is Paid and running now
+     */
+    public static Specification<Product> featuredFirst(Collection<Integer> featuredIds) {
+        return (root, query, cb) -> {
+            if (query != null && !Long.class.equals(query.getResultType()) && !long.class.equals(query.getResultType())) {
+                List<Order> order = new ArrayList<>();
+                if (!featuredIds.isEmpty()) {
+                    order.add(cb.asc(cb.<Integer>selectCase().when(root.get("id").in(featuredIds), 0).otherwise(1)));
+                }
+                order.add(cb.desc(root.get("createdAt")));
+                order.add(cb.desc(root.get("id")));
+                query.orderBy(order);
+            }
+            return null;
+        };
     }
 
     /**

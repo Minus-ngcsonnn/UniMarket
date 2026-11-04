@@ -76,7 +76,9 @@ class ProductRulesTest {
 
     @Test
     void catalogParametersAreWhitelisted() {
-        assertThat(CatalogQuery.CatalogSort.fromParameter(null)).isEqualTo(CatalogQuery.CatalogSort.NEWEST);
+        assertThat(CatalogQuery.CatalogSort.fromParameter(null)).isEqualTo(CatalogQuery.CatalogSort.RECOMMENDED);
+        assertThat(CatalogQuery.CatalogSort.fromParameter("newest")).isEqualTo(CatalogQuery.CatalogSort.NEWEST);
+        assertThat(CatalogQuery.CatalogSort.fromParameter("recommended")).isEqualTo(CatalogQuery.CatalogSort.RECOMMENDED);
         assertThat(CatalogQuery.CatalogSort.fromParameter("price_asc")).isEqualTo(CatalogQuery.CatalogSort.PRICE_ASC);
         assertThatThrownBy(() -> CatalogQuery.CatalogSort.fromParameter("Price; DROP TABLE")).isInstanceOf(IllegalArgumentException.class);
         assertThat(CatalogService.parseConditions(List.of("new,like_new", "NEW"))).containsExactly(ProductCondition.NEW, ProductCondition.LIKE_NEW);
