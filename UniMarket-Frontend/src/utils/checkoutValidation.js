@@ -8,6 +8,27 @@ export function isVietnamesePhone(value) {
 }
 
 /**
+ * Delivery details for the real checkout (POST /api/checkout): recipient 2–150 characters, Vietnamese mobile number,
+ * address 5–500 characters (same rules as CheckoutRequest). The delivery area is chosen separately.
+ */
+export function validateBackendDelivery({ fullName, phone, address }) {
+  const errors = {}
+  const name = String(fullName ?? '').trim()
+  if (!name) errors.fullName = 'Enter the name of the person receiving the item.'
+  else if (name.length < 2) errors.fullName = 'Enter a full name.'
+  else if (name.length > 150) errors.fullName = 'Use at most 150 characters.'
+
+  if (isBlank(phone)) errors.phone = 'Phone number is required so the seller can reach you.'
+  else if (!isVietnamesePhone(phone)) errors.phone = 'Enter a Vietnamese mobile number, e.g. 0912 345 678.'
+
+  const place = String(address ?? '').trim()
+  if (!place) errors.address = 'Tell the seller where to deliver, e.g. dormitory and room.'
+  else if (place.length < 5) errors.address = 'Add a bit more detail, e.g. “Dormitory A, room 305”.'
+  else if (place.length > 500) errors.address = 'Use at most 500 characters.'
+  return errors
+}
+
+/**
  * Delivery details at checkout (Business Plan: the buyer provides a delivery address, the seller arranges delivery).
  * @returns {object} { fieldName: message } for invalid fields
  */

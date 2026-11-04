@@ -16,7 +16,8 @@ import { isPurchasable } from '../../constants/moderation'
 import { CAMPUSES, UNIVERSITY_NAME } from '../../constants/product'
 import useAsyncData from '../../hooks/useAsyncData'
 import useCart from '../../hooks/useCart'
-import { PATHS } from '../../routes/paths'
+import { PATHS, loginUrl } from '../../routes/paths'
+import { describeApiError } from '../../utils/apiErrorMessage'
 import { productService } from '../../services/products/productService'
 import { formatPrice } from '../../utils/format'
 import Avatar from '../../components/ui/Avatar'
@@ -89,8 +90,29 @@ export default function CartPage() {
   }
 
   let content
-  if (error) {
-    content = <ErrorState title={t("Couldn’t load your cart")} message={error.message} onRetry={reload} />
+  if (cart.isBackend && cart.status === 'anonymous') {
+    content = (
+      <EmptyState
+        icon={<ShoppingCartIcon className="size-6" />}
+        title={t('Sign in to see your cart')}
+        description={t('Your cart is saved with your UniMarket account.')}
+        action={
+          <Link to={loginUrl(PATHS.cart)} className={buttonClasses({ size: 'sm' })}>
+            {t('Login')}
+          </Link>
+        }
+      />
+    )
+  } else if (error || (cart.isBackend && cart.status === 'error')) {
+    content = (
+      <ErrorState
+        title={t("Couldn’t load your cart")}
+        message={describeApiError(error ?? cart.error).message}
+        onRetry={() => (error ? reload() : cart.refresh())}
+      />
+    )
+  } else if (cart.isBackend && cart.status === 'loading') {
+    content = <LoadingState message={t("Loading your cart…")} />
   } else if (cart.count === 0) {
     content = (
       <EmptyState
@@ -226,7 +248,9 @@ export default function CartPage() {
                 <footer className="flex flex-wrap items-center justify-between gap-2 bg-subtle/70 px-4 py-3 text-xs sm:px-5">
                   <span className="flex items-center gap-1.5 text-ink-muted">
                     <MapPinIcon className="size-4 text-primary" />
-                    {t(UNIVERSITY_NAME)} · {t(CAMPUSES[seller?.campus]?.label)} · {t('Delivery arranged by seller')}
+                    {cart.isBackend
+                      ? `${groupLines[0]?.product.locationLabel ? `${t(groupLines[0].product.locationLabel)} · ` : ''}${t('Simulated delivery, quoted at checkout')}`
+                      : `${t(UNIVERSITY_NAME)} · ${t(CAMPUSES[seller?.campus]?.label)} · ${t('Delivery arranged by seller')}`}
                   </span>
                   <span className="text-ink-muted">
                     Selected subtotal <span className="ml-1 text-sm font-semibold text-ink">{formatPrice(groupSubtotal)}</span>
@@ -261,7 +285,7 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-ink-muted">{t("Delivery")}</dt>
-                <dd className="text-right text-ink">{t("Arranged by seller")}</dd>
+                <dd className="text-right text-ink">{cart.isBackend ? t('Quoted at checkout (simulated)') : t("Arranged by seller")}</dd>
               </div>
             </dl>
             <p className="mt-4 rounded-control bg-primary-soft px-3 py-2.5 text-xs text-primary">
@@ -316,6 +340,11 @@ export default function CartPage() {
         <CheckoutSteps current="Cart" />
       </header>
 
+      {cart.isBackend && (
+        <p className="mb-5 text-xs text-ink-muted">
+          {t('Your cart is saved with your account. Each listing is a single item. Delivery fees are simulated estimates shown at checkout.')}
+        </p>
+      )}
       <SampleDataNotice className="mb-5">{t("Prices and availability come from sample listings. Your cart is saved in this browser only.")}</SampleDataNotice>
       {content}
     </PageContainer>

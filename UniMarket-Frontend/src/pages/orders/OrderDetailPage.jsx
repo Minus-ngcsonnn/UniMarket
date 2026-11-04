@@ -21,11 +21,120 @@ import useLiveOrders from '../../hooks/useLiveOrders'
 import useOrderActions from '../../hooks/useOrderActions'
 import { PATHS } from '../../routes/paths'
 import { orderService } from '../../services/orders/orderService'
-import { isSampleData } from '../../services/products/productService'
+import { isSampleOrders } from '../../services/orders/orderService'
+import { describeApiError } from '../../utils/apiErrorMessage'
 import { formatDateTime, formatPrice } from '../../utils/format'
 import Avatar from '../../components/ui/Avatar'
 import { OTHER_PARTY_TURN, nextStep } from '../../utils/orderFlow'
 import useTranslation from '../../i18n/useTranslation'
+
+const PROVIDER_LABELS = { MOMO: 'MoMo (simulated)', ZALOPAY: 'ZaloPay (simulated)', BANK_QR: 'Bank QR (simulated)' }
+const PAYMENT_STATUS = { PENDING: 'In progress', SUCCEEDED: 'Succeeded', FAILED: 'Failed', EXPIRED: 'Expired' }
+
+/** Real API: amounts from the server (snapshots); the seller also sees commission and payout (3 % of items only). */
+function BackendSummary({ order }) {
+  const { t } = useTranslation()
+  const { amounts, shipping } = order
+  const shippingLabel =
+    shipping?.source === 'LEGACY'
+      ? t('Delivery (earlier order)')
+      : shipping?.label
+        ? `${t(shipping.label)}${shipping.distanceKm != null ? ` · ${t('about {km} km', { km: Number(shipping.distanceKm) })}` : ''}`
+        : t('Simulated delivery')
+  const row = (label, value, strong = false) => (
+    <div className="flex justify-between gap-3">
+      <dt className="text-ink-muted">{label}</dt>
+      <dd className={`text-right ${strong ? 'font-semibold' : ''} text-ink`}>{value}</dd>
+    </div>
+  )
+  return (
+    <Card title="Summary">
+      <dl className="flex flex-col gap-2 text-sm">
+        {row(t('Items ({count})', { count: order.items.length }), formatPrice(amounts.subtotal))}
+        {row(shippingLabel, amounts.shippingFee === 0 ? t('Free') : formatPrice(amounts.shippingFee))}
+        {row(t('Payment'), order.paymentMethod ? t(PROVIDER_LABELS[order.paymentMethod] ?? order.paymentMethod) : t('Online, after confirmation'))}
+        <div className="mt-2 flex items-end justify-between border-t border-line pt-3">
+          <dt className="font-semibold text-ink">{order.role === 'buyer' ? t('You pay') : t('Buyer pays')}</dt>
+          <dd className="text-2xl font-bold tracking-tight text-ink">{formatPrice(amounts.total)}</dd>
+        </div>
+        {amounts.commission != null && (
+          <div className="mt-2 flex flex-col gap-2 border-t border-line pt-3">
+            {row(t('UniMarket fee ({percent}% of items)', { percent: Math.round(Number(amounts.commissionRate ?? 0.03) * 100) }), `−${formatPrice(amounts.commission)}`)}
+            {row(t('Delivery fee (passed to you)'), formatPrice(amounts.shippingFee))}
+            {row(t('Your payout'), formatPrice(amounts.sellerPayout), true)}
+            {order.settlement && (
+              <p className="text-xs text-ink-muted">
+                {t(order.settlement.status === 'RELEASED' ? 'Payout recorded by an admin.' : 'Payout pending: an admin records it after completion.')}{' '}
+                {order.settlement.sandbox && t('Simulated: no real money is paid out.')}
+              </p>
+            )}
+          </div>
+        )}
+      </dl>
+      {shipping?.source === 'SIMULATED_QUOTE' && <p className="mt-3 text-xs text-ink-muted">{t('Vận chuyển mô phỏng: no real carrier is booked.')}</p>}
+      {order.payments?.length > 0 && (
+        <div className="mt-4 border-t border-line pt-3">
+          <p className="mb-2 text-xs font-semibold tracking-wide text-ink-muted uppercase">{t('Payment attempts')}</p>
+          <ul className="flex flex-col gap-1 text-xs text-ink-muted">
+            {order.payments.map((payment) => (
+              <li key={payment.id} className="flex justify-between gap-2">
+                <span>
+                  {t(PROVIDER_LABELS[payment.provider] ?? payment.provider)} · {formatDateTime(payment.createdAt)}
+                </span>
+                <span className="font-medium text-ink">
+                  {t(PAYMENT_STATUS[payment.status] ?? payment.status)}
+                  {payment.sandbox ? ` · ${t('simulated')}` : ''}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </Card>
+  )
+}
+
+/**
+ * Real API: delivery details as the server returns them. The seller gets them only while PAID / DELIVERING (privacy
+ * rule); before that the card says when they appear.
+ */
+function BackendDelivery({ order }) {
+  const { t } = useTranslation()
+  const { delivery, shipment, shipping } = order
+  return (
+    <Card title="Deliver to">
+      {delivery ? (
+        <p className="flex gap-2 text-sm">
+          <MapPinIcon className="mt-0.5 size-4 shrink-0 text-primary" />
+          <span>
+            <span className="block font-medium text-ink">{delivery.fullName}</span>
+            <span className="block text-ink-muted">{delivery.phone}</span>
+            <span className="block text-ink-muted">{delivery.address}</span>
+            {shipping?.deliveryZone && (
+              <span className="block text-ink-muted">
+                {shipping.deliveryZone.name}, {shipping.deliveryZone.province}
+              </span>
+            )}
+          </span>
+        </p>
+      ) : (
+        <p className="text-sm text-ink-muted">
+          {t(
+            order.status === 'PENDING' || order.status === 'AWAITING_PAYMENT'
+              ? 'The buyer’s delivery details appear here after they have paid.'
+              : 'Delivery details are only shown while the order is being delivered.',
+          )}
+        </p>
+      )}
+      {shipment && (
+        <p className="mt-3 border-t border-line pt-3 text-xs text-ink-muted">
+          {t('Handed to {carrier} on {time}.', { carrier: t(shipment.carrier ?? shipping?.label ?? 'delivery'), time: formatDateTime(shipment.shippedAt) })}
+          {shipment.trackingNumber && ` ${t('Tracking: {number}', { number: shipment.trackingNumber })}`}
+        </p>
+      )}
+    </Card>
+  )
+}
 
 function Card({ title, children, className = '' }) {
   const { t } = useTranslation()
@@ -57,7 +166,7 @@ export default function OrderDetailPage() {
 
   let content
   if (error) {
-    content = <ErrorState title={t("Couldn’t load this order")} message={error.message} onRetry={reload} />
+    content = <ErrorState title={t("Couldn’t load this order")} message={describeApiError(error).message} onRetry={reload} />
   } else if (isLoading) {
     content = <LoadingState message={t("Loading order…")} />
   } else if (!order) {
@@ -114,13 +223,16 @@ export default function OrderDetailPage() {
                 <OrderProgress status={order.status} />
               </Card>
             )}
-            {order.status === 'COMPLETED' && <OrderReviews order={order} onWriteReview={() => handleAction(order, 'review')} />}
+            {order.status === 'COMPLETED' && !order.isBackend && <OrderReviews order={order} onWriteReview={() => handleAction(order, 'review')} />}
             <Card title={t("Status history")}>
               <OrderTimeline order={order} />
             </Card>
           </div>
 
           <aside className="flex flex-col gap-4 lg:sticky lg:top-36">
+            {order.isBackend ? (
+              <BackendSummary order={order} />
+            ) : (
             <Card title={t("Summary")}>
               <dl className="flex flex-col gap-2 text-sm">
                 <div className="flex justify-between">
@@ -141,16 +253,20 @@ export default function OrderDetailPage() {
                 </div>
               </dl>
             </Card>
+            )}
 
             <OrderNextStep
               layout="stacked"
               step={nextStep(order, role)}
-              canSimulate={isSampleData && OTHER_PARTY_TURN[role].includes(order.status)}
+              canSimulate={isSampleOrders && OTHER_PARTY_TURN[role].includes(order.status)}
               otherParty={role === 'buyer' ? 'seller' : 'buyer'}
               busyAction={busyActionFor(order)}
               onAction={(action) => handleAction(order, action)}
             />
 
+            {order.isBackend ? (
+              <BackendDelivery order={order} />
+            ) : (
             <Card title={t("Deliver to")}>
               <p className="flex gap-2 text-sm">
                 <MapPinIcon className="mt-0.5 size-4 shrink-0 text-primary" />
@@ -164,6 +280,7 @@ export default function OrderDetailPage() {
                 </span>
               </p>
             </Card>
+            )}
 
             <Card title={role === 'buyer' ? t('Seller') : t('Buyer')}>
               <div className="flex items-center gap-3">
@@ -201,7 +318,7 @@ export default function OrderDetailPage() {
 
   return (
     <PageContainer className="py-6 sm:py-8">
-      <title>{order ? `Order ${orderCode(order.id)} · UniMarket` : 'Order · UniMarket'}</title>
+      <title>{order ? `Order ${order.code ?? orderCode(order.id)} · UniMarket` : 'Order · UniMarket'}</title>
       <Breadcrumbs items={breadcrumb} />
       <SampleDataNotice className="mt-5">{t("Sample order saved in this browser only. Payments are simulated. This page refreshes every 30 seconds.")}</SampleDataNotice>
       {content}

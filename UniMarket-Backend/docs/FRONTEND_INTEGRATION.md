@@ -490,7 +490,7 @@ forwards `/media` (uploaded photos) to the backend as well as `/api`.
 | `campusId` filter accepts one campus | the campus filter is single-select |
 | Photos are not re-encoded | EXIF metadata (e.g. GPS) of uploaded photos is kept (see PRODUCTS_API.md storage audit) |
 | Demo photos `/images/demo/products/*.svg` do not exist | demo listings show the placeholder |
-| Cart / checkout / orders still sample data | "Add to cart" / "Buy now" on real listings lead to the sample checkout, which cannot order them (Stage 6.3) |
+| Cart / checkout / orders | connected in Stage 6.3 (§3.10) |
 
 ### Manual test (browser)
 
@@ -513,6 +513,64 @@ forwards `/media` (uploaded photos) to the backend as well as `/api`.
 6. Filters: category, price, condition, campus, province / area, sort, pages; open a filtered URL in a new tab.
 7. Heart a listing, reload, check `/saved`; sign out → hearts empty; another account has its own list.
 8. My listings: edit (photos, price), delete (confirmation).
+
+## 3.10 Stage 6.3 — cart, simulated shipping, checkout, simulated payments and orders (frontend)
+
+No backend change was needed: every call uses the Stage 4 / V003 contracts in `ORDERS_API.md` unchanged.
+
+### Data source switch
+
+`VITE_USE_MOCK_ORDERS` (default: follows the product data source, so `VITE_AUTH_MODE=backend` gives real products **and**
+real cart / orders). `vite.config.js` resolves `@order-api-impl` with it; sample checkout stays available for demos.
+
+### Code
+
+| File | Role |
+|---|---|
+| `src/services/orders/orderApi.js` | real order API: lists (all pages up to 200), detail, by-ids, action counts, shipping quotes, checkout, actions, payment start, sandbox completion |
+| `src/services/orders/orderMapper.js` | OrderResponse → order page shape (server money, snapshots, delivery, history, `actions`); quote options, totals shown before checkout, `shipping` choices (tokens only), `existingOrderIds` |
+| `src/services/cart/backendCartStore.js`, `src/hooks/useCart.js` | cart in the database (`GET/PUT/DELETE /api/cart`), per account, loaded on sign-in, cleared on sign-out; "selected" ticks stay in the tab |
+| `src/pages/checkout/BackendCheckout.jsx` | delivery details + area, per-seller quotes and carrier choice, totals, 15-minute countdown, checkout and error recovery |
+| `src/components/orders/BackendPaymentDialog.jsx` | MoMo / ZaloPay / Bank QR (simulated): start or resume an attempt, sandbox outcome, Bank QR text payload |
+| `OrderDetailPage`, `OrderCard`, `utils/orderFlow.js`, `hooks/useOrderActions.js` | buttons from the server's `actions`, deadlines, amounts and payout, delivery privacy, payment attempts, shipment |
+| `ProductDetailPage`, `CartPage` | add to cart with server errors; Buy now; cart sign-in / loading states |
+
+### Behaviour
+
+- **Cart**: one unit per listing (PUT again → "already in your cart"); own / reserved / hidden listings are refused with
+  the server's code; unavailable lines stay until removed. Visitors are asked to sign in. The header count follows the
+  server cart. Product cards have no cart button in the current design (Add to cart is on the product page).
+- **Buy now**: `/checkout?items=<id>` — the normal checkout with only that listing (no cart change, no second path).
+- **Shipping**: the buyer picks a delivery area (default: their home area). `POST /api/shipping/quotes` returns one
+  group per seller with distance, free flag (≤ 3 km), carriers `GrabExpress / Ahamove / Standard (simulated)` and signed
+  tokens. Default carrier = cheapest available; the buyer can change it per seller. Unavailable groups
+  (`OUT_OF_RANGE`, `NO_PICKUP_AREA`) block the order with an explanation. A change of area or items re-quotes; an
+  expired quote (15 min) disables "Place order" until new estimates are loaded.
+- **Checkout**: `POST /api/checkout` with recipient, phone, address, `deliveryZoneId`, `shipping[{ sellerId, carrier,
+  quoteToken }]` and `expectedPrices`. React never sends or computes an authoritative fee. Errors:
+  `SHIPPING_QUOTE_CHANGED` / `INVALID` → re-quote; `LISTING_UNAVAILABLE` / `PRICE_CHANGED` → reload; 409 with
+  `existingOrderIds` → links to the orders already created; network failure / timeout / 5xx → "may or may not have been
+  placed, check My orders" (no blind resubmit). The button is disabled while sending.
+- **Orders**: buttons only for the server's `actions` (`CONFIRM`, `CANCEL`, `PAY` / `CONTINUE_PAYMENT`, `SHIP`,
+  `CONFIRM_RECEIPT`); deadlines `confirmBy` / `paymentDueAt` shown in the next step. The seller sees the buyer's delivery
+  details only while PAID / DELIVERING. Seller view: 3 % fee on items only, delivery fee passed on, payout, settlement
+  (simulated). LEGACY orders show their stored fee. Lists and the header refresh every 30 s and after actions (Q4).
+- **Payments**: available after seller confirmation. `POST /api/orders/{id}/payments` (start / resume) never marks the
+  order paid; the sandbox outcome goes through the backend simulator (HMAC-signed notification, server verification).
+  The simulator choice is shown only when `simulatorUrl` is present. Bank QR shows the simulated text payload only.
+- Reviews, reports and disputes are not offered with the real API yet (later stage).
+
+### Gaps (unchanged backend)
+
+| Gap | Effect |
+|---|---|
+| No checkout idempotency key | a lost response cannot return the original 201; the retry gets 409 + `existingOrderIds` |
+| No tracking updates after shipping | the shipment shows carrier (+ optional tracking) once |
+| `CartItems` has no price snapshot | price changes are caught at checkout with `expectedPrices` (409 `PRICE_CHANGED`) |
+| Delivery note from the old sample form has no column | the real checkout does not ask for it |
+
+Manual test: `docs/STAGE_6_3_MANUAL_TEST.md` — **pending verification**, deferred to Stage 7 (not performed in Stage 6.3;
+only automated backend tests and API checks through the Vite proxy were run).
 
 ## 4. Conventions already in place (Stage 1)
 
