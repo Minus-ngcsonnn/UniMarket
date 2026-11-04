@@ -62,4 +62,19 @@ $env:UPLOAD_DIR = $UploadDir
 Write-Host "UniMarket backend -> database [$Database] on ${SqlHost}:${SqlPort} | http://localhost:$Port | CORS http://localhost:$FrontendPort | mail=$MailMode | expiry OFF | payments SIMULATED | uploads $UploadDir"
 if ($OfficialDemo) { Write-Warning 'OFFICIAL DEMO MODE: every action changes the main database UniMarketJava.' }
 Set-Location $backendDir
-& .\mvnw.cmd spring-boot:run
+
+# Run an immutable copy of the application, NOT `mvnw spring-boot:run`: spring-boot:run loads classes lazily from
+# target/classes, and any later build or test run (mvnw test / package / compile) rewrites that folder while the server
+# is running. A class that is first needed at that moment (e.g. AttemptLimiter$Counter, used only on a failed sign-in)
+# then fails to load, the JVM remembers the failure, and every wrong-password sign-in answers HTTP 500 until restart.
+& .\mvnw.cmd -q -DskipTests package
+if ($LASTEXITCODE -ne 0) { throw 'Build failed (mvnw package).' }
+$jar = Get-ChildItem (Join-Path $backendDir 'target') -Filter 'unimarket-backend-*.jar' | Where-Object { $_.Name -notlike '*.original' } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if (-not $jar) { throw 'No unimarket-backend-*.jar found in target/.' }
+$runDir = Join-Path $env:LOCALAPPDATA 'UniMarket\run'
+New-Item -ItemType Directory -Force $runDir | Out-Null
+$runJar = Join-Path $runDir "unimarket-backend-$Port.jar"
+Copy-Item $jar.FullName $runJar -Force
+Write-Host "Running $runJar (copy of $($jar.Name), built $($jar.LastWriteTime)); later builds do not affect this process."
+# Working directory stays UniMarket-Backend so spring.config.import=optional:file:.env still finds the git-ignored .env.
+& (Join-Path $env:JAVA_HOME 'bin\java.exe') -jar $runJar

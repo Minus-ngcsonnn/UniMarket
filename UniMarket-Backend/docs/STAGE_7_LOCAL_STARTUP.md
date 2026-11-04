@@ -34,8 +34,13 @@ cd D:\Minus\UniMarket\UniMarket-Backend\docs\scripts
 
 The script sets `DB_URL`, `SERVER_PORT`, `CORS_ALLOWED_ORIGINS=http://localhost:<FrontendPort>`, `MAIL_MODE=log`
 (OTP codes appear in this console), `ORDER_EXPIRY_ENABLED=false`, `PAYMENT_SIMULATOR_ENABLED=true` and a per-database
-`UPLOAD_DIR` (git-ignored), then runs `mvnw spring-boot:run`. Ready when the console prints
-`Started UniMarketApplication`. Use `-MailMode smtp` only when the Gmail settings in `.env` are complete.
+`UPLOAD_DIR` (git-ignored), builds the JAR (`mvnw package -DskipTests`) and runs a **copy** of it from
+`%LOCALAPPDATA%\UniMarket\run\` with `java -jar`. Ready when the console prints `Started UniMarketApplication`.
+
+Do not start the backend with `mvnw spring-boot:run` while you also build or run tests: spring-boot:run loads classes
+lazily from `target/classes`, a later `mvnw test` rewrites that folder, and a class first needed at that moment fails to
+load for the rest of the process life (seen as **every wrong-password sign-in answering HTTP 500**). The JAR copy is
+not affected by later builds. Use `-MailMode smtp` only when the Gmail settings in `.env` are complete.
 
 **CORS:** the backend accepts browser requests only from the origin in `CORS_ALLOWED_ORIGINS` (default
 `http://localhost:5173`). A frontend on another port without the matching `-FrontendPort` fails every sign-in with
@@ -57,6 +62,7 @@ Open **http://localhost:5175**. (Environment variables win over `UniMarket-Front
 ```powershell
 cd D:\Minus\UniMarket\UniMarket-Backend\docs\scripts
 .\check-active-db.ps1 -Port 8083 -Expect UniMarketJava_Stage7ReadyTest   # exit code 1 if it is any other database
+.\smoke-login.ps1 -BaseUrl http://localhost:5175                          # wrong sign-ins must be 401, never 500
 Invoke-RestMethod http://localhost:5175/api/products?size=1 | Select-Object totalItems   # frontend proxy -> backend
 ```
 
@@ -78,6 +84,7 @@ Stop-Process -Id <PID>        # only the PID you started
 | Symptom | Cause / fix |
 |---|---|
 | Sign-in fails, browser console `403` on `/api/auth/login` | CORS: restart the backend with `-FrontendPort` = the Vite port |
+| Correct password works but any wrong password shows "Something went wrong on our side" (HTTP 500); backend log `NoClassDefFoundError` | the backend ran from `target/classes` while a build rewrote it: restart it with `start-backend.ps1` (JAR mode); check with `smoke-login.ps1` |
 | `Port 8083 was already in use` | another backend runs there: `check-active-db.ps1 -Port 8083`, stop it or choose another port |
 | `Login failed for user` / `Cannot open database` | wrong DB credentials in `.env` or the database name does not exist / is offline |
 | `Schema-validation: missing column/table` | the database is not at V003 — use a clone of the current main, never run migrations on main |
