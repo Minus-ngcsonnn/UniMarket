@@ -1,5 +1,29 @@
 # UniMarket — Local startup guide (Windows / VS Code)
 
+## Official demo — one command
+
+```powershell
+cd D:\Minus\UniMarket
+powershell -ExecutionPolicy Bypass -File .\start-unimarket-demo.ps1     # start (≈ 1–2 minutes)
+powershell -ExecutionPolicy Bypass -File .\stop-unimarket-demo.ps1      # stop everything UniMarket
+```
+
+`start-unimarket-demo.ps1` checks SQL Server, `UniMarketJava` (ONLINE, migrations V001–V003) and that a verified backup
+exists (creates a new `COPY_ONLY` backup with a unique name when the latest is older than 24 h), checks the
+configuration in `UniMarket-Backend\.env` (presence only), stops any other UniMarket backend / Vite process, starts the
+backend on **8080** from an immutable JAR copy (`-OfficialDemo`: real Gmail SMTP, simulated payments and delivery,
+`ddl-auto=validate`, order expiry OFF) and Vite on **5173** (`VITE_BACKEND_URL=http://localhost:8080`, real APIs), then
+verifies the database the backend is really connected to, the frontend proxy and the sign-in smoke test. Open
+**http://localhost:5173**. Both servers run detached (hidden, own process group): closing the terminal does not stop
+them; logs are in `%LOCALAPPDATA%\UniMarket\logs\`. Gmail SMTP is checked at startup (`SMTP check: login … succeeded`).
+
+Prerequisites: SQL Server service `MSSQL$MSSQLSERVER09` running, JDK 21 (`JAVA_HOME` or `%USERPROFILE%\.jdks\jdk-21*`),
+Node.js with `npm install` done in `UniMarket-Frontend`, and `UniMarket-Backend\.env` with `DB_USERNAME`, `DB_PASSWORD`,
+`MAIL_USERNAME`, `MAIL_PASSWORD` (Google App Password), `MAIL_FROM`. `JWT_SECRET` is optional in the dev profile (a
+random key per start: everyone signs in again after a restart).
+
+The sections below describe the individual steps and the test / rehearsal mode on database clones.
+
 Two modes, never mixed:
 
 | Mode | Database | Backend / frontend | Writes allowed |
@@ -32,8 +56,9 @@ cd D:\Minus\UniMarket\UniMarket-Backend\docs\scripts
 .\start-backend.ps1 -Database UniMarketJava_Stage7ReadyTest -Port 8083 -FrontendPort 5175
 ```
 
-The script sets `DB_URL`, `SERVER_PORT`, `CORS_ALLOWED_ORIGINS=http://localhost:<FrontendPort>`, `MAIL_MODE=log`
-(OTP codes appear in this console), `ORDER_EXPIRY_ENABLED=false`, `PAYMENT_SIMULATOR_ENABLED=true` and a per-database
+The script sets `DB_URL`, `SERVER_PORT`, `CORS_ALLOWED_ORIGINS=http://localhost:<FrontendPort>`, `MAIL_MODE`
+(`smtp` with `-OfficialDemo`, otherwise `log`: OTP codes appear in this console; it refuses to start when the SMTP
+settings are missing), refuses a port that is already in use or a database another backend is connected to, `ORDER_EXPIRY_ENABLED=false`, `PAYMENT_SIMULATOR_ENABLED=true` and a per-database
 `UPLOAD_DIR` (git-ignored), builds the JAR (`mvnw package -DskipTests`) and runs a **copy** of it from
 `%LOCALAPPDATA%\UniMarket\run\` with `java -jar`. Ready when the console prints `Started UniMarketApplication`.
 
