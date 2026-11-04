@@ -42,11 +42,26 @@ several items; seller confirmation within 24 h; buyer payment within 24 h of con
 admin-managed disputes with manual refund confirmation (D3); manual settlement release (D6); reviews after completion,
 one per direction (D5); promotion packages 5 000 / 15 000 / 30 000 VND.
 
-## 4. Engineering notes (not BP requirements)
+## 4. Implementation status (2026-11-04)
 
-- Nationwide registration, simulated shipping and the simulated Bank QR provider need V003:
-  `V003_DESIGN_nationwide_and_simulated_shipping.md`. Tested on isolated copies on 2026-11-03 (section 11 there);
-  **not applied to `UniMarketJava`** — that needs a separate approval.
+Every DECISION row above is implemented and runs in the official demo (`UniMarketJava`, Stage 7 final QA). The
+requirement-by-requirement mapping is in `BUSINESS_PLAN_TRACEABILITY.md`.
+
+| Decision | Implemented as |
+|---|---|
+| Nationwide audience, self-declared university | Registration: official campus **or** typed university name (`Users.DeclaredUniversityName`, campus optional) |
+| Any email + OTP | 6-digit code by email, 10 minutes, 5 tries; real Gmail SMTP in the demo; UI says "Email verified" |
+| Simulated shipping, free ≤ 3 km | `POST /api/shipping/quotes` per seller (Standard / Ahamove / GrabExpress, all "(simulated)"), signed 15-minute quotes, recomputed at checkout, stored in `OrderShippingQuotes` |
+| Bank transfer by QR (simulated) | `BankQR` provider for orders and promotions, beside MoMo and ZaloPay; all three are sandbox simulations |
+| Approximate location data | `LocationZones` (demo areas with approximate centres); listings have a pickup area |
+
+The BP text in section 2 still has to be rewritten by its authors; the product already follows the proposed direction.
+
+## 5. Engineering notes (not BP requirements)
+
+- Nationwide registration, simulated shipping and the simulated Bank QR provider come from V003
+  (`V003_DESIGN_nationwide_and_simulated_shipping.md`), tested on isolated copies and **applied to `UniMarketJava` on
+  2026-11-03** (`dbo.SchemaMigrations`), following `V003_DEPLOYMENT_RUNBOOK.md`.
 - A real bank / VietQR integration would need a provider contract, real account data and webhook verification; it is
   not part of the MVP.
 - Wording in the product must not claim "verified students"; the frontend now shows "Email verified" only.

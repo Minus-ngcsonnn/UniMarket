@@ -59,8 +59,8 @@ checkout → PENDING ──seller confirm (≤ 24 h after the order)──► AW
 | `COMPLETED` | `Completed` | **Sold** |
 | `CANCELLED` | `Cancelled` | back to Available |
 
-Payment attempts: `PENDING`, `SUCCEEDED`, `FAILED`, `EXPIRED` (`Payments.Status`). Providers: `MOMO`, `ZALOPAY`
-(the database allows only these two). Settlement: `PENDING` (calculated, owed, not paid) / `RELEASED` (an admin
+Payment attempts: `PENDING`, `SUCCEEDED`, `FAILED`, `EXPIRED` (`Payments.Status`). Providers: `MOMO`, `ZALOPAY`,
+`BANK_QR` (SQL `BankQR`, added by V003; all three are simulated in the MVP). Settlement: `PENDING` (calculated, owed, not paid) / `RELEASED` (an admin
 confirmed a manual payout); `settlement.calculation` is `STANDARD` (amount = `amounts.sellerPayout`) or
 `LEGACY_V001_MERCHANDISE_ONLY` (V001 demo record without the delivery fee, kept as recorded; the seller page then shows
 the recorded amount and a legacy note). Dispute: `OPEN` / `RESOLVED`, decision `NO_REFUND` / `REFUND_APPROVED`.
@@ -305,8 +305,8 @@ A scheduler runs `usp_ExpirePendingOrders` every minute (`ORDER_EXPIRY_INTERVAL`
 
 ## Delivery fee (V003: simulated per-seller quotes)
 
-> **V003 (tested on an isolated copy, not yet applied to `UniMarketJava`).** This backend version needs the V003
-> schema; it does not start against a V002-only database (`ddl-auto=validate`). See
+> **V003 (applied to `UniMarketJava` on 2026-11-03).** This backend version needs the V003 schema; it does not start
+> against a V002-only database (`ddl-auto=validate`). See
 > `database/docs/V003_DESIGN_nationwide_and_simulated_shipping.md`.
 
 Fees are calculated **only by the backend** from the listing's pickup area and the buyer's delivery area (formula

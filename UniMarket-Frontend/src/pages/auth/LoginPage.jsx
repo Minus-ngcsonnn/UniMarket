@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router'
 import AuthTabs from '../../components/auth/AuthTabs'
 import PendingNotice from '../../components/auth/PendingNotice'
-import { ArrowRightIcon, LockIcon, MailIcon, ShieldCheckIcon } from '../../components/icons'
+import { LockIcon, LogInIcon, MailIcon, ShieldCheckIcon } from '../../components/icons'
 import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
 import Checkbox from '../../components/ui/Checkbox'
@@ -75,7 +75,7 @@ export default function LoginPage() {
       <title>{t("Login · UniMarket")}</title>
 
       <header>
-        <h1 className="text-3xl tracking-tight text-ink sm:text-[2.125rem]">{t("Good to see you again.")}</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-ink sm:text-[2.25rem]">{t("Good to see you again.")}</h1>
         <p className="mt-2 text-ink-muted">{t("Your next great find is right around campus.")}</p>
       </header>
 
@@ -154,7 +154,7 @@ export default function LoginPage() {
         )}
 
         <Button type="submit" size="lg" fullWidth loading={form.isSubmitting}>
-          <ArrowRightIcon className="size-4.5" />
+          <LogInIcon className="size-4.5" />
           {t("Login")}
         </Button>
 

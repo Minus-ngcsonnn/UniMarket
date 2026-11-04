@@ -110,7 +110,7 @@ export default function RegisterPage() {
       <title>{t("Register · UniMarket")}</title>
 
       <header>
-        <h1 className="text-3xl tracking-tight text-ink sm:text-[2.125rem]">{t("Your campus. Your community.")}</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-ink sm:text-[2.25rem]">{t("Your campus. Your community.")}</h1>
         <p className="mt-2 text-ink-muted">{t("Join UniMarket. Great finds start here.")}</p>
       </header>
 

@@ -150,7 +150,7 @@ export default function ForgotPasswordPage() {
         <span className="flex size-12 items-center justify-center rounded-card bg-primary-soft text-primary">
           <LockIcon className="size-6" />
         </span>
-        <h1 className="text-3xl tracking-tight text-ink sm:text-[2.125rem]">
+        <h1 className="text-3xl font-extrabold tracking-tight text-ink sm:text-[2.25rem]">
           {step === 'email' ? t('Forgot your password?') : t('Set a new password')}
         </h1>
         <p className="text-ink-muted">

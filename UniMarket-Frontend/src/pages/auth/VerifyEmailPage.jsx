@@ -183,7 +183,7 @@ export default function VerifyEmailPage() {
         <span className="flex size-12 items-center justify-center rounded-card bg-primary-soft text-primary">
           <ShieldCheckIcon className="size-6" />
         </span>
-        <h1 className="text-3xl tracking-tight text-ink sm:text-[2.125rem]">{t('Verify your email')}</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-ink sm:text-[2.25rem]">{t('Verify your email')}</h1>
         <p className="text-ink-muted">
           {t('Enter the {count}-digit code we sent to your email. It confirms that you own the address.', { count: OTP_LENGTH })}
         </p>

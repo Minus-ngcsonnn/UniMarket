@@ -1,74 +1,96 @@
 # UniMarket
 
-UniMarket is a full-stack web marketplace application built with a **Spring Boot** REST API, a **React (Vite)** single-page frontend and a **Microsoft SQL Server** database.
+UniMarket is a C2C second-hand marketplace for university and college students in Vietnam. Students list items,
+buy from several sellers in one checkout, pay online (simulated in this academic MVP) and rate each other after
+delivery. Administrators moderate listings, handle reports and disputes, and confirm seller payouts.
 
-> **Status:** project foundation only. The backend exposes a health-check endpoint and the frontend shows the backend connection status. Business features (authentication, products, orders, etc.) are not implemented yet.
+It is a full-stack web application: a **Spring Boot** REST API, a **React (Vite)** single-page frontend and a
+**Microsoft SQL Server** database.
 
----
-
-## 1. Technology Stack
-
-| Layer      | Technology                                                        |
-|------------|-------------------------------------------------------------------|
-| Backend    | Java 21, Spring Boot 3.5 (Web, Data JPA, Validation, Actuator), Maven |
-| Database   | Microsoft SQL Server (2019/2022), `mssql-jdbc` driver             |
-| Frontend   | React 19, Vite 8, Tailwind CSS 4, React Router, Axios, ESLint     |
-| UI         | Inter font (self-hosted), shared design tokens in `src/index.css` |
-| API style  | RESTful JSON, all endpoints under `/api`                          |
-| Tooling    | Git & GitHub, Visual Studio Code, Windows PowerShell              |
-
-Backend architecture is **layered**: `controller → service → repository → entity`, with `dto` objects used for API input/output.
+> **Status (November 2026): academic MVP, feature-complete for the demo.** All Business Plan flows below run end to end
+> against the real database (`UniMarketJava`, migrations V001–V003). Payments and delivery fees are **simulated**: no
+> real money moves and no carrier is contacted. FPT University Hoa Lac is the first demo community; registration is
+> open to students of any Vietnamese university or college. See [Known limitations](#9-known-limitations).
 
 ---
 
-## 2. Project Structure
+## 1. Features
+
+| Area | What works |
+|---|---|
+| Accounts | Register with any valid email + 6-digit OTP (10 min, 5 tries), choose an official campus **or** type your own university (self-declared, not verified); login with JWT; forgot / reset password by email; roles Student and Admin; suspended accounts cannot sign in |
+| Listings | Create / edit / delete with photos (stored on disk, metadata stripped), condition New / Like New / Used, category, price, pickup area; **pre-moderation**: a new or edited listing is hidden until an admin approves it |
+| Browsing | Catalog with keyword, category, price, condition, university / campus filters; product page; seller profile with ratings; saved items (favorites); featured (promoted) listings |
+| Cart & checkout | Cart grouped by seller; checkout creates **one order per seller** (several items each, quantity 1); delivery address and area; **simulated shipping quote per seller** (free ≤ 3 km), total shown before placing the order |
+| Orders | `PENDING` → seller confirms within 24 h → `AWAITING_PAYMENT` → buyer pays within 24 h → `PAID` → seller ships → `DELIVERING` → buyer confirms receipt → `COMPLETED`; or `CANCELLED`. Buyer and seller views, action badges refreshed every 30 s |
+| Payments | Online only (no COD, no direct transfer to sellers): **MoMo, ZaloPay, Bank QR — all simulated**, server-verified signed results |
+| Money | 3 % commission on the items subtotal (not on delivery); seller payout = subtotal − commission + delivery fee; settlement created at completion, released manually by an admin |
+| Trust | Reviews in both directions after completion (1–5 stars, one per side); reports on listings / users; disputes on paid orders (admin decides `NO_REFUND` / `REFUND_APPROVED`, refund confirmed by reference); contact (phone / Zalo) shown only if the user chooses |
+| Promotions | 24-hour boost 5 000 ₫, featured 3 days 15 000 ₫, featured 7 days 30 000 ₫, paid with a simulated payment |
+| Admin | Dashboard, listing moderation queue (approve / reject / block / remove), users (suspend / reactivate), orders (read only), categories (read only), reports, disputes, settlements |
+| UI | Vietnamese / English, responsive, Figma-based design tokens |
+
+The full mapping of Business Plan requirements to code, database and tests is in
+[`database/docs/BUSINESS_PLAN_TRACEABILITY.md`](database/docs/BUSINESS_PLAN_TRACEABILITY.md).
+
+---
+
+## 2. Technology Stack
+
+| Layer      | Technology |
+|------------|------------|
+| Backend    | Java 21, Spring Boot 3.5 (Web, Security / OAuth2 resource server with JWT, Data JPA, Validation, Mail, Actuator), Maven wrapper |
+| Database   | Microsoft SQL Server 2019+ (developed on 2022), `mssql-jdbc`; business rules in constraints, triggers and stored procedures (`usp_*`) |
+| Frontend   | React 19, Vite 8, Tailwind CSS 4, React Router, Axios, ESLint |
+| UI         | Inter font (self-hosted), design tokens in `src/index.css` |
+| API style  | RESTful JSON, all endpoints under `/api`, one error format |
+| Tooling    | Git & GitHub, Visual Studio Code, Windows PowerShell |
+
+Backend architecture is **layered**: `controller → service → repository / stored procedures → entity`, with `dto`
+objects for API input and output.
+
+---
+
+## 3. Project Structure
 
 ```text
 UniMarket/
+├── start-unimarket-demo.ps1         One-command official demo start (checks, backup, backend 8080, frontend 5173)
+├── stop-unimarket-demo.ps1          Stops only UniMarket backend / Vite processes (-ListOnly to show them)
 ├── UniMarket-Backend/               Spring Boot REST API
-│   ├── .mvn/wrapper/                Maven wrapper configuration (no global Maven needed)
 │   ├── src/main/java/com/unimarket/
-│   │   ├── controller/              REST controllers (thin: HTTP only)
-│   │   ├── service/                 Business logic
-│   │   ├── repository/              Spring Data JPA repositories
-│   │   ├── entity/                  JPA entities (mapped to UniMarketDB tables)
-│   │   ├── dto/                     Request/response objects
-│   │   ├── config/                  Spring configuration classes
-│   │   └── UniMarketApplication.java
-│   ├── src/main/resources/
-│   │   ├── application.properties       Main config (reads env variables)
-│   │   └── application-nodb.properties  Profile to run without a database
-│   ├── src/test/java/com/unimarket/     Tests
-│   ├── .env.example                 Example DB configuration (copy to .env)
-│   ├── pom.xml
-│   └── mvnw / mvnw.cmd              Maven wrapper scripts
+│   │   ├── controller/              Auth, Catalog, Listing, Favorite, Cart, Order, Community, Admin, PaymentSimulator, Health
+│   │   ├── service/                 auth, product, order, shipping, promotion, review, admin, mail, storage, account
+│   │   ├── repository/  entity/  dto/
+│   │   ├── security/                JWT, password stamps, attempt limiter, verification-code hashing
+│   │   ├── config/                  Security, CORS, order-expiry scheduler
+│   │   └── common/  exception/      Error codes and the JSON error handler
+│   ├── src/main/resources/          application.properties (reads env variables), application-nodb.properties
+│   ├── src/test/java/               Unit and integration tests
+│   ├── docs/                        API references, Stage 7 startup guide and demo walkthrough
+│   ├── docs/scripts/                start-backend.ps1, check-active-db.ps1, smoke-login.ps1
+│   └── .env.example                 Configuration template (copy to .env, git-ignored)
 ├── UniMarket-Frontend/              React + Vite SPA
-│   ├── public/
+│   ├── public/images/demo/          Demo product photos (licensed, see photos/CREDITS.md)
 │   ├── src/
-│   │   ├── assets/                  Images, fonts, static files
-│   │   ├── components/              Reusable UI components
-│   │   ├── pages/                   Route-level pages
-│   │   ├── services/                API calls (Axios)
-│   │   ├── hooks/                   Custom React hooks
-│   │   ├── App.jsx                  Routes
-│   │   └── main.jsx                 Entry point
+│   │   ├── pages/                   auth, products, checkout, orders, profile, admin (+ admin/live), info
+│   │   ├── components/  hooks/  services/  constants/  i18n/  utils/
+│   │   ├── mocks/                   Sample data for the offline UI mode
+│   │   └── App.jsx                  Routes
 │   ├── .env.example
-│   ├── package.json
-│   └── vite.config.js               Dev server + /api proxy
-├── database/
-│   ├── baseline/                    V001 installer (UniMarket_BusinessAligned.sql)
-│   ├── migrations/                  Numbered migrations (V002 multi-item orders, ...)
-│   ├── validation/ tests/ schema/   Checks, test scripts, generated schema reference
-│   └── README.md                    How to run and test database scripts
-├── .vscode/extensions.json          Recommended VS Code extensions for the team
-├── .gitattributes
-├── .gitignore
-└── README.md
+│   └── vite.config.js               Dev server, /api proxy, data-mode switches
+└── database/
+    ├── baseline/                    V001 installer (creates UniMarketJava with demo data)
+    ├── migrations/                  V002 multi-item orders, V003 nationwide registration + simulated shipping (+ rollback)
+    ├── validation/  tests/          Read-only checks; test scripts that run only on *Test copies
+    ├── schema/                      Generated schema reference
+    ├── docs/                        Business Plan traceability, change proposal, V002 / V003 designs and runbook
+    └── README.md                    How to run and test database scripts
 ```
 
 ---
 
-## 3. Required Software
+## 4. Required Software
 
 | Software                      | Version         | Check with          |
 |-------------------------------|-----------------|---------------------|
@@ -79,35 +101,78 @@ UniMarket/
 | Git                           | any recent      | `git --version`     |
 | Visual Studio Code (suggested)| latest          |                     |
 
-Maven does **not** need to be installed: use the included wrapper (`mvnw.cmd`), which downloads Maven 3.9 automatically.
+Maven does **not** need to be installed: use the wrapper (`mvnw.cmd`). Recommended VS Code extensions are listed in
+`.vscode/extensions.json`.
 
-Recommended VS Code extensions (VS Code offers to install them from `.vscode/extensions.json`): *Extension Pack for Java*, *Spring Boot Extension Pack*, *ESLint*, *Tailwind CSS IntelliSense*, *SQL Server (mssql)*.
-
-### JDK 21 on Windows
-
-Install [Eclipse Temurin 21](https://adoptium.net/temurin/releases/?version=21) (or any JDK 21) and set `JAVA_HOME`. If you have several JDKs, you can point a single PowerShell session at JDK 21:
+If you have several JDKs, point one PowerShell session at JDK 21:
 
 ```powershell
 $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.x-hotspot"   # adjust to your install path
 $env:Path = "$env:JAVA_HOME\bin;$env:Path"
-java -version   # must show 21
 ```
 
 ---
 
-## 4. Database Setup (SQL Server)
+## 5. Quick Start: Official Demo (one command)
 
-### 4.1 Create the database
+Prerequisites: SQL Server running with the `UniMarketJava` database (section 6), `npm install` done once in
+`UniMarket-Frontend`, and `UniMarket-Backend\.env` filled in (section 6.3).
 
-The schema, stored procedures, views, triggers and demo data come from **`database/baseline/V001__UniMarket_BusinessAligned.sql`** (SQL Server 2019+), which creates the **`UniMarketJava`** database. It is the single source of truth for the schema.
+```powershell
+cd D:\Minus\UniMarket
+powershell -ExecutionPolicy Bypass -File .\start-unimarket-demo.ps1   # start (about 1–2 minutes)
+powershell -ExecutionPolicy Bypass -File .\stop-unimarket-demo.ps1    # stop all UniMarket processes
+```
 
-- Run it **once** on a fresh server: in SSMS enable *Query → SQLCMD Mode*, then execute the **entire** file.
-- The script stops with an error if `UniMarketJava` already exists. It never resets or drops a database.
-- Later changes are numbered migrations in `database/migrations/` (see `database/README.md`). The old `UniMarketDB` placeholder is kept only in `database/legacy/`.
+The start script:
 
-### 4.2 Create a SQL login for the application
+1. checks SQL Server, that `UniMarketJava` is ONLINE with migrations V001, V002, V003;
+2. makes a `COPY_ONLY` verified backup if the latest one is older than 24 hours;
+3. checks that the required `.env` values exist (it never prints them);
+4. stops any other UniMarket backend / Vite process and checks that ports 8080 and 5173 are free;
+5. builds the backend and runs it from an **immutable JAR copy** on **8080** (real Gmail SMTP, simulated payments and
+   delivery, `ddl-auto=validate`, order expiry OFF), then Vite on **5173** with the real APIs;
+6. verifies which database the backend is connected to, the frontend proxy and a sign-in smoke test.
 
-The backend connects with **SQL Server Authentication** (Windows authentication would need an extra native DLL). Use a dedicated login rather than `sa`. In SSMS (as an administrator), run something like the following, using your own strong password:
+Open **http://localhost:5173**. Both servers run detached and hidden (closing the terminal does not stop them).
+Logs: `%LOCALAPPDATA%\UniMarket\logs\backend-8080.log` and `frontend-5173.log`.
+
+| Service       | URL                                  |
+|---------------|--------------------------------------|
+| Frontend      | http://localhost:5173                |
+| Backend API   | http://localhost:8080/api            |
+| Health check  | http://localhost:8080/api/health     |
+
+**Demo accounts** (fictional, created by V001): `demo.admin@fpt.edu.vn` (Admin) and `demo.student01@fpt.edu.vn` …
+`demo.student14@fpt.edu.vn` (Students). `demo.student15` is intentionally unverified and `demo.student16`
+intentionally suspended. The shared demo password is documented in the V001 header comment
+(`database/baseline/V001__UniMarket_BusinessAligned.sql`); you can also register your own account with a real email.
+A guided 15-minute script is in
+[`UniMarket-Backend/docs/STAGE_7_DEMO_WALKTHROUGH.md`](UniMarket-Backend/docs/STAGE_7_DEMO_WALKTHROUGH.md); details
+and troubleshooting are in [`UniMarket-Backend/docs/STAGE_7_LOCAL_STARTUP.md`](UniMarket-Backend/docs/STAGE_7_LOCAL_STARTUP.md).
+
+> Automated tests and rehearsals that write data must run on a **database clone** (e.g. `UniMarketJava_Stage7BrowserTest`)
+> with other ports, never on `UniMarketJava`. `docs/scripts/start-backend.ps1` refuses the main database unless
+> `-OfficialDemo` is given.
+
+---
+
+## 6. Database Setup (SQL Server)
+
+### 6.1 Create the database
+
+- Run **`database/baseline/V001__UniMarket_BusinessAligned.sql`** once on a fresh server (SSMS → *Query → SQLCMD
+  Mode*, execute the whole file). It creates **`UniMarketJava`** with tables, views, procedures, triggers and demo
+  data, and refuses to run if the database already exists.
+- Then apply the migrations in order: `migrations/V002__multi_item_orders.sql`, then
+  `migrations/V003__nationwide_registration_and_simulated_shipping.sql`. Each runs once and records itself in
+  `dbo.SchemaMigrations`; follow `database/README.md` and `database/docs/V003_DEPLOYMENT_RUNBOOK.md`.
+- The current backend **requires V003** (it does not start against a V002-only database).
+
+### 6.2 Create a SQL login for the application
+
+The backend connects with **SQL Server Authentication**. Use a dedicated login rather than `sa`, with your own strong
+password:
 
 ```sql
 CREATE LOGIN unimarket_app WITH PASSWORD = '<choose-a-strong-password>';
@@ -115,307 +180,192 @@ USE UniMarketJava;
 CREATE USER unimarket_app FOR LOGIN unimarket_app;
 ALTER ROLE db_datareader ADD MEMBER unimarket_app;
 ALTER ROLE db_datawriter ADD MEMBER unimarket_app;
-GRANT EXECUTE ON SCHEMA::dbo TO unimarket_app;   -- the order and payment procedures (usp_*)
+GRANT EXECUTE ON SCHEMA::dbo TO unimarket_app;   -- the order, payment and settlement procedures (usp_*)
 ```
 
-The login does not need permission to create or alter tables.
+On the server, enable **mixed mode authentication** and **TCP/IP** (with a fixed port for named instances).
 
-Requirements on the server:
+### 6.3 Configuration (never commit it)
 
-- **Mixed mode authentication** enabled (SSMS → Server Properties → Security → *SQL Server and Windows Authentication mode*), then restart the service.
-- **TCP/IP** enabled (SQL Server Configuration Manager → SQL Server Network Configuration → Protocols → TCP/IP → *Enabled*). Note the port (default `1433`; named instances often use a dynamic port, so set a fixed one under *IPAll → TCP Port*).
+Copy `UniMarket-Backend/.env.example` to `UniMarket-Backend/.env` (git-ignored) and fill it in. Environment variables
+of the current session take precedence over `.env`.
 
-### 4.3 Configure credentials (never commit them)
+| Variable | Description | Default |
+|---|---|---|
+| `DB_URL` | JDBC URL | `…localhost:1433;databaseName=UniMarketJava;encrypt=true;trustServerCertificate=true` |
+| `DB_USERNAME` / `DB_PASSWORD` | SQL login | *(required)* |
+| `DB_POOL_SIZE` | Maximum connections | `10` |
+| `SERVER_PORT` | API port | `8080` |
+| `SPRING_PROFILES_ACTIVE` | `dev` (default) or `nodb` | `dev` |
+| `JWT_SECRET` / `JWT_ACCESS_TOKEN_TTL` | Base64 key (≥ 32 bytes) signing access tokens / token lifetime | random per start in `dev` (everyone signs in again after a restart) |
+| `VERIFICATION_CODE_SECRET` | Base64 key hashing email codes | random per start in `dev` |
+| `MAIL_MODE` | `log` (codes printed to the backend log) or `smtp` | `log` in `dev`; the official demo uses `smtp` |
+| `MAIL_HOST` / `MAIL_PORT` / `MAIL_USERNAME` / `MAIL_PASSWORD` / `MAIL_FROM` / `MAIL_FROM_NAME` | SMTP (Gmail: `smtp.gmail.com`, 587, STARTTLS, a Google **App Password**) | *(none)* |
+| `MAIL_VERIFY_ON_STARTUP` / `MAIL_STARTTLS_REQUIRED` / `MAIL_TIMEOUT_MS` / `MAIL_EHLO_NAME` | SMTP checks and tuning | see `.env.example` |
+| `CORS_ALLOWED_ORIGINS` | Browser origins allowed to call the API | `http://localhost:5173` |
+| `UPLOAD_DIR` | Folder for uploaded listing photos | `uploads` (git-ignored) |
+| `SHIPPING_QUOTE_SECRET` | Base64 key signing simulated shipping quotes | random per start in `dev` |
+| `ORDER_EXPIRY_ENABLED` / `ORDER_EXPIRY_INTERVAL` | 24 h deadline job | `false` in `dev` (protects demo orders), `true` otherwise / `PT1M` |
+| `PAYMENT_SIMULATOR_ENABLED` / `PAYMENT_SIMULATOR_SECRET` | Sandbox payment simulator and its signing key | `true` in `dev`, refused in production / random per start |
 
-The backend reads these variables. They are never hard-coded:
+Outside the `dev` profile the secrets are required. `trustServerCertificate=true` is for local development only.
 
-| Variable             | Description                                       | Default                                   |
-|----------------------|---------------------------------------------------|-------------------------------------------|
-| `DB_URL`             | JDBC URL                                          | `jdbc:sqlserver://localhost:1433;databaseName=UniMarketJava;encrypt=true;trustServerCertificate=true` |
-| `DB_USERNAME`        | SQL login                                         | *(none)*                                  |
-| `DB_PASSWORD`        | SQL password                                      | *(none)*                                  |
-| `DB_POOL_SIZE`       | Maximum database connections                      | `10`                                      |
-| `SERVER_PORT`        | API port                                          | `8080`                                    |
-| `SPRING_PROFILES_ACTIVE` | `dev` (default) or `nodb`                     | `dev`                                     |
-| `JWT_SECRET`         | Base64 key (≥ 32 bytes) signing access tokens     | random per run in `dev` (warning); required otherwise |
-| `VERIFICATION_CODE_SECRET` | Base64 key (≥ 32 bytes) hashing e-mail codes | random per run in `dev` (warning); required otherwise |
-| `MAIL_MODE`          | `log` (dev: codes printed to the console) or `smtp` | `log` in `dev`, `smtp` otherwise |
-| `MAIL_HOST` / `MAIL_PORT` / `MAIL_USERNAME` / `MAIL_PASSWORD` / `MAIL_FROM` | SMTP settings | *(none)* |
-| `CORS_ALLOWED_ORIGINS` | Browser origins allowed to call the API          | `http://localhost:5173` |
-| `UPLOAD_DIR`         | Folder for uploaded listing photos (`<UPLOAD_DIR>/products`) | `uploads` (git-ignored) |
-| `CHECKOUT_SHIPPING_FEE` | Delivery fee per order in VND (source still a pending decision) | `0` |
-| `ORDER_EXPIRY_ENABLED` / `ORDER_EXPIRY_INTERVAL` | Order expiry job (24 h deadlines) | `false` in `dev` (protects demo orders), `true` otherwise / `PT1M` |
-| `PAYMENT_SIMULATOR_ENABLED` / `PAYMENT_SIMULATOR_SECRET` | Sandbox payment simulator (no real money) and its signing key | off (`true` in `dev`) / random per run in `dev` |
+### 6.4 Schema management policy
 
-Authentication API (register, e-mail verification, login, JWT, roles): `UniMarket-Backend/docs/AUTH_API.md`.
-Products, categories, listing photos and favorites API: `UniMarket-Backend/docs/PRODUCTS_API.md`.
-Cart, checkout, orders, simulated payments and expiry API: `UniMarket-Backend/docs/ORDERS_API.md`.
-Admin, moderation, reviews, reports, disputes, settlements, promotions and contact settings API: `UniMarket-Backend/docs/ADMIN_API.md`.
-
-**Option A: `.env` file (recommended).** Copy the example and edit it. `UniMarket-Backend/.env` is git-ignored.
-
-```powershell
-cd UniMarket-Backend
-Copy-Item .env.example .env
-notepad .env
-```
-
-**Option B: environment variables in the current PowerShell session.** These take precedence over `.env`.
-
-```powershell
-$env:DB_URL      = "jdbc:sqlserver://localhost:1433;databaseName=UniMarketJava;encrypt=true;trustServerCertificate=true"
-$env:DB_USERNAME = "unimarket_app"
-$env:DB_PASSWORD = "<your-password>"
-```
-
-> `trustServerCertificate=true` is for **local development only**. Use a trusted certificate in shared or production environments.
-
-### 4.4 Schema management policy
-
-- `spring.jpa.hibernate.ddl-auto=validate` is fixed in `application.properties`: Hibernate only **checks** that entities match existing tables. It never creates, alters or drops anything. Never use `create`, `create-drop` or `update`.
-- Schema changes are new numbered migrations in `database/migrations/`, tested on a copy first (`database/tests/`), then entities are updated to match.
-- Entities use the exact SQL table and column names (e.g. `Users.UserId`); see `UniMarket-Backend/docs/FRONTEND_INTEGRATION.md` for value mappings such as `Like New` ↔ `LIKE_NEW`.
+- `spring.jpa.hibernate.ddl-auto=validate`: Hibernate only checks entities against the existing tables. Never use
+  `create`, `create-drop` or `update`.
+- Schema changes are new numbered migrations in `database/migrations/`, tested on a copy first (`database/tests/`),
+  applied to `UniMarketJava` only with team approval and a verified backup.
+- Entities use the exact SQL names (e.g. `Users.UserId`); value mappings such as `Like New` ↔ `LIKE_NEW` and
+  `Rejected` ↔ `BLOCKED` are in `UniMarket-Backend/docs/FRONTEND_INTEGRATION.md`.
 
 ---
 
-## 5. Backend Setup and Run
+## 7. Manual Development Setup
 
-All commands are run from the `UniMarket-Backend` folder in PowerShell.
+### 7.1 Backend
 
 ```powershell
 cd UniMarket-Backend
-
-# Compile and run tests
-.\mvnw.cmd clean verify
-
-# Run with SQL Server (requires section 4)
-.\mvnw.cmd spring-boot:run
-
-# Run WITHOUT a database (health check / frontend connectivity only)
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=nodb"
+.\mvnw.cmd clean verify                                       # compile and run the tests
+.\mvnw.cmd spring-boot:run                                    # run with SQL Server (dev profile)
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=nodb"  # run without a database (health check only)
 ```
 
-The API starts on **http://localhost:8080**. Test it:
+For anything longer than a quick check, prefer the helper, which sets `DB_URL` explicitly and runs a JAR copy (a
+Maven rebuild then cannot break the running server):
 
 ```powershell
-Invoke-RestMethod http://localhost:8080/api/health
-# or
-curl.exe http://localhost:8080/api/health
+.\docs\scripts\start-backend.ps1 -Database UniMarketJava_Stage7BrowserTest -Port 8083 -FrontendPort 5175
+.\docs\scripts\check-active-db.ps1      # which database each running backend really uses
+.\docs\scripts\smoke-login.ps1          # sign-in smoke test (no real password needed)
 ```
 
-Expected response:
+`GET /api/health` returns `{ "status": "UP", "application": "UniMarket", "database": "UP" }` (`DISABLED` with `nodb`).
+Every error uses one JSON format (`timestamp`, `status`, `error`, `code`, `message`, `path`, `fieldErrors`); stack
+traces and SQL details are never returned. Read-only tests against the real database are skipped unless
+`UNIMARKET_DB_IT=true`.
 
-```json
-{ "status": "UP", "application": "UniMarket", "database": "UP" }
-```
-
-`database` is `UP` when SQL Server answers a short connectivity check, `DOWN` when it does not, and `DISABLED` with the `nodb` profile. `GET /actuator/health` is also available (status only, no details); no other Actuator endpoint is exposed.
-
-Errors from every endpoint use one JSON format: `timestamp`, `status`, `error`, `code`, `message`, `path` and, for validation errors, `fieldErrors`. Stack traces and SQL details are never returned.
-
-**Tests that use the real database** (read-only) are skipped by default. With `.env` configured:
-
-```powershell
-$env:UNIMARKET_DB_IT = "true"; .\mvnw.cmd test; Remove-Item Env:UNIMARKET_DB_IT
-```
-
-**No SQL Server available?** Use the `nodb` profile shown above. It disables the DataSource and JPA auto-configuration so the application starts without a database. Without it, startup fails with a clear error such as `Login failed for user ''` when credentials are missing or the server is unreachable.
-
-Run the packaged JAR instead:
-
-```powershell
-.\mvnw.cmd clean package
-java -jar target\unimarket-backend-0.0.1-SNAPSHOT.jar                                   # with database
-java -jar target\unimarket-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=nodb    # without database
-```
-
----
-
-## 6. Frontend Setup and Run
-
-From the `UniMarket-Frontend` folder:
+### 7.2 Frontend
 
 ```powershell
 cd UniMarket-Frontend
-npm install        # first time, or after package.json changes
+npm install
 npm run dev        # http://localhost:5173
+npm run lint
+npm run build      # production build into dist/
 ```
 
-Other scripts:
-
-```powershell
-npm run lint       # ESLint
-npm run build      # production build into UniMarket-Frontend\dist
-npm run preview    # serve the production build on http://localhost:4173
-```
-
-### How the frontend talks to the backend
-
-The Vite dev server **proxies** every request starting with `/api` to `http://localhost:8080`. Frontend code always calls relative URLs (`/api/...`, via `src/services/apiClient.js`), so the browser sees a single origin and **no CORS configuration is needed** in development.
-
-To point the proxy at a different backend, create `UniMarket-Frontend/.env.local`:
+Vite proxies `/api` to `VITE_BACKEND_URL` (default `http://localhost:8080`), so the browser sees one origin. For the
+real backend create `UniMarket-Frontend/.env.local` (git-ignored):
 
 ```text
-VITE_BACKEND_URL=http://localhost:9090
+VITE_BACKEND_URL=http://localhost:8080
+VITE_AUTH_MODE=backend
 ```
 
-### Sample product data (until the product API exists)
+With `VITE_AUTH_MODE=backend`, sign-in, products, orders and admin all use the real API (the Vite log prints the
+active modes). Without it, `npm run dev` runs an **offline UI mode** with sample data from `src/mocks/` (pages show a
+*Sample data* notice and actions are previews); `VITE_USE_MOCK_DATA`, `VITE_USE_MOCK_PRODUCTS`, `VITE_USE_MOCK_ORDERS`
+and `VITE_USE_MOCK_ADMIN` override each area (see `.env.example`).
 
-The product backend (and its SQL Server schema) is not ready yet, so the marketplace pages use **sample data** in development:
-
-| Command          | Product data                                   |
-|------------------|------------------------------------------------|
-| `npm run dev`    | Sample data from `src/mocks/` (pages show a yellow *Sample data* notice) |
-| `npm run build`  | Real API (`src/services/products/productApi.js`); the mock files are **not** included in the build |
-
-- Override with `VITE_USE_MOCK_DATA=true|false` in `UniMarket-Frontend/.env.local`.
-- Pages only use `productService` (`src/services/products/productService.js`); `vite.config.js` points it to the mock or the real implementation.
-- Sample data is read-only: *Publish*, *Save changes* and *Delete* validate the input and then clearly report **"Preview only"**. Nothing is stored.
-- To test states in development, add `?simulate=slow` or `?simulate=error` to a marketplace URL.
-
-- **Orders (sample data):** cart → checkout → confirmation → *My orders* / *Order detail* follows the Business Plan flow (seller confirms within 24 h → buyer pays online → seller delivers → buyer confirms receipt). Sample orders and the listing statuses they change are saved in this browser (`localStorage`, survives reloads); use *Reset sample data* on My orders to start over. Payments are **simulated**. “Simulate … step” buttons play the other person’s step so one person can try both sides.
-- **Q3 (approved): one order per seller.** Checkout groups the selected listings by seller; each order has several items. The seller confirms or declines the whole order and the buyer pays each order once. Statuses: `PENDING → AWAITING_PAYMENT → PAID → DELIVERING → COMPLETED`, or `CANCELLED` (buyer before payment, or seller declines).
-- **Q4 (approved): polling.** Order pages and the header “to do” badge refresh every 30 s while the tab is visible, and immediately after any order action (`useLiveOrders`, `usePolling`).
-- **Cart:** stored in this browser (`localStorage`, listing IDs only) until a backend cart exists.
-- **Saved items (wishlist):** the heart on listings saves them to `/saved`, kept in this browser (`unimarket.saved.v1`, listing IDs only) until accounts exist. Saving doesn’t reserve an item.
-- **Editing an approved listing** sends it back to *Pending review* (hidden until an admin approves the changes).
-- **Pre-moderation (approved):** listings have a review state separate from the sale status: `PENDING` (hidden until an admin approves), `APPROVED` (public), `BLOCKED` (hidden, seller sees the reason). Only approved, available listings can be found or ordered.
-- **Reviews (approved):** only `COMPLETED` orders; buyer reviews seller and seller reviews buyer, one review per side per order; 1–5 stars required, comment optional (max 500), not editable. Reviews written in the demo are saved in this browser only (`unimarket.sample-reviews.v1`) and tagged “Sample · this browser only”; *Reset sample data* clears them.
-- **Profiles and reports:** saving a profile and reporting a listing/student are **previews** (checked, nothing stored, no admin notified).
-- **Admin workspace (demo):** `/admin` follows the Figma admin dashboard with sample data. Statistics are labelled *Sample*; approve/block/remove/suspend/reactivate/resolve/dismiss/export (single or bulk) are **previews** that change nothing. *Remove* is for serious violations and is refused while a listing is part of an open order; *Block* is the normal action. Without sample data the workspace shows “Admin sign-in isn’t available yet”. Hiding pages in the frontend is not security: **the backend must check the admin role on every admin request.**
-
-Routes:
+### 7.3 Routes
 
 | Area | Routes |
-|------|--------|
-| Marketplace | `/marketplace` (filters in the URL), `/products/:id`, `/deals`, `/saved` |
-| Selling | `/sell`, `/my-listings`, `/my-listings/:id/edit` |
-| Buying | `/cart`, `/checkout?items=…`, `/orders/confirmation?ids=…`, `/orders` (`?view=sales`, `?status=ACTIVE\|COMPLETED\|CANCELLED`), `/orders/:id`, `/messages` |
+|---|---|
+| Marketplace | `/marketplace`, `/products/:id`, `/deals`, `/saved`, `/users/:id` |
+| Selling | `/sell`, `/my-listings`, `/my-listings/:id/edit`, `/shop` |
+| Buying | `/cart`, `/checkout`, `/orders/confirmation`, `/orders` (`?view=sales`), `/orders/:id`, `/messages` (placeholder) |
+| Account | `/login`, `/register`, `/verify-email`, `/forgot-password`, `/profile`, `/settings` |
 | Information | `/how-it-works`, `/safety`, `/help`, `/about`, `/contact`, `/ambassadors`, `/privacy`, `/terms` |
-| Account | `/login`, `/register`, `/profile`, `/users/:id` |
-| Admin (demo) | `/admin`, `/admin/products`, `/admin/users`, `/admin/orders` (read only), `/admin/categories` (read only), `/admin/reports` |
+| Admin | `/admin`, `/admin/products`, `/admin/users`, `/admin/orders`, `/admin/categories`, `/admin/reports`, `/admin/disputes`, `/admin/settlements` |
 
-Pages other than the homepage and sign-in are code-split and loaded on first visit.
+The backend checks the role on every admin request; hiding pages in the frontend is not security.
 
-### Styling: Tailwind CSS and design tokens
+### 7.4 API references
 
-The frontend uses **Tailwind CSS v4** through the official Vite plugin (`@tailwindcss/vite`). There is no `tailwind.config.js`: all UniMarket design tokens live in the `@theme` block of `UniMarket-Frontend/src/index.css`, and each token automatically becomes a Tailwind class.
-
-| Token                    | Example classes                     | Value     | Status              |
-|--------------------------|-------------------------------------|-----------|---------------------|
-| `--font-sans`            | `font-sans` (default)               | Inter     | Confirmed (Figma)   |
-| `--color-primary`        | `bg-primary`, `text-primary`        | `#2459E0` | Confirmed (Figma)   |
-| `--color-primary-hover`  | `hover:bg-primary-hover`            | `#1D47B8` | Proposed            |
-| `--color-primary-soft`   | `bg-primary-soft`                   | `#EAF0FC` | Proposed            |
-| `--color-canvas`         | `bg-canvas` (page background)       | `#F8FAFD` | Proposed            |
-| `--color-surface`        | `bg-surface` (cards, inputs)        | `#FFFFFF` | Proposed            |
-| `--color-ink`            | `text-ink` (main text)              | `#172033` | Proposed            |
-| `--color-ink-muted`      | `text-ink-muted` (secondary text)   | `#64748B` | Proposed            |
-| `--color-line`           | `border-line`                       | `#E2E8F0` | Proposed            |
-| `--color-success` / `-soft` | `text-success`, `bg-success-soft` | `#16A34A` | Proposed            |
-| `--color-warning` / `-soft` | `text-warning`, `bg-warning-soft` | `#F59E0B` | Proposed            |
-| `--color-danger` / `-soft`  | `text-danger`, `bg-danger-soft`   | `#DC2626` | Proposed            |
-| `--radius-control`       | `rounded-control` (buttons, inputs) | `0.5rem`  | Proposed            |
-| `--radius-card`          | `rounded-card` (cards, panels)      | `0.75rem` | Proposed            |
-
-"Proposed" values have not been checked against Figma yet. When they are, update them in `index.css` only.
-
-Rules:
-
-- Style components with Tailwind classes. Add regular CSS to `index.css` only when Tailwind cannot express it.
-- Use the token classes (`text-ink`, `bg-primary`) instead of raw hex values or Tailwind's default palette (`text-gray-700`, `bg-blue-600`), so colors stay consistent.
-- Use Tailwind's default spacing scale (`p-4`, `gap-3`, …) and its mobile-first breakpoints (`sm:`, `md:`, `lg:`).
+| Topic | Document |
+|---|---|
+| Register, OTP, login, JWT, password reset, roles | [`AUTH_API.md`](UniMarket-Backend/docs/AUTH_API.md) |
+| Catalog, listings, photos, favorites, areas | [`PRODUCTS_API.md`](UniMarket-Backend/docs/PRODUCTS_API.md) |
+| Cart, checkout, shipping quotes, orders, payments, expiry | [`ORDERS_API.md`](UniMarket-Backend/docs/ORDERS_API.md) |
+| Moderation, users, reviews, reports, disputes, settlements, promotions, dashboard | [`ADMIN_API.md`](UniMarket-Backend/docs/ADMIN_API.md) |
+| Value mappings between SQL, API and UI | [`FRONTEND_INTEGRATION.md`](UniMarket-Backend/docs/FRONTEND_INTEGRATION.md) |
 
 ---
 
-## 7. Running the Whole Project
+## 8. Styling: Tailwind CSS and design tokens
 
-Use two PowerShell terminals:
+Tailwind CSS v4 runs through `@tailwindcss/vite`; there is no `tailwind.config.js`. All design tokens live in the
+`@theme` block of `UniMarket-Frontend/src/index.css` and become Tailwind classes (`bg-primary`, `text-ink`,
+`text-ink-muted`, `border-line`, `bg-canvas`, `bg-surface`, `text-success` / `-warning` / `-danger`,
+`rounded-control`, `rounded-card`). The primary color `#2459E0` and the Inter font come from Figma.
 
-```powershell
-# Terminal 1: backend
-cd UniMarket-Backend
-.\mvnw.cmd spring-boot:run            # add "-Dspring-boot.run.profiles=nodb" if no database
-
-# Terminal 2: frontend
-cd UniMarket-Frontend
-npm run dev
-```
-
-Open **http://localhost:5173**. The homepage shows *"Welcome to UniMarket"*, *"Project initialized successfully"* and the backend connection status (*"Backend connected: UniMarket is UP"*).
-
-| Service       | URL                                  |
-|---------------|--------------------------------------|
-| Frontend      | http://localhost:5173                |
-| Backend       | http://localhost:8080                |
-| Health check  | http://localhost:8080/api/health     |
+- Style components with Tailwind classes; add plain CSS to `index.css` only when Tailwind cannot express it.
+- Use the token classes, never raw hex values or Tailwind's default palette.
+- Use the default spacing scale and mobile-first breakpoints (`sm:`, `md:`, `lg:`).
 
 ---
 
-## 8. Git Collaboration Guidelines
+## 9. Known limitations
+
+- **Simulated money and delivery:** MoMo, ZaloPay and Bank QR are sandbox simulations; shipping fees come from a
+  simulated distance formula between demo areas (zone centres), not from a carrier. Refunds and seller payouts are
+  records of transfers made outside UniMarket.
+- **Profile editing** is not implemented (contact settings exist only in the API); **Messages / chat** is a placeholder.
+- **Search is accent-sensitive** (`CI_AS` collation): search with Vietnamese accents.
+- A rejected listing is shown as "Blocked" (one database status for both); the seller still sees the reason.
+- Order expiry is OFF in the demo, so overdue demo orders stay until someone cancels them.
+- `JWT_SECRET` is random per start in `dev`: users sign in again after a backend restart.
+- 12 seeded listings have no reference photo yet and show a placeholder.
+- Not in the MVP: real payment gateways, real carriers, advertising, notifications, student-ID verification.
+
+---
+
+## 10. Git Collaboration Guidelines
 
 ### Branching
 
-- `main`: always stable and runnable. No direct pushes; changes arrive through pull requests.
-- Create a branch from an up-to-date `main` for every task:
-
-| Prefix       | Use for                          | Example                     |
-|--------------|----------------------------------|-----------------------------|
-| `feature/`   | new functionality                | `feature/user-registration` |
-| `fix/`       | bug fixes                        | `fix/product-price-rounding`|
-| `refactor/`  | code changes without behavior change | `refactor/order-service` |
-| `docs/`      | documentation only               | `docs/api-endpoints`        |
-| `chore/`     | build, dependencies, config      | `chore/upgrade-spring-boot` |
-
-### Typical workflow (PowerShell)
+- `main` is always stable and runnable; changes arrive through pull requests.
+- Branch from an up-to-date `main`: `feature/`, `fix/`, `refactor/`, `docs/`, `chore/` (e.g. `feature/user-registration`).
 
 ```powershell
 git switch main
 git pull origin main
 git switch -c feature/your-feature
-
-# ... work, then commit small logical changes
 git add .
 git commit -m "feat: add product listing endpoint"
-
-# keep your branch up to date before opening a PR
 git fetch origin
 git rebase origin/main          # or: git merge origin/main
-
 git push -u origin feature/your-feature
 # then open a Pull Request on GitHub into main
 ```
 
-### Commit messages
+### Commit messages and pull requests
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`. Use the imperative mood, e.g. `fix: handle empty cart on checkout`.
-
-### Pull requests
-
-- Keep PRs small and focused on one task.
-- Before opening a PR, make sure `.\mvnw.cmd clean verify`, `npm run lint` and `npm run build` pass.
-- At least one teammate reviews and approves before merging.
-- Resolve conflicts in your branch, not in `main`.
+- [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `refactor:`, `docs:`, `test:`,
+  `chore:`, imperative mood.
+- Keep PRs small. Before opening one, `.\mvnw.cmd clean verify`, `npm run lint` and `npm run build` must pass. A
+  teammate reviews before merging.
 
 ### Never commit
 
-- `UniMarket-Backend/.env`, `UniMarket-Frontend/.env.local` or any file containing real credentials
-- `target/`, `node_modules/`, `dist/`
+- `UniMarket-Backend/.env`, `UniMarket-Frontend/.env.local` or any file with real credentials (DB password, Gmail App
+  Password, JWT or other secrets)
+- `target/`, `node_modules/`, `dist/`, `uploads/`, database backups
 - IDE settings (`.idea/`, personal `.vscode/` files)
 
-If a secret is committed by mistake, **change the password immediately**. Deleting the file in a later commit does not remove it from Git history.
-
-### Line endings
-
-`.gitattributes` keeps `mvnw` with LF endings (so it runs on Linux/macOS) and `*.cmd` with CRLF. On Linux/macOS, make the wrapper executable once if needed: `chmod +x UniMarket-Backend/mvnw`.
+If a secret is committed by mistake, **change it immediately**; deleting the file later does not remove it from Git
+history. `.gitattributes` keeps `mvnw` with LF endings and `*.cmd` with CRLF.
 
 ---
 
-## 9. Coding Conventions
+## 11. Coding Conventions
 
-- **Java:** classes `PascalCase`, methods/variables `camelCase`, packages `lowercase`, constants `UPPER_SNAKE_CASE`.
-- Controllers stay thin. Business logic goes in services, data access in repositories.
-- Never expose JPA entities directly from controllers. Use DTOs.
-- Configuration goes in `config/` and `application*.properties`, never mixed with business logic.
-- **React:** components and pages in `PascalCase.jsx`, hooks named `useSomething.js`, all HTTP calls go through `src/services/`.
-- **Styling:** Tailwind classes with UniMarket design tokens (see section 6, *Styling*). No inline hex colors.
+- **Java:** classes `PascalCase`, methods / variables `camelCase`, packages `lowercase`, constants `UPPER_SNAKE_CASE`.
+  Controllers stay thin; business logic in services; data access in repositories and stored procedures. Never expose
+  JPA entities from controllers, use DTOs. Configuration in `config/` and `application*.properties`.
+- **Money rules live in the database** (commission, payout, settlement): the backend reads them, never recalculates.
+- **React:** components and pages in `PascalCase.jsx`, hooks `useSomething.js`, all HTTP calls through `src/services/`,
+  user-facing text through `useTranslation` (Vietnamese phrases in `src/i18n/messages/`).
+- **Styling:** Tailwind classes with UniMarket design tokens (section 8). No inline hex colors.

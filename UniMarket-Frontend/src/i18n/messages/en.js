@@ -68,6 +68,10 @@ export const en = {
     pointVerified: 'Students from universities across Vietnam',
     pointPayment: 'Online payment through UniMarket only',
     pointDelivery: 'Sellers arrange delivery on campus',
+    eyebrow: 'Vietnam University Marketplace',
+    title: 'Buy & Sell Within Your Campus Community',
+    text: 'A trusted marketplace for students across universities in Vietnam.',
+    imageAlt: 'Student desk essentials: a desk lamp, a UniMarket tote bag, notebooks, a tablet and a small plant',
   },
   hero: {
     eyebrow: 'FPT University community',
