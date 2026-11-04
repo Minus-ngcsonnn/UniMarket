@@ -1041,6 +1041,11 @@ export const viPhrases = {
   "USER": "Tài khoản",
   "SIMULATED_RECORD": "Bản ghi mô phỏng",
   "EXTERNAL_TRANSFER_CONFIRMED": "Chuyển khoản ngoài đã xác nhận",
+  "Reference photo": "Ảnh tham khảo",
+  "Reference photo of this product, not a photo of the item the seller is selling.":
+    "Ảnh tham khảo của sản phẩm này, không phải ảnh chụp món đồ người bán đang bán.",
+  "Photo: {author}": "Ảnh: {author}",
+  "resized and reframed to 4:3": "đã thu nhỏ và đổi khung 4:3",
   "Calculation": "Cách tính",
   "Legacy V001": "Dữ liệu cũ V001",
   "Legacy settlement": "Khoản quyết toán dữ liệu cũ",
