@@ -22,7 +22,15 @@ public record ProductDetailResponse(
         Integer id, String title, String description, Long price, Long originalPrice, String condition, String status,
         boolean purchasable, ReferenceDtos.CategoryRef category, ReferenceDtos.CampusRef campus, ReferenceDtos.ZoneRef pickupZone,
         List<ImageResponse> images,
-        SellerProfile seller, boolean featured, Instant createdAt, Instant updatedAt, String moderation, Boolean editable) {
+        SellerProfile seller, boolean featured, Instant createdAt, Instant updatedAt, String moderation, Boolean editable,
+        PickupPoint pickupPoint) {
+
+    /**
+     * V006: the seller's confirmed handover point. Sent ONLY to the seller of the listing (not to admins, not to
+     * buyers: a buyer gets the order snapshot after payment); public responses carry only {@code pickupZone}.
+     */
+    public record PickupPoint(java.math.BigDecimal latitude, java.math.BigDecimal longitude, String instructions) {
+    }
 
     /**
      * @param id        {@code ProductImages.ImageId}

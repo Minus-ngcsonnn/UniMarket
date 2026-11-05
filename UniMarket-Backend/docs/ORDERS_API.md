@@ -303,6 +303,21 @@ A scheduler runs `usp_ExpirePendingOrders` every minute (`ORDER_EXPIRY_INTERVAL`
   9, 10 (AwaitingPayment) and 11 (Pending) and releases their listings, exactly as V002 documents. That is why it is
   off by default in `dev`.
 
+## Pickup and delivery points (V006)
+
+Checkout additionally requires the buyer's confirmed map / GPS point: `"deliveryLatitude"` (-90..90) and
+`"deliveryLongitude"` (-180..180), at most 6 decimals (400 `VALIDATION_FAILED` otherwise). It is stored on every seller
+order of the checkout (`Orders.DeliveryLatitude/DeliveryLongitude`), and each order item keeps a snapshot of its
+listing's pickup point and instructions (`OrderItems.Pickup*`), both inside the checkout transaction (database
+triggers; a failed checkout stores nothing). The points never change afterwards (database triggers refuse it) and do
+not affect delivery areas, quotes, fees, commission or payouts.
+
+Every order carries `locations`, filtered by the backend for the viewer:
+`{ "delivery": { "latitude", "longitude" } | null, "deliveryVisible", "pickups": [{ "productId", "title", "point", "instructions" }], "pickupsVisible" }`.
+The buyer always sees the delivery point and sees the pickups only after payment (`paidAt`); the seller always sees
+their pickups and sees the delivery point only after payment; admins and anyone else receive no coordinates. Orders
+placed before V006 have null points.
+
 ## Delivery fee (V003: simulated per-seller quotes)
 
 > **V003 (applied to `UniMarketJava` on 2026-11-03).** This backend version needs the V003 schema; it does not start

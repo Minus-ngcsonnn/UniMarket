@@ -37,7 +37,7 @@ public record OrderResponse(
         long id, String code, String status, String role, Party buyer, Party seller, List<Item> items, Amounts amounts,
         String paymentProvider, Delivery delivery, Deadlines deadlines, Timestamps timestamps, String cancellationReason,
         Shipment shipment, List<Payment> payments, List<HistoryEntry> history, List<Dispute> disputes, Settlement settlement,
-        List<String> actions, com.unimarket.dto.shipping.ShippingDtos.OrderShipping shipping) {
+        List<String> actions, com.unimarket.dto.shipping.ShippingDtos.OrderShipping shipping, Locations locations) {
 
     /** Display code used by the frontend ({@code orderCode}). */
     public static String codeOf(long orderId) {
@@ -46,6 +46,36 @@ public record OrderResponse(
 
     /** @param id user id; @param fullName display name */
     public record Party(int id, String fullName) {
+    }
+
+    /** A confirmed GPS / map point (V006). */
+    public record Point(java.math.BigDecimal latitude, java.math.BigDecimal longitude) {
+        public static Point of(java.math.BigDecimal latitude, java.math.BigDecimal longitude) {
+            return latitude == null || longitude == null ? null : new Point(latitude, longitude);
+        }
+    }
+
+    /**
+     * Pickup snapshot of one order item: the listing's confirmed handover point when the order was placed.
+     *
+     * @param point        null when the listing had no confirmed pickup point (listings created before V006)
+     * @param instructions the seller's pickup instructions, or null
+     */
+    public record ItemPickup(int productId, String title, Point point, String instructions) {
+    }
+
+    /**
+     * Precise locations of an order, filtered by the backend for the viewer (V006):
+     * the buyer always sees their delivery point and sees the pickup points only after payment; the seller always
+     * sees their own pickup points and sees the delivery point only after payment; nobody else (admins included)
+     * receives coordinates. A hidden part is null and its {@code …Visible} flag false.
+     *
+     * @param delivery        the buyer's confirmed delivery point, or null (hidden, or an order placed before V006)
+     * @param deliveryVisible true when the delivery point is shown to this viewer
+     * @param pickups         one entry per item, or an empty list when hidden
+     * @param pickupsVisible  true when the pickup points are shown to this viewer
+     */
+    public record Locations(Point delivery, boolean deliveryVisible, List<ItemPickup> pickups, boolean pickupsVisible) {
     }
 
     /**

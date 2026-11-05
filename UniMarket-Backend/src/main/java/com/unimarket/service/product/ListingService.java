@@ -122,13 +122,16 @@ public class ListingService {
             Product product = Product.newListing(owner, category, customCategoryName(category, request.customCategory()),
                     location.campus(), location.pickupZone(), request.title().trim(), request.description().trim(), request.condition(),
                     BigDecimal.valueOf(request.price()), toPrice(request.originalPrice()), nowUtc());
+            // V006: a new listing needs a confirmed pickup point.
+            PickupPoint pickup = pickupPoint(request, true);
+            product.setPickupPoint(pickup.latitude(), pickup.longitude(), pickup.instructions());
             products.saveAndFlush(product);
             for (int i = 0; i < references.size(); i++) {
                 images.save(new ProductImage(product, references.get(i), i));
             }
             images.flush();
             log.info("Listing {} created by user {}", product.getId(), seller.id());
-            return reloadDetail(product.getId());
+            return reloadDetail(product.getId(), seller);
         }));
     }
 
@@ -141,8 +144,15 @@ public class ListingService {
             product.update(category, customCategoryName(category, request.customCategory()), location.campus(), location.pickupZone(),
                     request.title().trim(), request.description().trim(), request.condition(),
                     BigDecimal.valueOf(request.price()), toPrice(request.originalPrice()), nowUtc());
+            // V006: only the seller sets the pickup point; omitted on edit = keep the stored one (older listings may have none).
+            if (product.getSeller().getId().equals(viewer.id())) {
+                PickupPoint pickup = pickupPoint(request, false);
+                if (pickup.latitude() != null) {
+                    product.setPickupPoint(pickup.latitude(), pickup.longitude(), pickup.instructions());
+                }
+            }
             products.flush();
-            return reloadDetail(productId);
+            return reloadDetail(productId, viewer);
         });
     }
 
@@ -176,7 +186,7 @@ public class ListingService {
             }
             product.markChanged(nowUtc());
             images.flush();
-            return reloadDetail(productId);
+            return reloadDetail(productId, viewer);
         }));
     }
 
@@ -200,7 +210,7 @@ public class ListingService {
                     storage.delete(reference);
                 }
             });
-            return reloadDetail(productId);
+            return reloadDetail(productId, viewer);
         });
     }
 
@@ -223,7 +233,7 @@ public class ListingService {
             }
             product.markChanged(nowUtc());
             images.flush();
-            return reloadDetail(productId);
+            return reloadDetail(productId, viewer);
         });
     }
 
@@ -313,10 +323,34 @@ public class ListingService {
         return new Location(campus, zone);
     }
 
-    private ProductDetailResponse reloadDetail(int productId) {
+    private ProductDetailResponse reloadDetail(int productId, AuthenticatedUser viewer) {
         entityManager.flush();
         entityManager.clear();
-        return mapper.toDetail(products.findWithDetailsById(productId).orElseThrow(), true);
+        Product product = products.findWithDetailsById(productId).orElseThrow();
+        return mapper.toDetail(product, true, product.getSeller().getId().equals(viewer.id()));
+    }
+
+    /** A validated pickup point of a listing request (V006). */
+    record PickupPoint(BigDecimal latitude, BigDecimal longitude, String instructions) {
+    }
+
+    /**
+     * Pickup point of a request: both coordinates or neither (400 otherwise), range checked by the request annotations;
+     * {@code required} for a new listing. Instructions are trimmed (blank = none), max 300 characters.
+     */
+    static PickupPoint pickupPoint(ListingRequest request, boolean required) {
+        BigDecimal lat = request.pickupLatitude();
+        BigDecimal lng = request.pickupLongitude();
+        if ((lat == null) != (lng == null)) {
+            throw new ValidationException(List.of(new ApiErrorResponse.FieldError(lat == null ? "pickupLatitude" : "pickupLongitude",
+                    "latitude and longitude must be sent together")));
+        }
+        if (lat == null && required) {
+            throw new ValidationException(List.of(new ApiErrorResponse.FieldError("pickupLatitude",
+                    "confirm the pickup location on the map")));
+        }
+        String instructions = request.pickupInstructions() == null ? null : request.pickupInstructions().strip();
+        return new PickupPoint(lat, lng, instructions == null || instructions.isEmpty() ? null : instructions);
     }
 
     /**

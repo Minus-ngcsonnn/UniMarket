@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button'
 import { buttonClasses } from '../../components/ui/buttonClasses'
 import EmptyState from '../../components/ui/EmptyState'
 import ErrorState from '../../components/ui/ErrorState'
+import LocationField from '../../components/location/LocationField'
 import ImageSlot from '../../components/ui/ImageSlot'
 import Input from '../../components/ui/Input'
 import LoadingState from '../../components/ui/LoadingState'
@@ -126,8 +127,12 @@ export default function BackendCheckout({ ids }) {
   }
 
   const form = useForm({
-    initialValues: { fullName: auth.user?.fullName ?? '', phone: '', address: '' },
-    validate: validateBackendDelivery,
+    // V006: deliveryPoint = the buyer's map / GPS point, confirmed in the map dialog (never typed).
+    initialValues: { fullName: auth.user?.fullName ?? '', phone: '', address: '', deliveryPoint: null },
+    validate: (values) => ({
+      ...validateBackendDelivery(values),
+      ...(values.deliveryPoint ? {} : { deliveryPoint: 'Confirm the delivery location on the map.' }),
+    }),
     onSubmit: async (values) => {
       setSubmitError(null)
       if (!canSubmit) return
@@ -138,6 +143,8 @@ export default function BackendCheckout({ ids }) {
           recipientPhone: values.phone.trim(),
           deliveryAddress: values.address.trim(),
           deliveryZoneId: Number(zoneId),
+          deliveryLatitude: values.deliveryPoint.latitude,
+          deliveryLongitude: values.deliveryPoint.longitude,
           shipping: shippingChoices(quoteData, carriers),
           expectedPrices: Object.fromEntries(items.map((p) => [p.id, p.price])),
         })
@@ -197,6 +204,18 @@ export default function BackendCheckout({ ids }) {
               setZoneId(value)
             }}
             hint={t('Used to estimate simulated delivery from each seller. Areas are approximate.')}
+          />
+          <LocationField
+            label="Delivery Location"
+            hint="The exact spot where you want to receive the item. Required to place the order."
+            value={form.values.deliveryPoint}
+            onChange={(point) => form.setFieldValue('deliveryPoint', point)}
+            error={form.getError('deliveryPoint')}
+            zones={reference.zones}
+            referenceZone={reference.zones.find((zone) => String(zone.id) === zoneId)}
+            mapTitle="Delivery Location"
+            confirmLabel="Confirm delivery location"
+            privacyNote="The pin does not change the delivery area or the delivery fee. The seller sees it only after you have paid."
           />
           <Input
             label={t("Delivery address")}

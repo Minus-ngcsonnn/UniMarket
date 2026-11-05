@@ -123,7 +123,7 @@ public class CatalogController {
      * V003 demo pickup / delivery areas (approximate zones for simulated shipping, not addresses). Public.
      */
     @GetMapping("/api/locations/zones")
-    public List<ReferenceDtos.ZoneRef> zones() {
+    public List<com.unimarket.dto.product.ReferenceDataResponses.ZoneArea> zones() {
         return referenceData.zones();
     }
 

@@ -33,7 +33,7 @@ public class OrderQueries {
             SELECT o.OrderId, o.BuyerId, o.SellerId, o.Status, o.Subtotal, o.ShippingFee, o.TotalAmount, o.CommissionRate,
                    o.CommissionAmount, o.SellerProceeds, o.SellerPayoutTotal, o.PaymentProvider, o.RecipientName, o.RecipientPhone,
                    o.DeliveryAddress, o.CreatedAt, o.ConfirmBy, o.ConfirmedAt, o.PaymentDueAt, o.PaidAt, o.ShippedAt, o.CompletedAt,
-                   o.CancelledAt, o.CancellationReason, b.FullName AS BuyerName, s.FullName AS SellerName,
+                   o.CancelledAt, o.CancellationReason, o.DeliveryLatitude, o.DeliveryLongitude, b.FullName AS BuyerName, s.FullName AS SellerName,
                    CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.Payments p WHERE p.OrderId = o.OrderId AND p.Status = 'Pending') THEN 1 ELSE 0 END AS bit) AS HasPendingPayment,
                    CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.OrderDisputes d WHERE d.OrderId = o.OrderId AND d.Status = 'Open') THEN 1 ELSE 0 END AS bit) AS HasOpenDispute,
                    (SELECT st.Status FROM dbo.SellerSettlements st WHERE st.OrderId = o.OrderId) AS SettlementStatus,
@@ -128,12 +128,14 @@ public class OrderQueries {
             return byOrder;
         }
         jdbc.query("""
-                SELECT oi.OrderId, oi.ProductId, oi.ProductTitle, oi.UnitPrice, oi.Quantity, img.ImageUrl
+                SELECT oi.OrderId, oi.ProductId, oi.ProductTitle, oi.UnitPrice, oi.Quantity, img.ImageUrl,
+                       oi.PickupLatitude, oi.PickupLongitude, oi.PickupInstructions
                 FROM dbo.OrderItems AS oi
                 OUTER APPLY (SELECT TOP (1) i.ImageUrl FROM dbo.ProductImages AS i WHERE i.ProductId = oi.ProductId ORDER BY i.SortOrder, i.ImageId) AS img
                 WHERE oi.OrderId IN (:ids) ORDER BY oi.OrderId, oi.OrderItemId""", Map.of("ids", orderIds), rs -> {
             byOrder.computeIfAbsent(rs.getLong("OrderId"), k -> new ArrayList<>()).add(new ItemRow(rs.getInt("ProductId"),
-                    rs.getString("ProductTitle"), rs.getBigDecimal("UnitPrice"), rs.getInt("Quantity"), rs.getString("ImageUrl")));
+                    rs.getString("ProductTitle"), rs.getBigDecimal("UnitPrice"), rs.getInt("Quantity"), rs.getString("ImageUrl"),
+                    rs.getBigDecimal("PickupLatitude"), rs.getBigDecimal("PickupLongitude"), rs.getString("PickupInstructions")));
         });
         return byOrder;
     }
@@ -256,7 +258,7 @@ public class OrderQueries {
                 utc(rs, "CreatedAt"), utc(rs, "ConfirmBy"), utc(rs, "ConfirmedAt"), utc(rs, "PaymentDueAt"), utc(rs, "PaidAt"),
                 utc(rs, "ShippedAt"), utc(rs, "CompletedAt"), utc(rs, "CancelledAt"), rs.getString("CancellationReason"),
                 rs.getString("BuyerName"), rs.getString("SellerName"), rs.getBoolean("HasPendingPayment"), rs.getBoolean("HasOpenDispute"),
-                rs.getString("SettlementStatus"), shipping(rs));
+                rs.getString("SettlementStatus"), shipping(rs), rs.getBigDecimal("DeliveryLatitude"), rs.getBigDecimal("DeliveryLongitude"));
     }
 
     /** V003 shipping block: the stored simulated quote, or LEGACY for orders created before V003 (no quote row). */
@@ -307,10 +309,13 @@ public class OrderQueries {
                            String deliveryAddress, Instant createdAt, Instant confirmBy, Instant confirmedAt, Instant paymentDueAt,
                            Instant paidAt, Instant shippedAt, Instant completedAt, Instant cancelledAt, String cancellationReason,
                            String buyerName, String sellerName, boolean hasPendingPayment, boolean hasOpenDispute, String settlementStatus,
-                           com.unimarket.dto.shipping.ShippingDtos.OrderShipping shipping) {
+                           com.unimarket.dto.shipping.ShippingDtos.OrderShipping shipping,
+                           BigDecimal deliveryLatitude, BigDecimal deliveryLongitude) {
     }
 
-    public record ItemRow(int productId, String title, BigDecimal unitPrice, int quantity, String imageUrl) {
+    /** @param pickupLatitude V006 pickup snapshot of the listing at checkout (null for older orders / listings) */
+    public record ItemRow(int productId, String title, BigDecimal unitPrice, int quantity, String imageUrl,
+                          BigDecimal pickupLatitude, BigDecimal pickupLongitude, String pickupInstructions) {
     }
 
     public record PaymentRow(long id, long orderId, String provider, String status, BigDecimal amount, boolean sandbox,

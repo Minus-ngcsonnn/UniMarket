@@ -70,6 +70,9 @@ export function toProduct(item) {
     categoryName: item.category?.name ?? null,
     // V005: seller-typed category of an "Other" listing (e.g. "Nhạc cụ"), otherwise null.
     customCategory: item.category?.customName ?? null,
+    // V006: the private pickup point, sent by the backend only to the listing's seller.
+    pickupPoint: item.pickupPoint ? { latitude: Number(item.pickupPoint.latitude), longitude: Number(item.pickupPoint.longitude) } : null,
+    pickupInstructions: item.pickupPoint?.instructions ?? '',
     campus: item.campus ? String(item.campus.id) : null,
     campusInfo: item.campus ?? null,
     pickupZone: item.pickupZone ?? null,
@@ -112,6 +115,9 @@ const LISTING_FIELDS = {
   campusId: 'campus',
   pickupZoneId: 'pickupZone',
   customCategory: 'customCategory',
+  pickupLatitude: 'pickupPoint',
+  pickupLongitude: 'pickupPoint',
+  pickupInstructions: 'pickupInstructions',
 }
 
 /** Error codes that belong to one form field. */

@@ -24,6 +24,7 @@ import { orderService } from '../../services/orders/orderService'
 import { isSampleOrders } from '../../services/orders/orderService'
 import { describeApiError } from '../../utils/apiErrorMessage'
 import { formatDateTime, formatPrice } from '../../utils/format'
+import { formatPoint, openStreetMapUrl } from '../../utils/geo'
 import Avatar from '../../components/ui/Avatar'
 import { OTHER_PARTY_TURN, nextStep } from '../../utils/orderFlow'
 import useTranslation from '../../i18n/useTranslation'
@@ -162,6 +163,66 @@ function BackendDelivery({ order }) {
   )
 }
 
+/** A saved point with a link that opens exactly these coordinates (only rendered when the backend sent them). */
+function PointLine({ point }) {
+  const { t } = useTranslation()
+  return (
+    <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+      <span className="text-ink tabular-nums">{formatPoint(point)}</span>
+      <a href={openStreetMapUrl(point)} target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline">
+        {t('Open in map')}
+      </a>
+    </span>
+  )
+}
+
+/**
+ * V006 order locations: the buyer's delivery point and each item's pickup snapshot, exactly as the backend filtered
+ * them for this viewer (buyer: delivery always, pickup after payment; seller: pickup always, delivery after payment).
+ * Points are snapshots taken when the order was placed; they cannot be changed afterwards.
+ */
+function OrderLocations({ order }) {
+  const { t } = useTranslation()
+  const locations = order.locations
+  if (!locations) return null
+  const isBuyer = order.role === 'buyer'
+  return (
+    <Card title="Locations">
+      <div className="flex flex-col gap-4 text-sm">
+        <section aria-labelledby="order-delivery-location">
+          <h3 id="order-delivery-location" className="mb-1 font-medium text-ink">{t('Delivery location')}</h3>
+          {!locations.deliveryVisible ? (
+            <p className="text-ink-muted">{t('The buyer’s exact delivery point appears here after payment.')}</p>
+          ) : locations.delivery ? (
+            <PointLine point={locations.delivery} />
+          ) : (
+            <p className="text-ink-muted">{t('No map point: this order was placed before map locations were available.')}</p>
+          )}
+        </section>
+        <section aria-labelledby="order-pickup-location">
+          <h3 id="order-pickup-location" className="mb-1 font-medium text-ink">{t('Pickup location')}</h3>
+          {!locations.pickupsVisible ? (
+            <p className="text-ink-muted">{t('The seller’s exact pickup point appears here after payment.')}</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {locations.pickups.map((pickup) => (
+                <li key={pickup.productId} className="flex flex-col gap-0.5">
+                  {locations.pickups.length > 1 && <span className="font-medium text-ink">{pickup.title}</span>}
+                  {pickup.point ? <PointLine point={pickup.point} /> : <span className="text-ink-muted">{t('No pickup point was set for this listing.')}</span>}
+                  {pickup.instructions && <span className="text-ink-muted">{t('Instructions: {text}', { text: pickup.instructions })}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        <p className="text-xs text-ink-muted">
+          {t(isBuyer ? 'These points were saved when you placed the order and cannot be changed.' : 'These points were saved when the order was placed and cannot be changed.')}
+        </p>
+      </div>
+    </Card>
+  )
+}
+
 function Card({ title, children, className = '' }) {
   const { t } = useTranslation()
   return (
@@ -292,7 +353,10 @@ export default function OrderDetailPage() {
             />
 
             {order.isBackend ? (
-              <BackendDelivery order={order} />
+              <>
+                <BackendDelivery order={order} />
+                <OrderLocations order={order} />
+              </>
             ) : (
             <Card title={t("Deliver to")}>
               <p className="flex gap-2 text-sm">

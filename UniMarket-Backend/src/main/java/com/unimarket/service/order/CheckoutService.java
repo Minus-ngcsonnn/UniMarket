@@ -105,7 +105,7 @@ public class CheckoutService {
         List<Long> created;
         try {
             created = placeWithDeadlockRetry(buyer.id(), ids, request.deliveryZoneId(), confirmed, request.recipientName().trim(), phone,
-                    request.deliveryAddress().trim(), provider);
+                    request.deliveryAddress().trim(), provider, request.deliveryLatitude(), request.deliveryLongitude());
         } catch (DataAccessException ex) {
             int number = SqlErrors.numberOf(ex);
             if (number == 51021 || SqlErrors.isDuplicateKey(ex)) {
@@ -188,15 +188,16 @@ public class CheckoutService {
 
     private List<Long> placeWithDeadlockRetry(int buyerId, List<Integer> ids, int deliveryZoneId,
                                               List<ShippingQuoteService.ConfirmedShipping> confirmed, String name, String phone,
-                                              String address, String provider) {
+                                              String address, String provider, java.math.BigDecimal deliveryLatitude,
+                                              java.math.BigDecimal deliveryLongitude) {
         try {
-            return procedures.checkoutWithShipping(buyerId, ids, deliveryZoneId, confirmed, name, phone, address, provider);
+            return procedures.checkoutWithShipping(buyerId, ids, deliveryZoneId, confirmed, name, phone, address, provider, deliveryLatitude, deliveryLongitude);
         } catch (DataAccessException ex) {
             if (SqlErrors.numberOf(ex) != SqlErrors.DEADLOCK_VICTIM) {
                 throw ex;
             }
             log.warn("Checkout of buyer {} was a deadlock victim (rolled back); retrying once", buyerId);
-            return procedures.checkoutWithShipping(buyerId, ids, deliveryZoneId, confirmed, name, phone, address, provider);
+            return procedures.checkoutWithShipping(buyerId, ids, deliveryZoneId, confirmed, name, phone, address, provider, deliveryLatitude, deliveryLongitude);
         }
     }
 

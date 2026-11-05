@@ -36,6 +36,18 @@ function timelineOf(order) {
     .map(([status, at]) => ({ status, at }))
 }
 
+const toPoint = (point) => (point ? { latitude: Number(point.latitude), longitude: Number(point.longitude) } : null)
+
+function toLocations(locations) {
+  if (!locations) return null
+  return {
+    delivery: toPoint(locations.delivery),
+    deliveryVisible: Boolean(locations.deliveryVisible),
+    pickupsVisible: Boolean(locations.pickupsVisible),
+    pickups: (locations.pickups ?? []).map((p) => ({ productId: p.productId, title: p.title, point: toPoint(p.point), instructions: p.instructions ?? null })),
+  }
+}
+
 export function toOrder(order) {
   if (!order) return null
   const delivery = order.delivery
@@ -71,6 +83,8 @@ export function toOrder(order) {
     cancellationReason: order.cancellationReason ?? null,
     disputes: order.disputes ?? [],
     settlement: order.settlement ?? null,
+    // V006: precise points, already filtered by the backend for this viewer (hidden parts are null / empty).
+    locations: toLocations(order.locations),
     isBackend: true,
   }
 }

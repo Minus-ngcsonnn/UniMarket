@@ -42,7 +42,11 @@ public final class OrderRequests {
             String paymentProvider,
             Map<Integer, Long> expectedPrices,
             @NotNull @Positive Integer deliveryZoneId,
-            @NotEmpty @Size(max = 50) List<@Valid @NotNull ShippingChoice> shipping) {
+            @NotEmpty @Size(max = 50) List<@Valid @NotNull ShippingChoice> shipping,
+            @NotNull @jakarta.validation.constraints.DecimalMin("-90") @jakarta.validation.constraints.DecimalMax("90")
+            @jakarta.validation.constraints.Digits(integer = 3, fraction = 6) java.math.BigDecimal deliveryLatitude,
+            @NotNull @jakarta.validation.constraints.DecimalMin("-180") @jakarta.validation.constraints.DecimalMax("180")
+            @jakarta.validation.constraints.Digits(integer = 3, fraction = 6) java.math.BigDecimal deliveryLongitude) {
     }
 
     /**

@@ -43,6 +43,18 @@ public class Product {
     @JoinColumn(name = "CategoryId", nullable = false)
     private Category category;
 
+    /** V006: the seller-confirmed handover point (map / GPS), both or neither; never in public responses. */
+    @Column(name = "PickupLatitude", precision = 9, scale = 6)
+    private BigDecimal pickupLatitude;
+
+    @Column(name = "PickupLongitude", precision = 9, scale = 6)
+    private BigDecimal pickupLongitude;
+
+    /** V006: optional private pickup instructions, e.g. "Gate 2 of the university". */
+    @Nationalized
+    @Column(name = "PickupInstructions", length = 300)
+    private String pickupInstructions;
+
     /** V005: seller-typed category of an "Other" listing (2-60 characters), null for every other category. */
     @Nationalized
     @Column(name = "CustomCategoryName", length = 60)
@@ -160,6 +172,25 @@ public class Product {
     public Integer getId() { return id; }
     public User getSeller() { return seller; }
     public Category getCategory() { return category; }
+
+    /**
+     * Sets the confirmed pickup point (V006). Both coordinates or neither; instructions are optional.
+     * Does not change moderation by itself: it is always saved together with an edit.
+     */
+    public void setPickupPoint(BigDecimal latitude, BigDecimal longitude, String instructions) {
+        if ((latitude == null) != (longitude == null)) {
+            throw new IllegalArgumentException("Pickup latitude and longitude go together");
+        }
+        this.pickupLatitude = latitude;
+        this.pickupLongitude = longitude;
+        this.pickupInstructions = instructions;
+    }
+
+    public BigDecimal getPickupLatitude() { return pickupLatitude; }
+
+    public BigDecimal getPickupLongitude() { return pickupLongitude; }
+
+    public String getPickupInstructions() { return pickupInstructions; }
 
     /** @return the seller-typed category name of an "Other" listing (V005), otherwise null */
     public String getCustomCategoryName() { return customCategoryName; }

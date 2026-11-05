@@ -635,6 +635,8 @@ class V003IntegrationTest {
         body.put("paymentProvider", provider);
         body.put("deliveryZoneId", deliveryZoneId);
         body.put("shipping", shipping);
+        body.put("deliveryLatitude", new java.math.BigDecimal("21.036200"));
+        body.put("deliveryLongitude", new java.math.BigDecimal("105.790500"));
         return json.writeValueAsString(body);
     }
 

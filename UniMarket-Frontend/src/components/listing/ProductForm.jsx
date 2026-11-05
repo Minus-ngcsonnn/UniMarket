@@ -12,6 +12,7 @@ import ProductCard from '../product/ProductCard'
 import Button from '../ui/Button'
 import { buttonClasses } from '../ui/buttonClasses'
 import Input from '../ui/Input'
+import LocationField from '../location/LocationField'
 import Select from '../ui/Select'
 import Textarea from '../ui/Textarea'
 import ConditionPicker from './ConditionPicker'
@@ -95,14 +96,14 @@ function priceFieldProps(form, name) {
  * @param {object} [serverErrors] field errors returned by the backend ({ field: message })
  * @param {number|null} [uploadProgress] 0–100 while photos are uploading
  */
-export default function ProductForm({ initialValues, onSubmit, submitLabel, cancelTo, notice, serverErrors, uploadProgress = null }) {
+export default function ProductForm({ initialValues, onSubmit, submitLabel, cancelTo, notice, serverErrors, uploadProgress = null, requirePickupPoint = false }) {
   const { t } = useTranslation()
   const location = useListingLocation()
   // V005 "Other" category: the seller types the product's category; the typed value is kept while switching categories.
   const isCustomCategory = (slug) => Boolean(location.reference.categories.find((c) => c.slug === slug)?.custom)
   const form = useForm({
     initialValues,
-    validate: (values) => validateListing(values, { location: location.mode, customCategory: isCustomCategory(values.categorySlug) }),
+    validate: (values) => validateListing(values, { location: location.mode, customCategory: isCustomCategory(values.categorySlug), requirePickupPoint }),
     onSubmit,
   })
   const categoryOptions = location.reference.categories.map((c) => ({ value: c.slug, label: t(c.name) }))
@@ -258,6 +259,36 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
             )}
           </FormSection>
         )}
+
+        <FormSection
+          title={t('Pickup Location')}
+          description={t('The exact spot where you hand over the item. Buyers see only the general area until they have paid.')}
+        >
+          <LocationField
+            label="Pickup point"
+            hint={
+              requirePickupPoint
+                ? 'Required for new listings. Use your location or choose the spot on the map.'
+                : values.pickupPoint
+                  ? 'Use your location or choose the spot on the map.'
+                  : 'This listing has no pickup point yet. Add one so buyers get the exact spot after paying.'
+            }
+            value={values.pickupPoint}
+            onChange={(point) => form.setFieldValue('pickupPoint', point)}
+            error={form.getError('pickupPoint')}
+            zones={location.reference.zones}
+            referenceZone={location.reference.zones.find((zone) => String(zone.id) === String(values.pickupZone))}
+            mapTitle="Pickup Location"
+            confirmLabel="Confirm pickup location"
+          />
+          <Input
+            label={t('Pickup instructions (optional)')}
+            placeholder={t('e.g. Meet at Gate 2 of the university.')}
+            maxLength={LISTING_LIMITS.pickupInstructionsMax}
+            hint={t('Shown to the buyer only after payment.')}
+            {...form.getFieldProps('pickupInstructions')}
+          />
+        </FormSection>
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

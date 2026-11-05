@@ -13,8 +13,9 @@ const L = LISTING_LIMITS
  * @param {{ location?: 'campus'|'zone' }} [options] real API (V003): 'campus' = seller with an official campus (campus
  *   required, pickup area optional); 'zone' = seller without a campus (pickup area required). Default: campus.
  * @param {{ customCategory?: boolean }} [options] true when the chosen category is "Other" (V005): its name is required.
+ * @param {{ requirePickupPoint?: boolean }} [options] V006: a new listing needs a pickup point confirmed on the map.
  */
-export function validateListing(values, { location = 'campus', customCategory = false } = {}) {
+export function validateListing(values, { location = 'campus', customCategory = false, requirePickupPoint = false } = {}) {
   const errors = {}
   const title = values.title.trim()
   const description = values.description.trim()
@@ -35,6 +36,10 @@ export function validateListing(values, { location = 'campus', customCategory = 
     else if (!/[\p{L}\p{N}]/u.test(name)) errors.customCategory = 'Use letters or numbers.'
   }
   if (isBlank(values.condition)) errors.condition = 'Choose the item’s condition.'
+  if (requirePickupPoint && !values.pickupPoint) errors.pickupPoint = 'Confirm the pickup location on the map.'
+  if ((values.pickupInstructions ?? '').trim().length > L.pickupInstructionsMax) {
+    errors.pickupInstructions = `Keep it under ${L.pickupInstructionsMax} characters.`
+  }
 
   // Template lines with nothing after the colon (e.g. "Edition / year: ") don't count as details.
   const emptyPromptLine = /^[^:\n]{1,40}:[ \t]*$/gm
