@@ -55,7 +55,7 @@ public class ProductMapper {
         return products.stream().map(product -> new ProductSummaryResponse(
                 product.getId(), product.getTitle(), toLong(product.getPrice()), toLong(product.getOriginalPrice()),
                 product.getCondition().name(), product.getStatus().name(), isPurchasable(product),
-                ReferenceDtos.CategoryRef.from(product.getCategory()), ReferenceDtos.CampusRef.from(product.getCampus()),
+                ReferenceDtos.CategoryRef.from(product.getCategory(), product.getCustomCategoryName()), ReferenceDtos.CampusRef.from(product.getCampus()),
                 ReferenceDtos.ZoneRef.from(product.getEffectivePickupZone()), mainImages.get(product.getId()),
                 new ProductSummaryResponse.SellerRef(product.getSeller().getId(), product.getSeller().getFullName()),
                 featured.contains(product.getId()), toInstant(product.getCreatedAt()),
@@ -83,7 +83,7 @@ public class ProductMapper {
                 ProductDetailResponse.Contact.of(seller.isShowContact(), seller.getPhone(), seller.getZaloUrl()));
         return new ProductDetailResponse(product.getId(), product.getTitle(), product.getDescription(), toLong(product.getPrice()),
                 toLong(product.getOriginalPrice()), product.getCondition().name(), product.getStatus().name(), isPurchasable(product),
-                ReferenceDtos.CategoryRef.from(product.getCategory()), ReferenceDtos.CampusRef.from(product.getCampus()),
+                ReferenceDtos.CategoryRef.from(product.getCategory(), product.getCustomCategoryName()), ReferenceDtos.CampusRef.from(product.getCampus()),
                 ReferenceDtos.ZoneRef.from(product.getEffectivePickupZone()), photos,
                 sellerProfile, featured, toInstant(product.getCreatedAt()), toInstant(product.getUpdatedAt()),
                 ownerView ? product.getModerationStatus().apiValue() : null,

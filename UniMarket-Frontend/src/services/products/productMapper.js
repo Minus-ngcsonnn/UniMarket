@@ -68,6 +68,8 @@ export function toProduct(item) {
     categorySlug: item.category ? frontendCategorySlug(item.category.slug) : null,
     categoryId: item.category?.id ?? null,
     categoryName: item.category?.name ?? null,
+    // V005: seller-typed category of an "Other" listing (e.g. "Nhạc cụ"), otherwise null.
+    customCategory: item.category?.customName ?? null,
     campus: item.campus ? String(item.campus.id) : null,
     campusInfo: item.campus ?? null,
     pickupZone: item.pickupZone ?? null,
@@ -109,6 +111,7 @@ const LISTING_FIELDS = {
   categoryId: 'categorySlug',
   campusId: 'campus',
   pickupZoneId: 'pickupZone',
+  customCategory: 'customCategory',
 }
 
 /** Error codes that belong to one form field. */

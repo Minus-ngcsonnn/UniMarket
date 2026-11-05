@@ -153,6 +153,11 @@ Only active categories, sorted by name. `slug` is derived from the name (there i
 
 ## POST /api/products: create a listing
 
+> **"Other" category (V005).** `GET /api/categories` returns `custom: true` for the official "Other" category, listed last.
+> A listing in that category must send `customCategory` (2–60 characters after trimming, inner spaces collapsed, letters or
+> digits); for every other category it is ignored and cleared. The text is stored in `Products.CustomCategoryName` (no new
+> category is created) and returned as `category.customName` (e.g. `{ "id": 9, "name": "Other", "custom": true, "customName": "Nhạc cụ" }`).
+
 `multipart/form-data` with:
 
 - part `listing` (`Content-Type: application/json`):

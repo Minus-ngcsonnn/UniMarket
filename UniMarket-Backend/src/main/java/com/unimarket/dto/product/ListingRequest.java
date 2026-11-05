@@ -20,6 +20,8 @@ import jakarta.validation.constraints.Size;
  * @param originalPrice optional reference price, higher than {@code price}
  * @param condition     NEW, LIKE_NEW or USED
  * @param categoryId    an active category
+ * @param customCategory required (2–60 characters, letters or digits) when the category is "Other" (V005
+ *                      {@code AllowsCustomName}); ignored for every other category
  * @param campusId      optional; a campus of the seller's university (default: the seller's campus). Not allowed for a
  *                      seller without a campus (V003 self-declared university)
  * @param pickupZoneId  optional demo pickup area ({@code GET /api/locations/zones}); required for a seller without a campus;
@@ -33,7 +35,8 @@ public record ListingRequest(
         @NotNull ProductCondition condition,
         @NotNull @Positive Integer categoryId,
         @Positive Integer campusId,
-        @Positive Integer pickupZoneId) {
+        @Positive Integer pickupZoneId,
+        @Size(max = 200) String customCategory) {
 
     /** The original price, when given, must be higher than the price (frontend rule; SQL allows equal). */
     @AssertTrue(message = "must be higher than price")

@@ -1,4 +1,4 @@
-import { LISTING_LIMITS } from '../constants/product'
+import { LISTING_LIMITS, normalizeCustomCategory } from '../constants/product'
 import { formatPrice } from './format'
 import { isBlank } from './validators'
 
@@ -12,8 +12,9 @@ const L = LISTING_LIMITS
  *   price/originalPrice are whole VND numbers or null.
  * @param {{ location?: 'campus'|'zone' }} [options] real API (V003): 'campus' = seller with an official campus (campus
  *   required, pickup area optional); 'zone' = seller without a campus (pickup area required). Default: campus.
+ * @param {{ customCategory?: boolean }} [options] true when the chosen category is "Other" (V005): its name is required.
  */
-export function validateListing(values, { location = 'campus' } = {}) {
+export function validateListing(values, { location = 'campus', customCategory = false } = {}) {
   const errors = {}
   const title = values.title.trim()
   const description = values.description.trim()
@@ -26,6 +27,13 @@ export function validateListing(values, { location = 'campus' } = {}) {
   else if (title.length > L.titleMax) errors.title = `Keep the title under ${L.titleMax} characters.`
 
   if (isBlank(values.categorySlug)) errors.categorySlug = 'Choose a category.'
+  else if (customCategory) {
+    const name = normalizeCustomCategory(values.customCategory)
+    if (!name) errors.customCategory = 'Enter the product category.'
+    else if (name.length < L.customCategoryMin) errors.customCategory = `Use at least ${L.customCategoryMin} characters.`
+    else if (name.length > L.customCategoryMax) errors.customCategory = `Keep it under ${L.customCategoryMax} characters.`
+    else if (!/[\p{L}\p{N}]/u.test(name)) errors.customCategory = 'Use letters or numbers.'
+  }
   if (isBlank(values.condition)) errors.condition = 'Choose the item’s condition.'
 
   // Template lines with nothing after the colon (e.g. "Edition / year: ") don't count as details.

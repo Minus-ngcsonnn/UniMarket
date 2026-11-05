@@ -49,9 +49,11 @@ public class ReferenceDataService {
     @Transactional(readOnly = true)
     public List<ReferenceDataResponses.CategoryResponse> categories() {
         Map<Integer, Long> counts = insights.availableCountByCategory();
+        // By name, with the "Other" category (V005 AllowsCustomName) always last.
         return categories.findByActiveTrueOrderByNameAsc().stream()
+                .sorted(java.util.Comparator.comparing(com.unimarket.entity.Category::allowsCustomName))
                 .map(c -> new ReferenceDataResponses.CategoryResponse(c.getId(), c.getName(), ReferenceDtos.slugOf(c.getName()),
-                        counts.getOrDefault(c.getId(), 0L)))
+                        counts.getOrDefault(c.getId(), 0L), c.allowsCustomName()))
                 .toList();
     }
 

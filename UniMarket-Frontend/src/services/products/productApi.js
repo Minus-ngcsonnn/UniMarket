@@ -1,5 +1,6 @@
 import apiClient from '../apiClient'
 import { session } from '../auth/session'
+import { normalizeCustomCategory } from '../../constants/product'
 import { findCampus, findCategory, loadCatalogReference } from './catalogReference'
 import { toFacets, toProduct } from './productMapper'
 
@@ -134,6 +135,8 @@ async function toListingRequest(payload) {
     // An unknown category is sent as 0, so the backend answers with a field error.
     categoryId: category?.id ?? 0,
   }
+  // V005: only the "Other" category carries the seller-typed name; it is never sent as a category id.
+  if (category?.custom) body.customCategory = normalizeCustomCategory(payload.customCategory)
   if (payload.campus) body.campusId = Number(payload.campus)
   if (payload.pickupZone) body.pickupZoneId = Number(payload.pickupZone)
   return body

@@ -322,6 +322,44 @@ class ProductIntegrationTest {
     class Listings {
 
         @Test
+        void otherCategoryStoresTheSellerTypedNameAndOfficialCategoriesIgnoreIt() throws Exception {
+            int other = jdbc.queryForObject("SELECT CategoryId FROM dbo.Categories WHERE AllowsCustomName = 1", Integer.class);
+            // Reference data: Other is listed last and flagged.
+            JsonNode categories = getJson("/api/categories", null);
+            JsonNode last = categories.get(categories.size() - 1);
+            assertThat(last.get("id").asInt()).isEqualTo(other);
+            assertThat(last.get("custom").asBoolean()).isTrue();
+            assertThat(categories.get(0).get("custom").asBoolean()).isFalse();
+
+            String base = "{\"title\":\"Ukulele soprano\",\"description\":\"A clean, well kept item from a student.\",\"price\":250000,"
+                    + "\"condition\":\"USED\",\"categoryId\":" + other;
+            // Required, trimmed, 2-60 characters, letters or digits.
+            expectFieldError(base + "}", "customCategory");
+            expectFieldError(base + ",\"customCategory\":\"   \"}", "customCategory");
+            expectFieldError(base + ",\"customCategory\":\"x\"}", "customCategory");
+            expectFieldError(base + ",\"customCategory\":\"--- ...\"}", "customCategory");
+            expectFieldError(base + ",\"customCategory\":\"" + "a".repeat(61) + "\"}", "customCategory");
+
+            JsonNode created = readJson(mvc.perform(createRequest(base + ",\"customCategory\":\"  Nhạc \\t  cụ  \"}", photo("main.png", PNG))
+                    .header("Authorization", "Bearer " + seller)).andExpect(status().isCreated()));
+            int id = created.get("id").asInt();
+            assertThat(created.get("category").get("id").asInt()).isEqualTo(other);
+            assertThat(created.get("category").get("customName").asText()).isEqualTo("Nhạc cụ");
+            assertThat(jdbc.queryForObject("SELECT CustomCategoryName FROM dbo.Products WHERE ProductId = ?", String.class, id)).isEqualTo("Nhạc cụ");
+            // No new global category is created.
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM dbo.Categories WHERE Name = N'Nhạc cụ'", Integer.class)).isZero();
+            assertThat(getJson("/api/products/" + id, seller).get("category").get("customName").asText()).isEqualTo("Nhạc cụ");
+
+            // Switching to an official category clears the custom name, even if a stale one is sent.
+            String official = "{\"title\":\"Ukulele soprano\",\"description\":\"A clean, well kept item from a student.\",\"price\":250000,"
+                    + "\"condition\":\"USED\",\"categoryId\":1,\"customCategory\":\"Nhạc cụ\"}";
+            mvc.perform(put("/api/products/" + id).contentType(MediaType.APPLICATION_JSON).content(official)
+                    .header("Authorization", "Bearer " + seller)).andExpect(status().isOk())
+                    .andExpect(jsonPath("$.category.id").value(1)).andExpect(jsonPath("$.category.customName").isEmpty());
+            assertThat(jdbc.queryForObject("SELECT CustomCategoryName FROM dbo.Products WHERE ProductId = ?", String.class, id)).isNull();
+        }
+
+        @Test
         void visitorsCannotCreateOrChangeListings() throws Exception {
             mvc.perform(createRequest(listing("Anonymous desk lamp", 100_000), photo("a.png", PNG))).andExpect(status().isUnauthorized());
             mvc.perform(put("/api/products/1").contentType(MediaType.APPLICATION_JSON).content(listing("Hijack attempt", 1_000)))

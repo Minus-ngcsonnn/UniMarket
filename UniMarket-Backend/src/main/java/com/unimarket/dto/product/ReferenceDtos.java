@@ -21,9 +21,17 @@ public final class ReferenceDtos {
      * @param name database name, e.g. "Dormitory items"
      * @param slug URL-friendly name derived from {@code name}, e.g. "dormitory-items"
      */
-    public record CategoryRef(Integer id, String name, String slug) {
+    /**
+     * @param custom     true for the "Other" category (V005), whose listings carry a seller-typed name
+     * @param customName the listing's seller-typed category name, or null
+     */
+    public record CategoryRef(Integer id, String name, String slug, boolean custom, String customName) {
         public static CategoryRef from(Category category) {
-            return new CategoryRef(category.getId(), category.getName(), slugOf(category.getName()));
+            return from(category, null);
+        }
+
+        public static CategoryRef from(Category category, String customName) {
+            return new CategoryRef(category.getId(), category.getName(), slugOf(category.getName()), category.allowsCustomName(), customName);
         }
     }
 

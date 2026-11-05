@@ -118,7 +118,8 @@ public class ListingService {
         return withStoredPhotos(validated, references -> transaction.execute(status -> {
             User owner = users.findById(seller.id()).orElseThrow(() -> new ApiException(ErrorCode.AUTHENTICATION_REQUIRED));
             Location location = locationFor(owner, request);
-            Product product = Product.newListing(owner, activeCategory(request.categoryId()),
+            Category category = activeCategory(request.categoryId());
+            Product product = Product.newListing(owner, category, customCategoryName(category, request.customCategory()),
                     location.campus(), location.pickupZone(), request.title().trim(), request.description().trim(), request.condition(),
                     BigDecimal.valueOf(request.price()), toPrice(request.originalPrice()), nowUtc());
             products.saveAndFlush(product);
@@ -136,7 +137,8 @@ public class ListingService {
         return transaction.execute(status -> {
             Product product = lockForChange(productId, viewer);
             Location location = locationFor(product.getSeller(), request);
-            product.update(activeCategory(request.categoryId()), location.campus(), location.pickupZone(),
+            Category category = activeCategory(request.categoryId());
+            product.update(category, customCategoryName(category, request.customCategory()), location.campus(), location.pickupZone(),
                     request.title().trim(), request.description().trim(), request.condition(),
                     BigDecimal.valueOf(request.price()), toPrice(request.originalPrice()), nowUtc());
             products.flush();
@@ -247,6 +249,31 @@ public class ListingService {
             throw new ApiException(ErrorCode.LISTING_NOT_EDITABLE);
         }
         return product;
+    }
+
+    /** Limits of the seller-typed category name of an "Other" listing (V005; SQL CHECK: 2-60 after trimming). */
+    static final int CUSTOM_CATEGORY_MIN = 2;
+    static final int CUSTOM_CATEGORY_MAX = 60;
+
+    /**
+     * The seller-typed category name to store: required for the "Other" category (trimmed, inner spaces collapsed,
+     * 2-60 characters, at least one letter or digit), always null for every other category (a stale value sent with an
+     * official category is ignored, never stored).
+     */
+    static String customCategoryName(Category category, String raw) {
+        if (!category.allowsCustomName()) {
+            return null;
+        }
+        String name = raw == null ? "" : raw.strip().replaceAll("\\s+", " ");
+        String problem = name.isEmpty() ? "is required for the Other category"
+                : name.length() < CUSTOM_CATEGORY_MIN ? "must be at least " + CUSTOM_CATEGORY_MIN + " characters"
+                : name.length() > CUSTOM_CATEGORY_MAX ? "must be at most " + CUSTOM_CATEGORY_MAX + " characters"
+                : name.codePoints().noneMatch(Character::isLetterOrDigit) ? "must contain letters or digits"
+                : null;
+        if (problem != null) {
+            throw new ValidationException(List.of(new ApiErrorResponse.FieldError("customCategory", problem)));
+        }
+        return name;
     }
 
     private Category activeCategory(Integer categoryId) {
