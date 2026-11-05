@@ -20,6 +20,14 @@ public final class ReferenceDataResponses {
     }
 
     /**
+     * A demo pickup / delivery area (V003) with its APPROXIMATE public centre point (V006: used by the map to describe
+     * a pin, e.g. "about 1.2 km from Hoa Lac", and to warn when a pin is far from the chosen area). Not an address.
+     */
+    public record ZoneArea(Integer id, String code, String name, String province,
+                           java.math.BigDecimal centerLatitude, java.math.BigDecimal centerLongitude) {
+    }
+
+    /**
      * @param id       {@code Universities.UniversityId}
      * @param name     e.g. "FPT University"
      * @param code     e.g. "FPT"

@@ -20,6 +20,10 @@ import jakarta.validation.constraints.Size;
  * @param originalPrice optional reference price, higher than {@code price}
  * @param condition     NEW, LIKE_NEW or USED
  * @param categoryId    an active category
+ * @param pickupLatitude  V006 confirmed pickup point (map / GPS), with {@code pickupLongitude}: required to create a
+ *                       listing; on edit, omitted = keep the stored point (older listings may have none)
+ * @param pickupLongitude see {@code pickupLatitude}
+ * @param pickupInstructions optional private instructions for the handover (max 300), shown only after payment
  * @param customCategory required (2–60 characters, letters or digits) when the category is "Other" (V005
  *                      {@code AllowsCustomName}); ignored for every other category
  * @param campusId      optional; a campus of the seller's university (default: the seller's campus). Not allowed for a
@@ -36,7 +40,12 @@ public record ListingRequest(
         @NotNull @Positive Integer categoryId,
         @Positive Integer campusId,
         @Positive Integer pickupZoneId,
-        @Size(max = 200) String customCategory) {
+        @Size(max = 200) String customCategory,
+        @jakarta.validation.constraints.DecimalMin("-90") @jakarta.validation.constraints.DecimalMax("90")
+        @jakarta.validation.constraints.Digits(integer = 3, fraction = 6) java.math.BigDecimal pickupLatitude,
+        @jakarta.validation.constraints.DecimalMin("-180") @jakarta.validation.constraints.DecimalMax("180")
+        @jakarta.validation.constraints.Digits(integer = 3, fraction = 6) java.math.BigDecimal pickupLongitude,
+        @Size(max = 300) String pickupInstructions) {
 
     /** The original price, when given, must be higher than the price (frontend rule; SQL allows equal). */
     @AssertTrue(message = "must be higher than price")

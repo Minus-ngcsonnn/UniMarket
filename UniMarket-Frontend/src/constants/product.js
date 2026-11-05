@@ -61,6 +61,8 @@ export const LISTING_LIMITS = {
   // V005 "Other" category: seller-typed category name (backend and SQL CHECK use the same limits).
   customCategoryMin: 2,
   customCategoryMax: 60,
+  // V006 pickup point: optional private instructions.
+  pickupInstructionsMax: 300,
 }
 
 /** Trimmed category text with inner whitespace collapsed ("  Nhạc   cụ " → "Nhạc cụ"). */
@@ -88,6 +90,8 @@ export const EMPTY_LISTING = {
   campus: 'HANOI', // pilot campus (Hoa Lac); the student can change it. Real API: the seller's campus id, or ''
   pickupZone: '', // real API (V003): demo pickup area id; required for sellers without a campus
   customCategory: '', // V005: required only when the chosen category is "Other"
+  pickupPoint: null, // V006: { latitude, longitude } confirmed on the map; required for new listings
+  pickupInstructions: '',
 }
 
 /**
@@ -119,6 +123,8 @@ export function listingToFormValues(product) {
     campus: product.campus ?? '',
     pickupZone: product.pickupZone?.id != null ? String(product.pickupZone.id) : '',
     customCategory: product.customCategory ?? '',
+    pickupPoint: product.pickupPoint ?? null,
+    pickupInstructions: product.pickupInstructions ?? '',
   }
 }
 

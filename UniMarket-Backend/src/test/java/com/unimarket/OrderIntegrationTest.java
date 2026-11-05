@@ -335,7 +335,8 @@ class OrderIntegrationTest {
             List<com.unimarket.service.shipping.ShippingQuoteService.ConfirmedShipping> shipping = List.of(
                     new com.unimarket.service.shipping.ShippingQuoteService.ConfirmedShipping(sellerA, CARRIER, pickupZone, distanceTenths, FEE, "SIM-2026-11"),
                     new com.unimarket.service.shipping.ShippingQuoteService.ConfirmedShipping(sellerB, CARRIER, pickupZone, distanceTenths, FEE, "SIM-2026-11"));
-            assertThatThrownBy(() -> procedures.checkoutWithShipping(buyer, List.of(ok, taken), deliveryZone, shipping, "Buyer", "0912345678", "Dorm A", null))
+            assertThatThrownBy(() -> procedures.checkoutWithShipping(buyer, List.of(ok, taken), deliveryZone, shipping, "Buyer", "0912345678", "Dorm A", null,
+                    new BigDecimal("21.036200"), new BigDecimal("105.790500")))
                     .isInstanceOf(DataAccessException.class)
                     .satisfies(ex -> assertThat(com.unimarket.service.order.SqlErrors.numberOf(ex)).isEqualTo(51021));
             assertThat(ordersOf(buyer)).isEqualTo(before);
@@ -641,6 +642,115 @@ class OrderIntegrationTest {
     }
 
     // ================================================================== payments
+
+    @Nested
+    class Locations {
+
+        private void setPickup(int productId, String lat, String lng, String instructions) {
+            jdbc.update("UPDATE dbo.Products SET PickupLatitude = ?, PickupLongitude = ?, PickupInstructions = ? WHERE ProductId = ?",
+                    new BigDecimal(lat), new BigDecimal(lng), instructions, productId);
+        }
+
+        private JsonNode order(String token, long id) throws Exception {
+            return getJson("/api/orders/" + id, token);
+        }
+
+        @Test
+        void checkoutSnapshotsEachItemsPickupAndTheDeliveryPointAndShowsThemOnlyToTheRightParty() throws Exception {
+            int a1 = listing(sellerA, "GPS lamp A1", 50_000);
+            int a2 = listing(sellerA, "GPS kettle A2", 60_000);
+            int b1 = listing(sellerB, "GPS chair B1", 70_000);
+            setPickup(a1, "21.013100", "105.525100", "Gate 2");
+            setPickup(a2, "21.004400", "105.517300", null);
+            setPickup(b1, "21.028500", "105.804800", "Dorm B lobby");
+
+            JsonNode result = checkout(buyerToken, List.of(a1, a2, b1), null);
+            long orderA = -1, orderB = -1;
+            for (JsonNode o : result.get("orders")) {
+                if (o.get("seller").get("id").asInt() == sellerA) orderA = o.get("id").asLong(); else orderB = o.get("id").asLong();
+            }
+            // DB snapshots: the delivery point on both seller orders, each item keeps its own listing's pickup point.
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM dbo.Orders WHERE OrderId IN (?, ?) AND DeliveryLatitude = 21.036200 AND DeliveryLongitude = 105.790500",
+                    Integer.class, orderA, orderB)).isEqualTo(2);
+            assertThat(jdbc.queryForList("SELECT CONCAT(ProductId, ':', PickupLatitude, ',', PickupLongitude, ',', ISNULL(PickupInstructions, '-')) FROM dbo.OrderItems WHERE OrderId = ? ORDER BY ProductId",
+                    String.class, orderA)).containsExactly(a1 + ":21.013100,105.525100,Gate 2", a2 + ":21.004400,105.517300,-");
+            // Totals and shipping are unchanged by locations.
+            assertThat(jdbc.queryForObject("SELECT ShippingFee FROM dbo.Orders WHERE OrderId = ?", BigDecimal.class, orderA).longValue()).isEqualTo(FEE);
+
+            // Before payment: buyer sees the delivery point, not the pickups; seller sees the pickups, not the delivery point.
+            JsonNode buyerView = order(buyerToken, orderA).get("locations");
+            assertThat(buyerView.get("deliveryVisible").asBoolean()).isTrue();
+            assertThat(buyerView.get("delivery").get("latitude").decimalValue()).isEqualByComparingTo("21.0362");
+            assertThat(buyerView.get("pickupsVisible").asBoolean()).isFalse();
+            assertThat(buyerView.get("pickups")).isEmpty();
+            JsonNode sellerView = order(sellerAToken, orderA).get("locations");
+            assertThat(sellerView.get("deliveryVisible").asBoolean()).isFalse();
+            assertThat(sellerView.get("delivery").isNull()).isTrue();
+            assertThat(sellerView.get("pickups")).hasSize(2);
+            assertThat(sellerView.get("pickups").get(0).get("point").get("latitude").decimalValue())
+                    .isNotEqualByComparingTo(sellerView.get("pickups").get(1).get("point").get("latitude").decimalValue());
+            assertThat(order(sellerAToken, orderA).toString()).doesNotContain("21.0362").doesNotContain("105.7905");
+            // No cross-seller leakage, no access for strangers; admins get no coordinates.
+            mvc.perform(get("/api/orders/" + orderA).header("Authorization", bearer(sellerBToken))).andExpect(status().isNotFound());
+            mvc.perform(get("/api/orders/" + orderA).header("Authorization", bearer(strangerToken))).andExpect(status().isNotFound());
+            JsonNode adminView = order(adminToken, orderA).get("locations");
+            assertThat(adminView.get("deliveryVisible").asBoolean()).isFalse();
+            assertThat(adminView.get("pickupsVisible").asBoolean()).isFalse();
+            assertThat(order(adminToken, orderA).toString()).doesNotContain("21.0362").doesNotContain("21.0131");
+
+            // Editing the listing later never changes the order snapshot; stored order points cannot be changed.
+            setPickup(a1, "10.762600", "106.660200", "Moved");
+            assertThat(jdbc.queryForObject("SELECT PickupLatitude FROM dbo.OrderItems WHERE OrderId = ? AND ProductId = ?", BigDecimal.class, orderA, a1))
+                    .isEqualByComparingTo("21.0131");
+            final long placedA = orderA;
+            assertThatThrownBy(() -> jdbc.update("UPDATE dbo.Orders SET DeliveryLatitude = 10.0 WHERE OrderId = ?", placedA))
+                    .hasMessageContaining("cannot be changed");
+            assertThatThrownBy(() -> jdbc.update("UPDATE dbo.OrderItems SET PickupLatitude = 10.0 WHERE OrderId = ?", placedA))
+                    .hasMessageContaining("cannot be changed");
+
+            // A failed payment reveals nothing more.
+            act(sellerAToken, orderA, "confirm").andExpect(status().isOk());
+            assertThat(payWithSimulator(orderA, false).get("status").asText()).isEqualTo("AWAITING_PAYMENT");
+            assertThat(order(buyerToken, orderA).get("locations").get("pickupsVisible").asBoolean()).isFalse();
+            assertThat(order(sellerAToken, orderA).get("locations").get("deliveryVisible").asBoolean()).isFalse();
+
+            // After payment: both parties see both, still from the snapshot (not the moved listing).
+            assertThat(payWithSimulator(orderA, true).get("status").asText()).isEqualTo("PAID");
+            JsonNode paidBuyer = order(buyerToken, orderA).get("locations");
+            assertThat(paidBuyer.get("pickupsVisible").asBoolean()).isTrue();
+            assertThat(paidBuyer.toString()).contains("Gate 2").doesNotContain("Moved").doesNotContain("10.7626");
+            JsonNode paidSeller = order(sellerAToken, orderA).get("locations");
+            assertThat(paidSeller.get("deliveryVisible").asBoolean()).isTrue();
+            assertThat(paidSeller.get("delivery").get("longitude").decimalValue()).isEqualByComparingTo("105.7905");
+            // The other seller's order keeps its own single pickup point.
+            assertThat(jdbc.queryForObject("SELECT PickupInstructions FROM dbo.OrderItems WHERE OrderId = ?", String.class, orderB)).isEqualTo("Dorm B lobby");
+        }
+
+        @Test
+        void aNewCheckoutNeedsAValidDeliveryPointAndOlderOrdersStayReadable() throws Exception {
+            int item = listing(sellerA, "GPS required lamp", 40_000);
+            long before = ordersOf(buyer);
+            Map<String, Object> body = json.readValue(checkoutBody(buyerToken, List.of(item), null), Map.class);
+            body.remove("deliveryLatitude");
+            mvc.perform(post("/api/checkout").header("Authorization", bearer(buyerToken)).contentType(MediaType.APPLICATION_JSON)
+                    .content(json.writeValueAsString(body))).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.fieldErrors[?(@.field == 'deliveryLatitude')]").exists());
+            body.put("deliveryLatitude", 91);
+            mvc.perform(post("/api/checkout").header("Authorization", bearer(buyerToken)).contentType(MediaType.APPLICATION_JSON)
+                    .content(json.writeValueAsString(body))).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.fieldErrors[?(@.field == 'deliveryLatitude')]").exists());
+            assertThat(productStatus(item)).isEqualTo("Available");
+            assertThat(ordersOf(buyer)).isEqualTo(before);
+
+            // An order placed before V006 (no coordinates) is still readable (admin view: no coordinates at all).
+            long old = jdbc.queryForObject("SELECT TOP 1 OrderId FROM dbo.Orders WHERE DeliveryLatitude IS NULL ORDER BY OrderId", Long.class);
+            JsonNode legacy = getJson("/api/orders/" + old, adminToken).get("locations");
+            assertThat(legacy.get("delivery").isNull()).isTrue();
+            assertThat(legacy.get("pickups")).isEmpty();
+            // The mapper keeps a missing point null for the parties too (no zero coordinates are invented).
+            assertThat(com.unimarket.dto.order.OrderResponse.Point.of(null, null)).isNull();
+        }
+    }
 
     @Nested
     class Payments {
@@ -971,6 +1081,8 @@ class OrderIntegrationTest {
         body.put("productIds", ids);
         body.put("deliveryZoneId", deliveryZone);
         body.put("shipping", shippingChoices(token, ids));
+        body.put("deliveryLatitude", new java.math.BigDecimal("21.036200"));
+        body.put("deliveryLongitude", new java.math.BigDecimal("105.790500"));
         body.put("recipientName", "Test Buyer");
         body.put("recipientPhone", "0912 345 678");
         body.put("deliveryAddress", "Dormitory A, room 305");

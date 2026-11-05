@@ -332,7 +332,7 @@ class ProductIntegrationTest {
             assertThat(categories.get(0).get("custom").asBoolean()).isFalse();
 
             String base = "{\"title\":\"Ukulele soprano\",\"description\":\"A clean, well kept item from a student.\",\"price\":250000,"
-                    + "\"condition\":\"USED\",\"categoryId\":" + other;
+                    + "\"condition\":\"USED\",\"pickupLatitude\":21.0131,\"pickupLongitude\":105.5251,\"categoryId\":" + other;
             // Required, trimmed, 2-60 characters, letters or digits.
             expectFieldError(base + "}", "customCategory");
             expectFieldError(base + ",\"customCategory\":\"   \"}", "customCategory");
@@ -357,6 +357,49 @@ class ProductIntegrationTest {
                     .header("Authorization", "Bearer " + seller)).andExpect(status().isOk())
                     .andExpect(jsonPath("$.category.id").value(1)).andExpect(jsonPath("$.category.customName").isEmpty());
             assertThat(jdbc.queryForObject("SELECT CustomCategoryName FROM dbo.Products WHERE ProductId = ?", String.class, id)).isNull();
+        }
+
+        @Test
+        void pickupPointIsRequiredForNewListingsAndOnlyTheSellerSeesIt() throws Exception {
+            String noPoint = listing("Pickup rule lamp", 90_000).replace(",\"pickupLatitude\":21.013100,\"pickupLongitude\":105.525100", "");
+            expectFieldError(noPoint, "pickupLatitude");
+            expectFieldError(noPoint.replace("}", ",\"pickupLatitude\":21.0131}"), "pickupLongitude");
+            expectFieldError(noPoint.replace("}", ",\"pickupLatitude\":95,\"pickupLongitude\":105.5}"), "pickupLatitude");
+            expectFieldError(noPoint.replace("}", ",\"pickupLatitude\":21.0,\"pickupLongitude\":181}"), "pickupLongitude");
+
+            String withPoint = noPoint.replace("}", ",\"pickupLatitude\":21.0131,\"pickupLongitude\":105.5251,\"pickupInstructions\":\"  Gate 2  \"}");
+            JsonNode created = readJson(mvc.perform(createRequest(withPoint, photo("main.png", PNG)).header("Authorization", "Bearer " + seller))
+                    .andExpect(status().isCreated()));
+            int id = created.get("id").asInt();
+            assertThat(created.get("pickupPoint").get("latitude").decimalValue()).isEqualByComparingTo("21.0131");
+            assertThat(created.get("pickupPoint").get("instructions").asText()).isEqualTo("Gate 2");
+
+            // Public views (approved listing): general area only, no coordinates or instructions anywhere.
+            jdbc.update("UPDATE dbo.Products SET ModerationStatus = 'Approved' WHERE ProductId = ?", id);
+            String publicDetail = mvc.perform(get("/api/products/" + id)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            assertThat(publicDetail).doesNotContain("pickupPoint").doesNotContain("21.0131").doesNotContain("Gate 2").contains("pickupZone");
+            assertThat(mvc.perform(get("/api/products/" + id).header("Authorization", "Bearer " + otherStudent)).andReturn().getResponse()
+                    .getContentAsString()).doesNotContain("21.0131").doesNotContain("Gate 2");
+            assertThat(mvc.perform(get("/api/products/" + id).header("Authorization", "Bearer " + admin)).andReturn().getResponse()
+                    .getContentAsString()).doesNotContain("21.0131").doesNotContain("Gate 2");
+            assertThat(mvc.perform(get("/api/products?size=50&q=Pickup%20rule")).andReturn().getResponse().getContentAsString())
+                    .doesNotContain("21.0131");
+
+            // Edit: omitted point = kept; a new point replaces it; another student cannot change it.
+            mvc.perform(put("/api/products/" + id).contentType(MediaType.APPLICATION_JSON).content(noPoint).header("Authorization", "Bearer " + seller))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.pickupPoint.latitude").value(21.0131));
+            String moved = noPoint.replace("}", ",\"pickupLatitude\":21.0044,\"pickupLongitude\":105.5173}");
+            mvc.perform(put("/api/products/" + id).contentType(MediaType.APPLICATION_JSON).content(moved).header("Authorization", "Bearer " + seller))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.pickupPoint.latitude").value(21.0044));
+            mvc.perform(put("/api/products/" + id).contentType(MediaType.APPLICATION_JSON).content(withPoint).header("Authorization", "Bearer " + otherStudent))
+                    .andExpect(result -> assertThat(result.getResponse().getStatus()).isIn(403, 404));
+            assertThat(jdbc.queryForObject("SELECT PickupLatitude FROM dbo.Products WHERE ProductId = ?", java.math.BigDecimal.class, id))
+                    .isEqualByComparingTo("21.0044");
+
+            // A listing without a point (created before V006) stays readable and editable without one.
+            jdbc.update("UPDATE dbo.Products SET PickupLatitude = NULL, PickupLongitude = NULL, PickupInstructions = NULL WHERE ProductId = ?", id);
+            mvc.perform(put("/api/products/" + id).contentType(MediaType.APPLICATION_JSON).content(noPoint).header("Authorization", "Bearer " + seller))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.pickupPoint").doesNotExist());
         }
 
         @Test
@@ -671,7 +714,7 @@ class ProductIntegrationTest {
 
     private String listing(String title, long price) {
         return "{\"title\":\"" + title + "\",\"description\":\"A clean, well kept item from a student.\",\"price\":" + price
-                + ",\"originalPrice\":null,\"condition\":\"USED\",\"categoryId\":1,\"campusId\":null}";
+                + ",\"originalPrice\":null,\"condition\":\"USED\",\"categoryId\":1,\"campusId\":null,\"pickupLatitude\":21.013100,\"pickupLongitude\":105.525100}";
     }
 
     private static MockMultipartFile photo(String name, byte[] content) {

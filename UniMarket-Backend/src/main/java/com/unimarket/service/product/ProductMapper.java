@@ -68,6 +68,14 @@ public class ProductMapper {
      * @param ownerView true for the seller or an admin
      */
     public ProductDetailResponse toDetail(Product product, boolean ownerView) {
+        return toDetail(product, ownerView, false);
+    }
+
+    /**
+     * @param ownerView  true for the seller or an admin (moderation, editable)
+     * @param sellerView true only for the seller: adds the private pickup point (V006)
+     */
+    public ProductDetailResponse toDetail(Product product, boolean ownerView, boolean sellerView) {
         User seller = product.getSeller();
         ProductInsightsRepository.Rating rating = insights.ratingsOf(List.of(seller.getId())).get(seller.getId());
         boolean featured = insights.featuredAmong(List.of(product.getId())).contains(product.getId());
@@ -87,7 +95,10 @@ public class ProductMapper {
                 ReferenceDtos.ZoneRef.from(product.getEffectivePickupZone()), photos,
                 sellerProfile, featured, toInstant(product.getCreatedAt()), toInstant(product.getUpdatedAt()),
                 ownerView ? product.getModerationStatus().apiValue() : null,
-                ownerView ? ProductStatus.EDITABLE.contains(product.getStatus()) : null);
+                ownerView ? ProductStatus.EDITABLE.contains(product.getStatus()) : null,
+                sellerView && product.getPickupLatitude() != null
+                        ? new ProductDetailResponse.PickupPoint(product.getPickupLatitude(), product.getPickupLongitude(), product.getPickupInstructions())
+                        : null);
     }
 
     /**

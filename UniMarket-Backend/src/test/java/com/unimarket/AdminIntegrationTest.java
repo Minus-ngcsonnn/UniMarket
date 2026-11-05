@@ -736,7 +736,7 @@ class AdminIntegrationTest {
 
     private static String listingJson(String title, long price) {
         return "{\"title\":\"" + title + "\",\"description\":\"A clean, well kept item from a student.\",\"price\":" + price
-                + ",\"originalPrice\":null,\"condition\":\"USED\",\"categoryId\":1,\"campusId\":null}";
+                + ",\"originalPrice\":null,\"condition\":\"USED\",\"categoryId\":1,\"campusId\":null,\"pickupLatitude\":21.013100,\"pickupLongitude\":105.525100}";
     }
 
     /** A pending listing of the test seller (created directly, as Stage 3 would leave it). */
@@ -796,6 +796,8 @@ class AdminIntegrationTest {
         body.put("paymentProvider", "MOMO");
         body.put("deliveryZoneId", deliveryZone);
         body.put("shipping", shipping);
+        body.put("deliveryLatitude", new java.math.BigDecimal("21.036200"));
+        body.put("deliveryLongitude", new java.math.BigDecimal("105.790500"));
         return readJson(mvc.perform(post("/api/checkout").header("Authorization", bearer(token)).contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(body))).andExpect(status().isCreated()))
                 .get("orders").get(0).get("id").asLong();

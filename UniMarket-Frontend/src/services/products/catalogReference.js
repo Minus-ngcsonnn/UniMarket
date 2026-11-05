@@ -11,7 +11,7 @@ import apiClient from '../apiClient'
  *   source: 'api' | 'sample',
  *   categories: [{ slug, name, id, Icon, tagline }],      // slug = frontend slug (see constants/categories.js)
  *   campuses:   [{ key, label, id, universityId, university }], // key = what the URL / filters store
- *   zones:      [{ id, code, name, province }],         // V003 demo pickup areas (empty with sample data)
+ *   zones:      [{ id, code, name, province, centerLatitude, centerLongitude }], // V003 demo areas; V006 approximate centres
  *   provinces:  [string],
  * }
  *

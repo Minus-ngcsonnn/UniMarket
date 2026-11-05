@@ -11,6 +11,8 @@ function toPayload(values) {
     title: values.title.trim(),
     categorySlug: values.categorySlug,
     customCategory: values.customCategory ?? '',
+    pickupPoint: values.pickupPoint ?? null,
+    pickupInstructions: (values.pickupInstructions ?? '').trim(),
     condition: values.condition,
     description: values.description.trim(),
     price: values.price,

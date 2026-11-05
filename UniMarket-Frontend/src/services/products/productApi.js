@@ -1,6 +1,7 @@
 import apiClient from '../apiClient'
 import { session } from '../auth/session'
 import { normalizeCustomCategory } from '../../constants/product'
+import { toStoredPoint } from '../../utils/geo'
 import { findCampus, findCategory, loadCatalogReference } from './catalogReference'
 import { toFacets, toProduct } from './productMapper'
 
@@ -137,6 +138,13 @@ async function toListingRequest(payload) {
   }
   // V005: only the "Other" category carries the seller-typed name; it is never sent as a category id.
   if (category?.custom) body.customCategory = normalizeCustomCategory(payload.customCategory)
+  // V006: the confirmed map point (never typed); omitted on edit when none was confirmed, so the stored one is kept.
+  const pickup = toStoredPoint(payload.pickupPoint)
+  if (pickup) {
+    body.pickupLatitude = pickup.latitude
+    body.pickupLongitude = pickup.longitude
+  }
+  body.pickupInstructions = payload.pickupInstructions ? payload.pickupInstructions : null
   if (payload.campus) body.campusId = Number(payload.campus)
   if (payload.pickupZone) body.pickupZoneId = Number(payload.pickupZone)
   return body

@@ -102,7 +102,8 @@ public class CatalogService {
         if (!product.isPubliclyVisible() && !ownerView) {
             throw new ApiException(ErrorCode.NOT_FOUND, "Listing not found.");
         }
-        return mapper.toDetail(product, ownerView);
+        boolean sellerView = viewer != null && viewer.id().equals(product.getSeller().getId());
+        return mapper.toDetail(product, ownerView, sellerView);
     }
 
     /**

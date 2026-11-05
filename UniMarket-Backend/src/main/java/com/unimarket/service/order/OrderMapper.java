@@ -77,7 +77,25 @@ final class OrderMapper {
                 itemDtos, amounts, OrderValues.provider(o.paymentProvider()), delivery,
                 new OrderResponse.Deadlines(o.confirmBy(), o.paymentDueAt()),
                 new OrderResponse.Timestamps(o.createdAt(), o.confirmedAt(), o.paidAt(), o.shippedAt(), o.completedAt(), o.cancelledAt()),
-                o.cancellationReason(), shipment, payments, history, disputes, settlement, actions(o, role, now), o.shipping());
+                o.cancellationReason(), shipment, payments, history, disputes, settlement, actions(o, role, now), o.shipping(),
+                locations(o, items, role));
+    }
+
+    /**
+     * Precise locations for this viewer (V006 privacy rules, enforced here and not only in the UI): the buyer sees their
+     * delivery point and, once the order is paid, the pickup points; the seller sees their pickup points and, once the
+     * order is paid, the delivery point. Admins and anyone else get no coordinates.
+     */
+    static OrderResponse.Locations locations(OrderQueries.OrderRow o, List<OrderQueries.ItemRow> items, String role) {
+        boolean paid = o.paidAt() != null;
+        boolean deliveryVisible = BUYER.equals(role) || (SELLER.equals(role) && paid);
+        boolean pickupsVisible = SELLER.equals(role) || (BUYER.equals(role) && paid);
+        List<OrderResponse.ItemPickup> pickups = !pickupsVisible ? List.of() : items.stream()
+                .map(i -> new OrderResponse.ItemPickup(i.productId(), i.title(), OrderResponse.Point.of(i.pickupLatitude(), i.pickupLongitude()),
+                        i.pickupInstructions()))
+                .toList();
+        return new OrderResponse.Locations(deliveryVisible ? OrderResponse.Point.of(o.deliveryLatitude(), o.deliveryLongitude()) : null,
+                deliveryVisible, pickups, pickupsVisible);
     }
 
     /**

@@ -53,6 +53,7 @@ export default function CreateListingPage() {
         uploadProgress={uploadProgress}
         onSubmit={submit}
         submitLabel={t("Publish listing")}
+        requirePickupPoint
         cancelTo={PATHS.myListings}
         notice={result && <Alert variant={result.variant} title={result.title}>{result.text}</Alert>}
       />

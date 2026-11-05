@@ -41,8 +41,10 @@ public class ReferenceDataService {
 
     /** @return active demo areas (V003) by province and name; no coordinates */
     @Transactional(readOnly = true)
-    public List<ReferenceDtos.ZoneRef> zones() {
-        return zones.findByActiveTrueOrderByProvinceAscNameAsc().stream().map(ReferenceDtos.ZoneRef::from).toList();
+    public List<ReferenceDataResponses.ZoneArea> zones() {
+        return zones.findByActiveTrueOrderByProvinceAscNameAsc().stream()
+                .map(z -> new ReferenceDataResponses.ZoneArea(z.getId(), z.getCode(), z.getName(), z.getProvince(), z.getLatitude(), z.getLongitude()))
+                .toList();
     }
 
     /** @return active categories by name, with their number of public available listings */

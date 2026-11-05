@@ -40,11 +40,18 @@ public class OrderProcedures {
      * LAST result set, read after the batch finished without error, is the outcome. An error raised after the first set
      * surfaces from {@code getMoreResults()} as an exception, so no order id is returned in that case.</p>
      *
+     * <p>V006: the buyer's confirmed delivery point is put in this connection's {@code SESSION_CONTEXT} in the SAME
+     * batch, right before the procedure; trigger {@code trg_Orders_DeliveryPoint} copies it into the new orders of this
+     * buyer inside the checkout transaction (rolled back with it), and trigger {@code trg_OrderItems_PickupSnapshot}
+     * copies each listing's pickup point into its order item. The context is cleared afterwards, also on error
+     * (TRY / CATCH, then {@code THROW} re-raises the original error number). The procedures themselves are unchanged.</p>
+     *
      * @return the created order ids (from the last result set)
      */
     public List<Long> checkoutWithShipping(int buyerId, List<Integer> productIds, int deliveryZoneId,
                                            List<com.unimarket.service.shipping.ShippingQuoteService.ConfirmedShipping> shipping,
-                                           String recipientName, String recipientPhone, String deliveryAddress, String providerSql) {
+                                           String recipientName, String recipientPhone, String deliveryAddress, String providerSql,
+                                           java.math.BigDecimal deliveryLatitude, java.math.BigDecimal deliveryLongitude) {
         String idsJson = productIds.stream().map(id -> Integer.toString(id)).collect(Collectors.joining(",", "[", "]"));
         // Built from typed values only (ints, enum carrier names, whole numbers) and passed as ONE bound parameter.
         String shippingJson = shipping.stream().map(s -> "{\"s\":" + s.sellerId() + ",\"c\":\"" + s.carrier() + "\",\"z\":"
@@ -57,16 +64,34 @@ public class OrderProcedures {
                     INSERT @ids (ProductId) SELECT CAST([value] AS int) FROM OPENJSON(?);
                     INSERT @ship (SellerId, Carrier, PickupZoneId, DistanceKm, Fee, FormulaVersion)
                     SELECT s, c, z, d, f, v FROM OPENJSON(?) WITH (s int, c varchar(30), z int, d decimal(6,1), f decimal(18,0), v varchar(20));
-                    EXEC dbo.usp_CheckoutWithShipping @BuyerId = ?, @ProductIds = @ids, @Shipping = @ship, @DeliveryZoneId = ?,
-                         @RecipientName = ?, @RecipientPhone = ?, @DeliveryAddress = ?, @PaymentProvider = ?;""")) {
+                    DECLARE @buyerKey nvarchar(12) = CAST(? AS nvarchar(12)), @lat nvarchar(30) = ?, @lng nvarchar(30) = ?;
+                    EXEC sys.sp_set_session_context @key = N'unimarket.checkout.buyer', @value = @buyerKey;
+                    EXEC sys.sp_set_session_context @key = N'unimarket.checkout.deliveryLat', @value = @lat;
+                    EXEC sys.sp_set_session_context @key = N'unimarket.checkout.deliveryLng', @value = @lng;
+                    BEGIN TRY
+                        EXEC dbo.usp_CheckoutWithShipping @BuyerId = ?, @ProductIds = @ids, @Shipping = @ship, @DeliveryZoneId = ?,
+                             @RecipientName = ?, @RecipientPhone = ?, @DeliveryAddress = ?, @PaymentProvider = ?;
+                    END TRY
+                    BEGIN CATCH
+                        EXEC sys.sp_set_session_context @key = N'unimarket.checkout.buyer', @value = NULL;
+                        EXEC sys.sp_set_session_context @key = N'unimarket.checkout.deliveryLat', @value = NULL;
+                        EXEC sys.sp_set_session_context @key = N'unimarket.checkout.deliveryLng', @value = NULL;
+                        THROW;
+                    END CATCH
+                    EXEC sys.sp_set_session_context @key = N'unimarket.checkout.buyer', @value = NULL;
+                    EXEC sys.sp_set_session_context @key = N'unimarket.checkout.deliveryLat', @value = NULL;
+                    EXEC sys.sp_set_session_context @key = N'unimarket.checkout.deliveryLng', @value = NULL;""")) {
                 statement.setString(1, idsJson);
                 statement.setString(2, shippingJson);
                 statement.setInt(3, buyerId);
-                statement.setInt(4, deliveryZoneId);
-                statement.setString(5, recipientName);
-                statement.setString(6, recipientPhone);
-                statement.setString(7, deliveryAddress);
-                statement.setString(8, providerSql);
+                statement.setString(4, deliveryLatitude.toPlainString());
+                statement.setString(5, deliveryLongitude.toPlainString());
+                statement.setInt(6, buyerId);
+                statement.setInt(7, deliveryZoneId);
+                statement.setString(8, recipientName);
+                statement.setString(9, recipientPhone);
+                statement.setString(10, deliveryAddress);
+                statement.setString(11, providerSql);
                 List<Long> last = List.of();
                 boolean isResultSet = statement.execute();
                 while (true) {

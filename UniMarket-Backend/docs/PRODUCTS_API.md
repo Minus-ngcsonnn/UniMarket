@@ -153,6 +153,12 @@ Only active categories, sorted by name. `slug` is derived from the name (there i
 
 ## POST /api/products: create a listing
 
+> **Pickup point (V006).** Creating a listing requires `pickupLatitude` + `pickupLongitude` (confirmed on the map / GPS,
+> both or neither, ranges checked, at most 6 decimals); `pickupInstructions` is optional (max 300). On edit, omitted = the
+> stored point is kept; only the listing's seller can change it. The point is returned as `pickupPoint` **only to the
+> seller**; public, buyer and admin responses carry only the general `pickupZone`. `GET /api/locations/zones` now also
+> returns each area's approximate public centre (`centerLatitude`, `centerLongitude`).
+
 > **"Other" category (V005).** `GET /api/categories` returns `custom: true` for the official "Other" category, listed last.
 > A listing in that category must send `customCategory` (2–60 characters after trimming, inner spaces collapsed, letters or
 > digits); for every other category it is ignored and cleared. The text is stored in `Products.CustomCategoryName` (no new
