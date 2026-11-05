@@ -98,7 +98,13 @@ function priceFieldProps(form, name) {
 export default function ProductForm({ initialValues, onSubmit, submitLabel, cancelTo, notice, serverErrors, uploadProgress = null }) {
   const { t } = useTranslation()
   const location = useListingLocation()
-  const form = useForm({ initialValues, validate: (values) => validateListing(values, { location: location.mode }), onSubmit })
+  // V005 "Other" category: the seller types the product's category; the typed value is kept while switching categories.
+  const isCustomCategory = (slug) => Boolean(location.reference.categories.find((c) => c.slug === slug)?.custom)
+  const form = useForm({
+    initialValues,
+    validate: (values) => validateListing(values, { location: location.mode, customCategory: isCustomCategory(values.categorySlug) }),
+    onSubmit,
+  })
   const categoryOptions = location.reference.categories.map((c) => ({ value: c.slug, label: t(c.name) }))
   const { setServerErrors } = form
 
@@ -170,6 +176,15 @@ export default function ProductForm({ initialValues, onSubmit, submitLabel, canc
             onBlur={form.getFieldProps('categorySlug').onBlur}
             error={form.getError('categorySlug')}
           />
+          {isCustomCategory(values.categorySlug) && (
+            <Input
+              label={t('Specify product category')}
+              placeholder={t('E.g. Musical instruments, Art supplies...')}
+              maxLength={LISTING_LIMITS.customCategoryMax}
+              hint={`${(values.customCategory ?? '').length} / ${LISTING_LIMITS.customCategoryMax} characters`}
+              {...form.getFieldProps('customCategory')}
+            />
+          )}
           <ConditionPicker
             value={values.condition}
             onChange={(condition) => form.setFieldValue('condition', condition)}

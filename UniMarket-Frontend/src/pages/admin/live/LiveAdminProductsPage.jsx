@@ -13,7 +13,7 @@ import FilterTabs from '../../../components/ui/FilterTabs'
 import ImageSlot from '../../../components/ui/ImageSlot'
 import LoadingState from '../../../components/ui/LoadingState'
 import { LISTING_MODERATION } from '../../../constants/moderation'
-import { listingCode } from '../../../constants/product'
+import { categoryLabel, listingCode } from '../../../constants/product'
 import useAdminList from '../../../hooks/useAdminList'
 import useAsyncData from '../../../hooks/useAsyncData'
 import { PATHS } from '../../../routes/paths'
@@ -169,7 +169,7 @@ function ListingReview({ id, onClose }) {
               ['Seller', listing.seller ? <Link to={PATHS.user(listing.seller.id)} className="text-primary hover:underline">{listing.seller.name}</Link> : '—'],
               ['Seller account', listing.sellerStatus],
               ['Price', money(listing.price)],
-              ['Category', listing.category?.name],
+              ['Category', listing.category && categoryLabel(t(listing.category.name), listing.category.customName)],
               ['Condition', listing.condition],
               ['Listed', formatDateTime(listing.createdAt)],
             ]}
@@ -220,7 +220,7 @@ export default function LiveAdminProductsPage() {
       ),
     },
     { key: 'seller', header: 'Seller', render: (row) => <span className="whitespace-nowrap text-ink">{row.seller?.name}</span> },
-    { key: 'category', header: 'Category', render: (row) => <span className="whitespace-nowrap text-ink-muted">{row.category?.name}</span> },
+    { key: 'category', header: 'Category', render: (row) => <span className="whitespace-nowrap text-ink-muted">{row.category && categoryLabel(t(row.category.name), row.category.customName)}</span> },
     { key: 'price', header: 'Price', className: 'whitespace-nowrap', render: (row) => money(row.price) },
     {
       key: 'status',

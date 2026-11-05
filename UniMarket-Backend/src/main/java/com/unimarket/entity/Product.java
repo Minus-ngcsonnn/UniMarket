@@ -43,6 +43,11 @@ public class Product {
     @JoinColumn(name = "CategoryId", nullable = false)
     private Category category;
 
+    /** V005: seller-typed category of an "Other" listing (2-60 characters), null for every other category. */
+    @Nationalized
+    @Column(name = "CustomCategoryName", length = 60)
+    private String customCategoryName;
+
     /** V003: optional when a pickup zone is given (CK_Products_Location). */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CampusId")
@@ -99,15 +104,15 @@ public class Product {
      * @param seller the signed-in student
      * @param nowUtc creation time (UTC)
      */
-    public static Product newListing(User seller, Category category, Campus campus, LocationZone pickupZone, String title,
-                                     String description, ProductCondition condition, BigDecimal price, BigDecimal originalPrice,
-                                     LocalDateTime nowUtc) {
+    public static Product newListing(User seller, Category category, String customCategoryName, Campus campus, LocationZone pickupZone,
+                                     String title, String description, ProductCondition condition, BigDecimal price,
+                                     BigDecimal originalPrice, LocalDateTime nowUtc) {
         Product product = new Product();
         product.seller = seller;
         product.status = ProductStatus.AVAILABLE;
         product.moderationStatus = ModerationStatus.PENDING;
         product.createdAt = nowUtc;
-        product.update(category, campus, pickupZone, title, description, condition, price, originalPrice, nowUtc);
+        product.update(category, customCategoryName, campus, pickupZone, title, description, condition, price, originalPrice, nowUtc);
         return product;
     }
 
@@ -115,12 +120,16 @@ public class Product {
      * Replaces the editable fields. Any change of an approved or blocked listing sends it back to
      * moderation (approved decision of 2026-11-01).
      */
-    public void update(Category category, Campus campus, LocationZone pickupZone, String title, String description,
-                       ProductCondition condition, BigDecimal price, BigDecimal originalPrice, LocalDateTime nowUtc) {
+    public void update(Category category, String customCategoryName, Campus campus, LocationZone pickupZone, String title,
+                       String description, ProductCondition condition, BigDecimal price, BigDecimal originalPrice, LocalDateTime nowUtc) {
         if (campus == null && pickupZone == null) {
             throw new IllegalArgumentException("A listing needs a campus or a pickup zone");
         }
+        if (category.allowsCustomName() == (customCategoryName == null)) {
+            throw new IllegalArgumentException("A custom category name is required exactly for the \"Other\" category");
+        }
         this.category = category;
+        this.customCategoryName = customCategoryName;
         this.campus = campus;
         this.pickupZone = pickupZone;
         this.title = title;
@@ -151,6 +160,9 @@ public class Product {
     public Integer getId() { return id; }
     public User getSeller() { return seller; }
     public Category getCategory() { return category; }
+
+    /** @return the seller-typed category name of an "Other" listing (V005), otherwise null */
+    public String getCustomCategoryName() { return customCategoryName; }
     public Campus getCampus() { return campus; }
     public LocationZone getPickupZone() { return pickupZone; }
 

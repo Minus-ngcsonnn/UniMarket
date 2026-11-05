@@ -14,7 +14,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import EmptyState from '../../components/ui/EmptyState'
 import ErrorState from '../../components/ui/ErrorState'
 import ImageSlot from '../../components/ui/ImageSlot'
-import { STATUSES, STATUS_KEYS, listingCode } from '../../constants/product'
+import { STATUSES, STATUS_KEYS, categoryLabel, listingCode } from '../../constants/product'
 import useAsyncData from '../../hooks/useAsyncData'
 import useCatalogReference from '../../hooks/useCatalogReference'
 import { findCategory } from '../../services/products/catalogReference'
@@ -221,7 +221,7 @@ export default function MyListingsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-ink-muted">{t(categoryName(listing))}</td>
+                  <td className="px-4 py-3 text-ink-muted">{categoryLabel(t(categoryName(listing)), listing.customCategory)}</td>
                   <td className="px-4 py-3 font-medium whitespace-nowrap text-ink">{formatPrice(listing.price)}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col items-start gap-1">

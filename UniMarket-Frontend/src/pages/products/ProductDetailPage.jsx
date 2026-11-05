@@ -18,7 +18,7 @@ import { buttonClasses } from '../../components/ui/buttonClasses'
 import EmptyState from '../../components/ui/EmptyState'
 import ErrorState from '../../components/ui/ErrorState'
 import { isPubliclyListed } from '../../constants/moderation'
-import { CAMPUSES, CONDITIONS, UNIVERSITY_NAME, listingCode } from '../../constants/product'
+import { CAMPUSES, CONDITIONS, UNIVERSITY_NAME, categoryLabel, listingCode } from '../../constants/product'
 import useAsyncData from '../../hooks/useAsyncData'
 import useCatalogReference from '../../hooks/useCatalogReference'
 import { findCategory } from '../../services/products/catalogReference'
@@ -169,7 +169,7 @@ export default function ProductDetailPage() {
   const canBuy = isAvailable && !isOwnListing
 
   const details = [
-    ['Category', t(category?.name)],
+    ['Category', categoryLabel(t(category?.name), product.customCategory)],
     ['Condition', t(CONDITIONS[product.condition]?.label)],
     // Real API: the listing's campus and / or V003 pickup area; sample data: FPT campus key.
     ...(product.campusInfo || product.pickupZone
@@ -213,7 +213,7 @@ export default function ProductDetailPage() {
           <div>
             <h1 className="text-2xl leading-tight font-bold tracking-tight text-ink sm:text-3xl">{product.title}</h1>
             <p className="mt-2 text-sm text-ink-muted">
-              {t(category?.name)} · {t('Listed {time}', { time: formatRelativeTime(product.createdAt).toLowerCase() })} · {listingCode(product.id)}
+              {categoryLabel(t(category?.name), product.customCategory)} · {t('Listed {time}', { time: formatRelativeTime(product.createdAt).toLowerCase() })} · {listingCode(product.id)}
             </p>
           </div>
 

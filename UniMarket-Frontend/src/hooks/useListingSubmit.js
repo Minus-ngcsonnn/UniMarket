@@ -10,6 +10,7 @@ function toPayload(values) {
   return {
     title: values.title.trim(),
     categorySlug: values.categorySlug,
+    customCategory: values.customCategory ?? '',
     condition: values.condition,
     description: values.description.trim(),
     price: values.price,

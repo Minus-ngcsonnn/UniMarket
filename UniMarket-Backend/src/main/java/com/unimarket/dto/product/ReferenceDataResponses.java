@@ -16,7 +16,7 @@ public final class ReferenceDataResponses {
      * @param slug           derived from the name
      * @param availableCount public, available listings in this category
      */
-    public record CategoryResponse(Integer id, String name, String slug, long availableCount) {
+    public record CategoryResponse(Integer id, String name, String slug, long availableCount, boolean custom) {
     }
 
     /**

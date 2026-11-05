@@ -58,6 +58,22 @@ export const LISTING_LIMITS = {
   photosMax: 8,
   photoMaxBytes: 5 * 1024 * 1024,
   photoTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  // V005 "Other" category: seller-typed category name (backend and SQL CHECK use the same limits).
+  customCategoryMin: 2,
+  customCategoryMax: 60,
+}
+
+/** Trimmed category text with inner whitespace collapsed ("  Nhạc   cụ " → "Nhạc cụ"). */
+export function normalizeCustomCategory(value) {
+  return (value ?? '').trim().replace(/\s+/g, ' ')
+}
+
+/**
+ * Category label of a listing: the category name, plus the seller-typed name for an "Other" listing
+ * ("Other · Musical instruments"). `name` is translated by the caller.
+ */
+export function categoryLabel(name, customCategory) {
+  return customCategory ? `${name} · ${customCategory}` : name
 }
 
 /** Initial values of the Create Listing form. */
@@ -71,6 +87,7 @@ export const EMPTY_LISTING = {
   originalPrice: null,
   campus: 'HANOI', // pilot campus (Hoa Lac); the student can change it. Real API: the seller's campus id, or ''
   pickupZone: '', // real API (V003): demo pickup area id; required for sellers without a campus
+  customCategory: '', // V005: required only when the chosen category is "Other"
 }
 
 /**
@@ -101,6 +118,7 @@ export function listingToFormValues(product) {
     originalPrice: product.originalPrice ?? null,
     campus: product.campus ?? '',
     pickupZone: product.pickupZone?.id != null ? String(product.pickupZone.id) : '',
+    customCategory: product.customCategory ?? '',
   }
 }
 

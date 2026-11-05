@@ -1,5 +1,4 @@
 import { Outlet } from 'react-router'
-import DevBackendBadge from '../dev/DevBackendBadge'
 import Footer from './Footer'
 import Header from './Header'
 
@@ -18,9 +17,6 @@ export default function MainLayout() {
         <Outlet />
       </main>
       <Footer />
-
-      {/* Development only: backend health check, kept small so it does not cover the Figma layout. */}
-      {import.meta.env.DEV && <DevBackendBadge />}
     </div>
   )
 }

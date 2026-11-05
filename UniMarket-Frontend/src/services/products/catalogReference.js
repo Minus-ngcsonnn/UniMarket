@@ -41,8 +41,10 @@ function buildReference(categories, campuses, zones) {
         Icon: design?.Icon ?? PackageIcon,
         id: category.id,
         availableCount: category.availableCount ?? null,
+        // V005 "Other": the seller types the product's category (Products.CustomCategoryName).
+        custom: Boolean(category.custom),
       }
-    }),
+    }).sort((a, b) => Number(a.custom) - Number(b.custom)), // "Other" always last (stable for the rest)
     campuses: campuses.map((campus) => ({
       key: String(campus.id),
       label: campus.name,

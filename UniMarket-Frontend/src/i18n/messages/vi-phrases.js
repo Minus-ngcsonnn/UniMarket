@@ -1101,4 +1101,11 @@ export const viPhrases = {
   "Previous promotion": "Tin quảng bá trước",
   "Next promotion": "Tin quảng bá tiếp theo",
   "Show promotion {number} of {count}": "Xem tin quảng bá {number}/{count}",
+  // "Other" category (V005)
+  Other: "Khác",
+  "Specify product category": "Nhập loại sản phẩm",
+  "E.g. Musical instruments, Art supplies...": "VD: Nhạc cụ, Dụng cụ vẽ...",
+  "Enter the product category.": "Hãy nhập loại sản phẩm.",
+  "Keep it under {count} characters.": "Không quá {count} ký tự.",
+  "Use letters or numbers.": "Hãy dùng chữ hoặc số.",
 }
